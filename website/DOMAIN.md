@@ -22,7 +22,7 @@ Fire `A`-pekere til GitHub Pages:
 
 | Type | Vert | Verdi |
 | --- | --- | --- |
-| CNAME | `www` | `chartvik.github.io` |
+| CNAME | `www` | `datalundno.github.io` |
 
 ### Valgfritt — `datalund.online`
 

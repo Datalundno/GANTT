@@ -1,0 +1,99 @@
+:root {
+  --ink: #0f3d36;
+  --muted: #3d5a54;
+  --paper: #e8f2ee;
+  --line: rgba(15, 61, 54, 0.12);
+  --accent: #1a6b5c;
+  --mint: #2dd4bf;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(90% 60% at 100% 0%, rgba(45, 212, 191, 0.18), transparent 55%),
+    var(--paper);
+  line-height: 1.55;
+}
+a { color: var(--accent); }
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.4rem;
+  border-bottom: 1px solid var(--line);
+  background: rgba(232, 242, 238, 0.9);
+  backdrop-filter: blur(8px);
+}
+.foot {
+  margin-top: auto;
+  border-bottom: 0;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.brand {
+  font-family: "Bricolage Grotesque", "Segoe UI", sans-serif;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+nav { display: flex; gap: 1rem; flex-wrap: wrap; }
+nav a { text-decoration: none; color: var(--muted); }
+nav a:hover { color: var(--ink); }
+.doc {
+  width: min(720px, calc(100% - 2rem));
+  margin: 2.2rem auto 3rem;
+}
+.doc h1 {
+  margin: 0.15rem 0 0.7rem;
+  font-family: "Bricolage Grotesque", "Segoe UI", sans-serif;
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+.meta, .lede { color: var(--muted); }
+.lede { font-size: 1.08rem; }
+.callout {
+  margin: 1.2rem 0;
+  padding: 0.95rem 1rem;
+  border-radius: 0.7rem;
+  background: rgba(45, 212, 191, 0.14);
+  border: 1px solid rgba(26, 107, 92, 0.18);
+}
+.doc h2 { margin-top: 1.7rem; font-size: 1.12rem; }
+.doc ul, .doc ol { padding-left: 1.2rem; }
+.doc li { margin: 0.35rem 0; }
+.actions { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-top: 1.6rem; }
+.btn {
+  display: inline-block;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #e8f2ee;
+  text-decoration: none;
+  font-weight: 600;
+}
+.btn.ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+@media (max-width: 640px) {
+  .bar { flex-direction: column; align-items: flex-start; }
+}

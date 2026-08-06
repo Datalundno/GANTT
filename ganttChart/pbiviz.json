@@ -1,0 +1,28 @@
+{
+  "visual": {
+    "name": "ganttChart",
+    "displayName": "DataLund Gantt",
+    "guid": "ganttChartF8E34E29596A403E8E39808FA17C9CE9",
+    "visualClassName": "Visual",
+    "version": "1.6.0.0",
+    "description": "DataLund Gantt — plan and track tasks on a Power BI timeline with progress, milestones, groups, resources, cross-filtering, and tooltips. Free visual by DataLund (datalund.no).",
+    "supportUrl": "https://datalund.no/support/",
+    "gitHubUrl": "https://github.com/Datalundno/GANTT"
+  },
+  "apiVersion": "5.11.1",
+  "author": {
+    "name": "DataLund",
+    "email": "jonas.lundervold@gmail.com"
+  },
+  "assets": {
+    "icon": "assets/icon.png"
+  },
+  "externalJS": null,
+  "style": "style/visual.less",
+  "capabilities": "capabilities.json",
+  "dependencies": null,
+  "stringResources": [
+    "stringResources/en-US/resources.resjson"
+  ],
+  "version": "1.6.0.0"
+}

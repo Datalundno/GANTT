@@ -2,6 +2,14 @@
 
 Marketing site for [Datalund](https://datalund.no) — custom Power BI visualizations.
 
+## AppSource legal pages (copied from `public/` on build)
+
+| URL | File |
+| --- | --- |
+| `/visuals/gantt/` | Help / product |
+| `/support/` | Support (must differ from Help) |
+| `/privacy/` | Privacy policy |
+
 ## Develop
 
 ```bash

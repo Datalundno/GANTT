@@ -1,10 +1,10 @@
 import './style.css'
 
 const GANTT_PBIVIZ =
-  'https://github.com/Chartvik/GANTT/raw/cursor/gantt-chart-visual-280c/ganttChart/downloads/ganttChart.pbiviz'
+  'https://github.com/Datalundno/GANTT/raw/main/ganttChart/downloads/ganttChart.pbiviz'
 const SAMPLE_XLSX =
-  'https://github.com/Chartvik/GANTT/raw/cursor/gantt-chart-visual-280c/ganttChart/downloads/GanttSampleData.xlsx'
-const REPO_URL = 'https://github.com/chartvik/gantt'
+  'https://github.com/Datalundno/GANTT/raw/main/ganttChart/downloads/GanttSampleData.xlsx'
+const REPO_URL = 'https://github.com/Datalundno/GANTT'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <a class="skip-link" href="#main">Skip to content</a>
@@ -17,6 +17,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <nav class="nav" aria-label="Primary">
       <a href="#visuals">Visuals</a>
       <a href="#gantt">Gantt</a>
+      <a href="/support/">Support</a>
       <a class="nav-cta" href="#get">Get the visual</a>
     </nav>
   </header>
@@ -113,10 +114,11 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <div class="feature-layout">
         <div class="feature-copy" data-reveal>
           <p class="eyebrow">Featured visual</p>
-          <h2 id="gantt-title">Gantt Chart</h2>
+          <h2 id="gantt-title">DataLund Gantt</h2>
           <p class="section-lede">
             Grouped tasks, resource colors, progress fills, a today line, hover tooltips,
-            and cross-filtering — packaged as a <code>.pbiviz</code> for Power BI Desktop.
+            and cross-filtering — packaged as a <code>.pbiviz</code> for Power BI Desktop
+            and the Visualization shop.
           </p>
           <ul class="feature-list">
             <li>Click bars to cross-filter other visuals</li>
@@ -167,13 +169,15 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
           <strong>Import a visual from a file</strong>. Resize to ~900×400 for the best read.
         </p>
         <div class="cta-row">
-          <a class="btn btn-primary" href="${GANTT_PBIVIZ}" download>Download Gantt (.pbiviz)</a>
+          <a class="btn btn-primary" href="${GANTT_PBIVIZ}" download>Download DataLund Gantt (.pbiviz)</a>
           <a class="btn btn-ghost" href="${SAMPLE_XLSX}" download>Sample data (.xlsx)</a>
         </div>
         <p class="fineprint">
           Source and updates live on
           <a href="${REPO_URL}">GitHub</a>.
-          More visuals will land here as they ship.
+          Help: <a href="/visuals/gantt/">product page</a> ·
+          <a href="/support/">support</a> ·
+          <a href="/privacy/">privacy</a>.
         </p>
       </div>
     </section>
@@ -183,7 +187,10 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div class="footer-inner" data-reveal>
       <p class="footer-brand">Datalund</p>
       <p class="footer-meta">
-        Custom Power BI visualizations · <a href="mailto:jonas.lundervold@gmail.com">jonas.lundervold@gmail.com</a>
+        Custom Power BI visualizations ·
+        <a href="/support/">Support</a> ·
+        <a href="/privacy/">Privacy</a> ·
+        <a href="mailto:jonas.lundervold@gmail.com">jonas.lundervold@gmail.com</a>
       </p>
       <p class="footer-domain">datalund.no</p>
     </div>

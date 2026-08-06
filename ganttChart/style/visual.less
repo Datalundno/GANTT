@@ -1,0 +1,195 @@
+.gantt-root {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    font-family: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+}
+
+.gantt-message {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #605e5c;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.gantt-landing {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background:
+        radial-gradient(120% 80% at 10% 0%, rgba(14, 165, 233, 0.12), transparent 55%),
+        radial-gradient(90% 70% at 100% 100%, rgba(2, 132, 199, 0.10), transparent 50%),
+        #f8fafc;
+}
+
+.gantt-landing-card {
+    max-width: 420px;
+    width: 100%;
+    text-align: left;
+}
+
+.gantt-landing-mark {
+    width: 44px;
+    height: 28px;
+    margin-bottom: 14px;
+    border-radius: 6px;
+    background:
+        linear-gradient(90deg, transparent 0 8px, rgba(14, 165, 233, 0.95) 8px 28px, transparent 28px) 0 4px / 100% 6px no-repeat,
+        linear-gradient(90deg, transparent 0 14px, rgba(2, 132, 199, 0.95) 14px 36px, transparent 36px) 0 12px / 100% 6px no-repeat,
+        linear-gradient(90deg, transparent 0 20px, rgba(14, 165, 233, 0.85) 20px 40px, transparent 40px) 0 20px / 100% 6px no-repeat,
+        #0f172a;
+}
+
+.gantt-landing-title {
+    margin: 0 0 6px;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #0f172a;
+}
+
+.gantt-landing-subtitle {
+    margin: 0 0 16px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #475569;
+}
+
+.gantt-landing-steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.gantt-landing-steps li {
+    margin: 0 0 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    color: #334155;
+    font-size: 12.5px;
+    line-height: 1.4;
+}
+
+.gantt-chart {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.gantt-body-row {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    min-height: 0;
+    min-width: 0;
+}
+
+.gantt-labels-col {
+    flex: 0 0 auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+    box-sizing: border-box;
+    /* Hide scrollbar; vertical scroll is driven from the plot pane */
+    scrollbar-width: none;
+}
+
+.gantt-labels-col::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+.gantt-plot-col {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: auto;
+}
+
+.gantt-axis-row {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: row;
+    min-width: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    background: rgba(250, 250, 250, 0.9);
+}
+
+.gantt-axis-gutter {
+    flex: 0 0 auto;
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+    box-sizing: border-box;
+}
+
+.gantt-axis-col {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.gantt-labels-svg,
+.gantt-plot-svg,
+.gantt-axis-svg {
+    display: block;
+}
+
+.gantt-labels-svg .label-row.is-group .label-text {
+    letter-spacing: 0.01em;
+}
+
+.gantt-labels-svg .label-chevron,
+.gantt-labels-svg .label-text {
+    pointer-events: none;
+    user-select: none;
+}
+
+.gantt-plot-svg .weekend-band {
+    shape-rendering: crispEdges;
+}
+
+.gantt-plot-svg .group-band {
+    shape-rendering: crispEdges;
+}
+
+.gantt-plot-svg .row-band {
+    shape-rendering: crispEdges;
+}
+
+.gantt-plot-svg .task-track,
+.gantt-plot-svg .task-progress,
+.gantt-plot-svg .task-milestone {
+    shape-rendering: geometricPrecision;
+}
+
+.gantt-plot-svg .task-track {
+    vector-effect: non-scaling-stroke;
+}
+
+.gantt-plot-svg .today-line {
+    shape-rendering: crispEdges;
+}
+
+.gantt-axis-svg .x-axis path,
+.gantt-axis-svg .x-axis line {
+    fill: none;
+    shape-rendering: crispEdges;
+}
+
+.gantt-axis-svg .x-axis text {
+    font-size: 11px;
+}
