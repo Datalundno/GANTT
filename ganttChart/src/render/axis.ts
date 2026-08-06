@@ -1,7 +1,7 @@
 "use strict";
 
 import * as d3 from "d3";
-import { AxisGranularity } from "../data/types";
+import { AxisGranularity, AxisLabelFormat } from "../data/types";
 
 export function createTimeScale(
     domainStart: Date,
@@ -27,12 +27,16 @@ export function createBandScale(
         .paddingOuter(0.15);
 }
 
-function tickInterval(granularity: AxisGranularity): d3.TimeInterval {
+function tickInterval(granularity: AxisGranularity, labelFormat: AxisLabelFormat): d3.TimeInterval {
     switch (granularity) {
         case "day":
+            // Align to ISO weeks when labels are week-oriented.
+            if (labelFormat === "week" || labelFormat === "both") {
+                return d3.timeMonday.every(1)!;
+            }
             return d3.timeDay.every(1)!;
         case "week":
-            return d3.timeWeek.every(1)!;
+            return d3.timeMonday.every(1)!;
         case "quarter":
             return d3.timeMonth.every(3)!;
         case "month":
@@ -41,17 +45,48 @@ function tickInterval(granularity: AxisGranularity): d3.TimeInterval {
     }
 }
 
-function tickFormat(granularity: AxisGranularity): (date: Date) => string {
+function dateTickLabel(granularity: AxisGranularity, date: Date): string {
     switch (granularity) {
         case "day":
-            return d3.timeFormat("%b %d");
+            return d3.timeFormat("%b %d")(date);
         case "week":
-            return d3.timeFormat("%b %d");
+            return d3.timeFormat("%b %d")(date);
         case "quarter":
-            return (d: Date) => `Q${Math.floor(d.getMonth() / 3) + 1} ${d3.timeFormat("%Y")(d)}`;
+            return `Q${Math.floor(date.getMonth() / 3) + 1} ${d3.timeFormat("%Y")(date)}`;
         case "month":
         default:
-            return d3.timeFormat("%b %Y");
+            return d3.timeFormat("%b %Y")(date);
+    }
+}
+
+/** ISO week number (01–53) and ISO week-year. */
+function isoWeekParts(date: Date): { week: string; year: string } {
+    return {
+        week: d3.timeFormat("%V")(date),
+        year: d3.timeFormat("%G")(date)
+    };
+}
+
+export function formatAxisTick(
+    date: Date,
+    granularity: AxisGranularity,
+    labelFormat: AxisLabelFormat
+): string {
+    const dateLabel = dateTickLabel(granularity, date);
+    const { week, year } = isoWeekParts(date);
+
+    switch (labelFormat) {
+        case "week":
+            // Include year on coarser ticks / year boundaries for clarity.
+            if (granularity === "month" || granularity === "quarter") {
+                return `${year}-W${week}`;
+            }
+            return `W${week}`;
+        case "both":
+            return `W${week} · ${dateLabel}`;
+        case "date":
+        default:
+            return dateLabel;
     }
 }
 
@@ -62,11 +97,13 @@ export function renderBottomAxis(
     selection: d3.Selection<SVGGElement, unknown, null, undefined>,
     xScale: d3.ScaleTime<number, number>,
     granularity: AxisGranularity,
+    labelFormat: AxisLabelFormat,
     color: string,
     chartWidth: number
 ): void {
-    const maxTicks = Math.max(2, Math.floor(chartWidth / 90));
-    const interval = tickInterval(granularity);
+    const labelBudget = labelFormat === "both" ? 110 : 90;
+    const maxTicks = Math.max(2, Math.floor(chartWidth / labelBudget));
+    const interval = tickInterval(granularity, labelFormat);
     const domain = xScale.domain();
     let ticks = interval.range(domain[0], d3.timeDay.offset(domain[1], 1));
 
@@ -79,7 +116,7 @@ export function renderBottomAxis(
         .tickValues(ticks)
         .tickSizeOuter(0)
         .tickPadding(8)
-        .tickFormat((domainValue) => tickFormat(granularity)(domainValue as Date));
+        .tickFormat((domainValue) => formatAxisTick(domainValue as Date, granularity, labelFormat));
 
     selection.call(axis);
     selection.selectAll("text")

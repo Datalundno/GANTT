@@ -97,7 +97,7 @@ Working end-to-end:
 | --- | --- |
 | Bars | Height, corner radius, fill, progress fill |
 | Task labels | Font size, font family, pane width |
-| General | Color by resource, today line + color, axis granularity, weekend shading |
+| General | Color by resource, today line + color, axis granularity, **axis labels (date / week / both)**, weekend shading |
 
 ## Notes
 

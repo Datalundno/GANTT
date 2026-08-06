@@ -15,6 +15,12 @@ const axisGranularityItems: powerbi.IEnumMember[] = [
     { value: "quarter", displayName: "Quarter" }
 ];
 
+const axisLabelFormatItems: powerbi.IEnumMember[] = [
+    { value: "date", displayName: "Date" },
+    { value: "week", displayName: "Week number" },
+    { value: "both", displayName: "Week + date" }
+];
+
 /**
  * Formatting cards aligned with capabilities.json.
  */
@@ -107,6 +113,13 @@ class GeneralCardSettings extends FormattingSettingsCard {
         value: axisGranularityItems[0]
     });
 
+    axisLabelFormat = new formattingSettings.ItemDropdown({
+        name: "axisLabelFormat",
+        displayName: "Axis labels",
+        items: axisLabelFormatItems,
+        value: axisLabelFormatItems[0]
+    });
+
     weekendShading = new formattingSettings.ToggleSwitch({
         name: "weekendShading",
         displayName: "Weekend shading",
@@ -120,6 +133,7 @@ class GeneralCardSettings extends FormattingSettingsCard {
         this.showTodayLine,
         this.todayLineColor,
         this.axisGranularity,
+        this.axisLabelFormat,
         this.weekendShading
     ];
 }

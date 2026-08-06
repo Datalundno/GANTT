@@ -18,7 +18,7 @@ import ISelectionId = powerbi.visuals.ISelectionId;
 import { VisualFormattingSettingsModel } from "./settings";
 import { convertDataView } from "./data/converter";
 import { buildDisplayRows, visibleTaskRows } from "./data/groups";
-import { AxisGranularity, AxisGranularityOption, TaskRow, ViewModel } from "./data/types";
+import { AxisGranularity, AxisGranularityOption, AxisLabelFormat, TaskRow, ViewModel } from "./data/types";
 import { computeLayout, ChartLayout, RIGHT_PADDING } from "./render/layout";
 import { createBandScale, createTimeScale, renderBottomAxis, renderWeekendShading } from "./render/axis";
 import {
@@ -229,6 +229,14 @@ export class Visual implements IVisual {
         return raw;
     }
 
+    private resolveLabelFormat(): AxisLabelFormat {
+        const raw = this.formattingSettings?.generalCard?.axisLabelFormat?.value?.value as AxisLabelFormat | undefined;
+        if (raw === "week" || raw === "both" || raw === "date") {
+            return raw;
+        }
+        return "date";
+    }
+
     private toggleGroup(groupKey: string): void {
         if (this.collapsedGroups.has(groupKey)) {
             this.collapsedGroups.delete(groupKey);
@@ -345,6 +353,7 @@ export class Visual implements IVisual {
         const showToday = this.formattingSettings?.generalCard?.showTodayLine?.value ?? true;
         const weekendShading = this.formattingSettings?.generalCard?.weekendShading?.value ?? false;
         const granularity = this.resolveGranularity(viewModel.granularity);
+        const labelFormat = this.resolveLabelFormat();
         const textColor = contrast.foreground;
         const cornerRadius = this.formattingSettings?.barsCard?.cornerRadius?.value ?? 4;
         const fontSize = this.formattingSettings?.labelsCard?.fontSize?.value ?? 12;
@@ -479,7 +488,7 @@ export class Visual implements IVisual {
             onMouseOut: (event, task) => this.onBarMouseOut(event, task)
         });
 
-        renderBottomAxis(this.axisLayer, xScale, granularity, textColor, plotWidth);
+        renderBottomAxis(this.axisLayer, xScale, granularity, labelFormat, textColor, plotWidth);
     }
 
     private showMessage(text: string): void {

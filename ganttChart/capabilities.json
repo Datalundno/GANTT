@@ -197,6 +197,25 @@
                         ]
                     }
                 },
+                "axisLabelFormat": {
+                    "displayName": "Axis labels",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Date",
+                                "value": "date"
+                            },
+                            {
+                                "displayName": "Week number",
+                                "value": "week"
+                            },
+                            {
+                                "displayName": "Week + date",
+                                "value": "both"
+                            }
+                        ]
+                    }
+                },
                 "weekendShading": {
                     "displayName": "Weekend shading",
                     "type": {
