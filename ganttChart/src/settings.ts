@@ -141,6 +141,14 @@ class GeneralCardSettings extends FormattingSettingsCard {
         value: false
     });
 
+    showTimeWindow = new formattingSettings.ToggleSwitch({
+        name: "showTimeWindow",
+        displayName: "Show time window",
+        displayNameKey: "Prop_ShowTimeWindow",
+        description: "Toolbar buttons for 3 / 6 / 9 / 12 months and All. Off by default.",
+        value: false
+    });
+
     name: string = "general";
     displayName: string = "General";
     displayNameKey: string = "Objects_General";
@@ -150,7 +158,8 @@ class GeneralCardSettings extends FormattingSettingsCard {
         this.todayLineColor,
         this.axisGranularity,
         this.axisLabelFormat,
-        this.weekendShading
+        this.weekendShading,
+        this.showTimeWindow
     ];
 }
 

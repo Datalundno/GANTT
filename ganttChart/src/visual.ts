@@ -18,7 +18,7 @@ import ISelectionId = powerbi.visuals.ISelectionId;
 
 import { VisualFormattingSettingsModel } from "./settings";
 import { convertDataView } from "./data/converter";
-import { buildDisplayRows, visibleTaskRows } from "./data/groups";
+import { buildDisplayRows, hasGrouping, visibleTaskRows } from "./data/groups";
 import { AxisGranularity, AxisGranularityOption, AxisLabelFormat, TaskRow, ViewModel } from "./data/types";
 import { computeLayout, ChartLayout, RIGHT_PADDING } from "./render/layout";
 import { createBandScale, createTimeScale, renderBottomAxis, renderWeekendShading } from "./render/axis";
@@ -30,7 +30,10 @@ import {
     renderTodayLine
 } from "./render/bars";
 import { getContrastColors } from "./utils/contrast";
+import { chooseGranularity } from "./utils/dates";
 import { buildTooltipDataItems, pointerCoordinates } from "./utils/tooltips";
+
+type TimeWindowMonths = 3 | 6 | 9 | 12 | null;
 
 export class Visual implements IVisual {
     private host: IVisualHost;
@@ -44,6 +47,7 @@ export class Visual implements IVisual {
     private root: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private message: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private landing: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private toolbar: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private chart: d3.Selection<HTMLDivElement, unknown, null, undefined>;
 
     private bodyRow: d3.Selection<HTMLDivElement, unknown, null, undefined>;
@@ -71,6 +75,7 @@ export class Visual implements IVisual {
     private syncingScroll = false;
     private lastViewport: { width: number; height: number } | null = null;
     private isLandingPageOn = false;
+    private timeWindowMonths: TimeWindowMonths = null;
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
@@ -105,6 +110,12 @@ export class Visual implements IVisual {
         this.chart = this.root
             .append("div")
             .classed("gantt-chart", true);
+
+        this.toolbar = this.chart
+            .append("div")
+            .classed("gantt-toolbar", true)
+            .style("display", "none");
+        this.buildToolbar();
 
         this.bodyRow = this.chart
             .append("div")
@@ -184,6 +195,99 @@ export class Visual implements IVisual {
         this.root.on("contextmenu", (event: MouseEvent) => {
             this.showEmptyContextMenu(event);
         });
+    }
+
+    private buildToolbar(): void {
+        const windows = this.toolbar.append("div")
+            .classed("gantt-toolbar-group", true)
+            .classed("gantt-toolbar-windows", true);
+        const windowOptions: Array<{ label: string; value: TimeWindowMonths }> = [
+            { label: "3M", value: 3 },
+            { label: "6M", value: 6 },
+            { label: "9M", value: 9 },
+            { label: "12M", value: 12 },
+            { label: "All", value: null }
+        ];
+        windowOptions.forEach((option) => {
+            windows.append("button")
+                .attr("type", "button")
+                .classed("gantt-tool-btn", true)
+                .attr("data-window", option.value == null ? "all" : String(option.value))
+                .text(option.label)
+                .on("click", (event: MouseEvent) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (!this.host.hostCapabilities?.allowInteractions) {
+                        return;
+                    }
+                    this.timeWindowMonths = option.value;
+                    this.syncToolbarActive();
+                    this.renderFromState();
+                });
+        });
+
+        const groups = this.toolbar.append("div")
+            .classed("gantt-toolbar-group", true)
+            .classed("gantt-toolbar-groups", true);
+        groups.append("button")
+            .attr("type", "button")
+            .classed("gantt-tool-btn", true)
+            .text("Expand")
+            .on("click", (event: MouseEvent) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (!this.host.hostCapabilities?.allowInteractions) {
+                    return;
+                }
+                this.collapsedGroups.clear();
+                this.renderFromState();
+            });
+        groups.append("button")
+            .attr("type", "button")
+            .classed("gantt-tool-btn", true)
+            .text("Collapse")
+            .on("click", (event: MouseEvent) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (!this.host.hostCapabilities?.allowInteractions || !this.viewModel) {
+                    return;
+                }
+                this.viewModel.tasks.forEach((task) => {
+                    if (task.group) {
+                        this.collapsedGroups.add(task.group);
+                    }
+                });
+                this.collapsedGroups.add("__ungrouped__");
+                this.renderFromState();
+            });
+
+        this.syncToolbarActive();
+    }
+
+    private syncToolbarActive(): void {
+        this.toolbar.selectAll<HTMLButtonElement, unknown>("button.gantt-tool-btn[data-window]")
+            .classed("is-active", (_d, _i, nodes) => {
+                const node = nodes[_i] as HTMLButtonElement;
+                const value = node.getAttribute("data-window");
+                if (this.timeWindowMonths == null) {
+                    return value === "all";
+                }
+                return value === String(this.timeWindowMonths);
+            });
+    }
+
+    private syncToolbarVisibility(): boolean {
+        const showTimeWindow = this.formattingSettings?.generalCard?.showTimeWindow?.value ?? false;
+        const showGroups = !!(this.viewModel && hasGrouping(this.viewModel.tasks));
+        const showToolbar = showTimeWindow || showGroups;
+
+        this.toolbar.style("display", showToolbar ? "flex" : "none");
+        this.toolbar.select(".gantt-toolbar-windows")
+            .style("display", showTimeWindow ? "inline-flex" : "none");
+        this.toolbar.select(".gantt-toolbar-groups")
+            .style("display", showGroups ? "inline-flex" : "none");
+
+        return showToolbar;
     }
 
     public update(options: VisualUpdateOptions): void {
@@ -370,6 +474,29 @@ export class Visual implements IVisual {
         return "date";
     }
 
+    private resolveDomain(): { start: Date; end: Date; granularity: AxisGranularity } {
+        const fullStart = this.viewModel?.domainStart ?? new Date();
+        const fullEnd = this.viewModel?.domainEnd ?? new Date();
+        const showTimeWindow = this.formattingSettings?.generalCard?.showTimeWindow?.value ?? false;
+        if (!showTimeWindow || this.timeWindowMonths == null) {
+            return {
+                start: fullStart,
+                end: fullEnd,
+                granularity: chooseGranularity(fullStart, fullEnd)
+            };
+        }
+        const today = new Date();
+        const ms = this.timeWindowMonths * 30.4375 * 24 * 60 * 60 * 1000;
+        const half = ms / 2;
+        const start = new Date(today.getTime() - half);
+        const end = new Date(today.getTime() + half);
+        return {
+            start,
+            end,
+            granularity: chooseGranularity(start, end)
+        };
+    }
+
     private toggleGroup(groupKey: string): void {
         if (!this.host.hostCapabilities?.allowInteractions) {
             return;
@@ -448,25 +575,29 @@ export class Visual implements IVisual {
         const labelWidth = this.formattingSettings?.labelsCard?.width?.value ?? 200;
         const barHeight = this.formattingSettings?.barsCard?.barHeight?.value ?? 28;
         const rowHeight = barHeight + 12;
+        const showToolbar = this.syncToolbarVisibility();
+        const toolbarHeight = showToolbar ? 40 : 0;
         const displayRows = buildDisplayRows(this.viewModel.tasks, this.collapsedGroups);
-        const domainStart = this.viewModel.domainStart ?? new Date();
-        const domainEnd = this.viewModel.domainEnd ?? new Date();
+        const domain = this.resolveDomain();
 
         const layout = computeLayout(
             this.lastViewport.width,
-            this.lastViewport.height,
+            Math.max(1, this.lastViewport.height - toolbarHeight),
             displayRows.length,
-            domainStart,
-            domainEnd,
+            domain.start,
+            domain.end,
             labelWidth,
             rowHeight
         );
-        this.render(layout, displayRows);
+        this.render(layout, displayRows, domain.start, domain.end, domain.granularity);
     }
 
     private render(
         layout: ChartLayout,
-        displayRows: ReturnType<typeof buildDisplayRows>
+        displayRows: ReturnType<typeof buildDisplayRows>,
+        domainStart: Date,
+        domainEnd: Date,
+        autoGranularity: AxisGranularity
     ): void {
         const viewModel = this.viewModel;
         if (!viewModel || viewModel.errorMessage || viewModel.tasks.length === 0) {
@@ -497,7 +628,7 @@ export class Visual implements IVisual {
             : (this.formattingSettings?.generalCard?.todayLineColor?.value?.value || "#e81123");
         const showToday = this.formattingSettings?.generalCard?.showTodayLine?.value ?? true;
         const weekendShading = this.formattingSettings?.generalCard?.weekendShading?.value ?? false;
-        const granularity = this.resolveGranularity(viewModel.granularity);
+        const granularity = this.resolveGranularity(autoGranularity);
         const labelFormat = this.resolveLabelFormat();
         const textColor = contrast.foreground;
         const cornerRadius = this.formattingSettings?.barsCard?.cornerRadius?.value ?? 4;
@@ -572,8 +703,6 @@ export class Visual implements IVisual {
         this.barsLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.axisLayer.attr("transform", "translate(0,0)");
 
-        const domainStart = viewModel.domainStart;
-        const domainEnd = viewModel.domainEnd;
         const rowIds = displayRows.map((r) => r.id);
         const tasks = visibleTaskRows(displayRows);
         const contentRowsHeight = displayRows.length * layout.rowHeight;

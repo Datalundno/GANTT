@@ -33,6 +33,7 @@
     "Prop_AxisGranularity": "Axis granularity",
     "Prop_AxisLabels": "Axis labels",
     "Prop_WeekendShading": "Weekend shading",
+    "Prop_ShowTimeWindow": "Show time window",
     "Landing_Title": "DataLund Gantt",
     "Landing_Subtitle": "Visualize project schedules on a clear timeline.",
     "Landing_Step1": "1. Drag Task into the Task field",
