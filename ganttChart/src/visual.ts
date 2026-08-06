@@ -17,7 +17,7 @@ import { convertDataView } from "./data/converter";
 import { ViewModel } from "./data/types";
 import { computeLayout, ChartLayout } from "./render/layout";
 import { createBandScale, createTimeScale, renderBottomAxis } from "./render/axis";
-import { renderBars, renderTaskLabels } from "./render/bars";
+import { renderBars, renderTaskLabels, renderTodayLine } from "./render/bars";
 import { getContrastColors } from "./utils/contrast";
 
 export class Visual implements IVisual {
@@ -28,10 +28,16 @@ export class Visual implements IVisual {
 
     private root: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private message: d3.Selection<HTMLDivElement, unknown, null, undefined>;
-    private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+    private chart: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private scrollArea: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private axisArea: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+
+    private bodySvg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+    private axisSvg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
     private labelLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private plotLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private barsLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
+    private todayLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private axisLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
 
     private viewModel: ViewModel | null = null;
@@ -50,14 +56,32 @@ export class Visual implements IVisual {
             .classed("gantt-message", true)
             .style("display", "none");
 
-        this.svg = this.root
-            .append("svg")
-            .classed("gantt-svg", true);
+        this.chart = this.root
+            .append("div")
+            .classed("gantt-chart", true);
 
-        this.labelLayer = this.svg.append("g").classed("labels", true);
-        this.plotLayer = this.svg.append("g").classed("plot", true);
+        this.scrollArea = this.chart
+            .append("div")
+            .classed("gantt-scroll", true);
+
+        this.bodySvg = this.scrollArea
+            .append("svg")
+            .classed("gantt-body-svg", true);
+
+        this.labelLayer = this.bodySvg.append("g").classed("labels", true);
+        this.plotLayer = this.bodySvg.append("g").classed("plot", true);
+        this.todayLayer = this.plotLayer.append("g").classed("today", true);
         this.barsLayer = this.plotLayer.append("g").classed("bars", true);
-        this.axisLayer = this.svg.append("g").classed("x-axis", true);
+
+        this.axisArea = this.chart
+            .append("div")
+            .classed("gantt-axis-pin", true);
+
+        this.axisSvg = this.axisArea
+            .append("svg")
+            .classed("gantt-axis-svg", true);
+
+        this.axisLayer = this.axisSvg.append("g").classed("x-axis", true);
     }
 
     public update(options: VisualUpdateOptions): void {
@@ -75,15 +99,21 @@ export class Visual implements IVisual {
                 options.type === VisualUpdateType.ResizeEnd ||
                 (options.type & VisualUpdateType.Resize) === VisualUpdateType.Resize;
 
-            // On pure resize, reuse the last view model when available.
             if (!isResizeOnly || !this.viewModel) {
                 this.viewModel = convertDataView(dataView);
             }
 
-            const width = options.viewport.width;
-            const height = options.viewport.height;
             const labelWidth = this.formattingSettings?.labelsCard?.width?.value ?? 160;
-            const layout = computeLayout(width, height, labelWidth);
+            const barHeight = this.formattingSettings?.barsCard?.barHeight?.value ?? 22;
+            const rowHeight = barHeight + 8;
+            const taskCount = this.viewModel?.tasks?.length ?? 0;
+            const layout = computeLayout(
+                options.viewport.width,
+                options.viewport.height,
+                taskCount,
+                labelWidth,
+                rowHeight
+            );
             this.render(layout);
 
             this.events.renderingFinished(options);
@@ -111,24 +141,61 @@ export class Visual implements IVisual {
         const barFill = contrast.isHighContrast
             ? contrast.foreground
             : (this.formattingSettings?.barsCard?.fill?.value?.value || "#118dff");
+        const progressFill = contrast.isHighContrast
+            ? contrast.foregroundSelected
+            : (this.formattingSettings?.barsCard?.progressFill?.value?.value || "#0b5cab");
+        const todayColor = contrast.isHighContrast
+            ? contrast.foreground
+            : (this.formattingSettings?.generalCard?.todayLineColor?.value?.value || "#e81123");
+        const showToday = this.formattingSettings?.generalCard?.showTodayLine?.value ?? true;
         const textColor = contrast.foreground;
         const cornerRadius = this.formattingSettings?.barsCard?.cornerRadius?.value ?? 3;
         const fontSize = this.formattingSettings?.labelsCard?.fontSize?.value ?? 11;
         const fontFamily = this.formattingSettings?.labelsCard?.fontFamily?.value
             ?? "Segoe UI, wf_segoe-ui_normal, helvetica, arial, sans-serif";
 
-        this.svg
+        this.root.style("background", contrast.background);
+
+        this.scrollArea
+            .style("height", `${layout.viewportBodyHeight}px`)
+            .style("overflow-y", layout.needsScroll ? "auto" : "hidden");
+
+        this.axisArea.style("height", `${layout.axisHeight}px`);
+
+        this.bodySvg
             .attr("width", layout.width)
-            .attr("height", layout.height)
-            .style("background", contrast.background);
+            .attr("height", layout.contentHeight);
+
+        this.axisSvg
+            .attr("width", layout.width)
+            .attr("height", layout.axisHeight);
 
         this.labelLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.plotLayer.attr("transform", `translate(${layout.plotLeft},${layout.plotTop})`);
-        this.axisLayer.attr("transform", `translate(${layout.plotLeft},${layout.axisY})`);
+        this.axisLayer.attr("transform", `translate(${layout.plotLeft},0)`);
 
         const taskIds = viewModel.tasks.map((t) => t.id);
-        const xScale = createTimeScale(viewModel.domainStart, viewModel.domainEnd, 0, layout.chartWidth);
-        const yScale = createBandScale(taskIds, 0, layout.chartHeight);
+
+        let domainStart = viewModel.domainStart;
+        let domainEnd = viewModel.domainEnd;
+        // Keep today visible on the axis when the reference line is enabled.
+        if (showToday) {
+            const today = new Date();
+            if (today < domainStart) {
+                domainStart = today;
+            }
+            if (today > domainEnd) {
+                domainEnd = today;
+            }
+        }
+
+        const xScale = createTimeScale(domainStart, domainEnd, 0, layout.chartWidth);
+        const yScale = createBandScale(
+            taskIds,
+            0,
+            viewModel.tasks.length * layout.rowHeight,
+            0.2
+        );
 
         renderTaskLabels(
             this.labelLayer,
@@ -140,10 +207,21 @@ export class Visual implements IVisual {
             textColor
         );
 
+        renderTodayLine(
+            this.todayLayer,
+            xScale,
+            domainStart,
+            domainEnd,
+            viewModel.tasks.length * layout.rowHeight,
+            showToday,
+            todayColor
+        );
+
         renderBars(this.barsLayer, viewModel.tasks, {
             xScale,
             yScale,
             barFill,
+            progressFill,
             cornerRadius,
             flaggedStroke: contrast.isHighContrast ? contrast.foreground : "#a80000"
         });
@@ -152,7 +230,7 @@ export class Visual implements IVisual {
     }
 
     private showMessage(text: string): void {
-        this.svg.style("display", "none");
+        this.chart.style("display", "none");
         this.message
             .style("display", "flex")
             .text(text);
@@ -160,7 +238,7 @@ export class Visual implements IVisual {
 
     private hideMessage(): void {
         this.message.style("display", "none").text("");
-        this.svg.style("display", null);
+        this.chart.style("display", "flex");
     }
 
     public getFormattingModel(): powerbi.visuals.FormattingModel {

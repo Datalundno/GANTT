@@ -7,8 +7,8 @@ import FormattingSettingsSlice = formattingSettings.Slice;
 import FormattingSettingsModel = formattingSettings.Model;
 
 /**
- * Phase 1: minimal formatting card stubs aligned with capabilities.json.
- * Full wiring of all options lands in a later phase.
+ * Formatting cards aligned with capabilities.json.
+ * Phase 2 wires bar/progress colors and today-line toggles into rendering.
  */
 class BarsCardSettings extends FormattingSettingsCard {
     barHeight = new formattingSettings.NumUpDown({

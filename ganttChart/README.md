@@ -82,19 +82,22 @@ pbiviz start
 
 Then enable developer mode in Power BI service settings and drop the developer visual onto a report. This path is optional for Desktop-only workflows.
 
-## Phase 1 status
+## Current status (Phase 2)
 
-Working end-to-end slice:
+Working:
 
 - Role-based table mapping (`metadata.columns[].roles`)
 - Left task labels + right `scaleTime` / `scaleBand` bars
 - Auto axis granularity (day / week / month / quarter)
 - Zero-duration tasks as milestone diamonds
+- Progress overlay (0–1 or 0–100), clamped to bar width
+- Toggleable today line (Format pane → General)
+- Vertical scroll when tasks exceed the viewport; time axis stays pinned
 - Empty / missing-field inline messages
-- Resize-aware updates (skips reconverting data on pure resize)
-- Formatting model stubs (`getFormattingModel`)
+- Resize-aware updates
+- Formatting model via `getFormattingModel()`
 
-Still planned for later phases: progress overlay, today line, vertical scroll with pinned axis, collapsible groups, color-by-resource, selection / cross-filter, host tooltips, full format-pane wiring.
+Still planned: collapsible groups, color-by-resource, selection / cross-filter, host tooltips, remaining format-pane options (weekend shading, axis override).
 
 ## Notes
 

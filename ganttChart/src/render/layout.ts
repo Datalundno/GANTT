@@ -1,56 +1,55 @@
 "use strict";
 
-export interface LayoutConfig {
-    width: number;
-    height: number;
-    labelWidth: number;
-    axisHeight: number;
-    topPadding: number;
-    rightPadding: number;
-    rowPaddingInner: number;
-}
-
 export interface ChartLayout {
     width: number;
     height: number;
     labelWidth: number;
     chartWidth: number;
-    chartHeight: number;
+    /** Height of the scrollable task viewport (excludes pinned axis). */
+    viewportBodyHeight: number;
+    /** Total SVG content height for all rows (may exceed viewport). */
+    contentHeight: number;
     plotLeft: number;
     plotTop: number;
-    axisY: number;
+    axisHeight: number;
+    rowHeight: number;
+    needsScroll: boolean;
 }
 
-export const DEFAULT_LAYOUT: LayoutConfig = {
-    width: 800,
-    height: 400,
-    labelWidth: 160,
-    axisHeight: 28,
-    topPadding: 8,
-    rightPadding: 12,
-    rowPaddingInner: 0.25
-};
+export const AXIS_HEIGHT = 28;
+export const TOP_PADDING = 4;
+export const RIGHT_PADDING = 12;
+export const DEFAULT_ROW_HEIGHT = 28;
+export const DEFAULT_LABEL_WIDTH = 160;
 
 export function computeLayout(
     viewportWidth: number,
     viewportHeight: number,
-    labelWidth: number = DEFAULT_LAYOUT.labelWidth
+    taskCount: number,
+    labelWidth: number = DEFAULT_LABEL_WIDTH,
+    rowHeight: number = DEFAULT_ROW_HEIGHT
 ): ChartLayout {
     const width = Math.max(1, viewportWidth);
     const height = Math.max(1, viewportHeight);
     const clampedLabel = Math.max(60, Math.min(labelWidth, Math.floor(width * 0.45)));
-    const plotTop = DEFAULT_LAYOUT.topPadding;
-    const chartHeight = Math.max(1, height - plotTop - DEFAULT_LAYOUT.axisHeight);
-    const chartWidth = Math.max(1, width - clampedLabel - DEFAULT_LAYOUT.rightPadding);
+    const safeRowHeight = Math.max(14, rowHeight);
+    const axisHeight = AXIS_HEIGHT;
+    const plotTop = TOP_PADDING;
+    const viewportBodyHeight = Math.max(1, height - axisHeight);
+    const contentHeight = Math.max(viewportBodyHeight, plotTop + taskCount * safeRowHeight);
+    const chartWidth = Math.max(1, width - clampedLabel - RIGHT_PADDING);
 
     return {
         width,
         height,
         labelWidth: clampedLabel,
         chartWidth,
-        chartHeight,
+        viewportBodyHeight,
+        contentHeight,
         plotLeft: clampedLabel,
         plotTop,
-        axisY: plotTop + chartHeight
+        axisHeight,
+        rowHeight: safeRowHeight,
+        needsScroll: contentHeight > viewportBodyHeight + 1
     };
 }
