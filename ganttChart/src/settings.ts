@@ -21,36 +21,33 @@ const axisLabelFormatItems: powerbi.IEnumMember[] = [
     { value: "both", displayName: "Week + date" }
 ];
 
-/**
- * Formatting cards aligned with capabilities.json.
- */
 class BarsCardSettings extends FormattingSettingsCard {
     barHeight = new formattingSettings.NumUpDown({
         name: "barHeight",
         displayName: "Bar height",
         displayNameKey: "Prop_BarHeight",
-        value: 28
+        value: 30
     });
 
     cornerRadius = new formattingSettings.NumUpDown({
         name: "cornerRadius",
         displayName: "Corner radius",
         displayNameKey: "Prop_CornerRadius",
-        value: 4
+        value: 7
     });
 
     fill = new formattingSettings.ColorPicker({
         name: "fill",
         displayName: "Bar fill",
         displayNameKey: "Prop_BarFill",
-        value: { value: "#0ea5e9" }
+        value: { value: "#0E7490" }
     });
 
     progressFill = new formattingSettings.ColorPicker({
         name: "progressFill",
         displayName: "Progress fill",
         displayNameKey: "Prop_ProgressFill",
-        value: { value: "#0284c7" }
+        value: { value: "#22D3EE" }
     });
 
     name: string = "bars";
@@ -83,7 +80,7 @@ class LabelsCardSettings extends FormattingSettingsCard {
         name: "width",
         displayName: "Label pane width",
         displayNameKey: "Prop_LabelWidth",
-        value: 200
+        value: 210
     });
 
     name: string = "labels";
@@ -115,7 +112,7 @@ class GeneralCardSettings extends FormattingSettingsCard {
         name: "todayLineColor",
         displayName: "Today line color",
         displayNameKey: "Prop_TodayLineColor",
-        value: { value: "#e81123" }
+        value: { value: "#F59E0B" }
     });
 
     axisGranularity = new formattingSettings.ItemDropdown({
@@ -131,14 +128,14 @@ class GeneralCardSettings extends FormattingSettingsCard {
         displayName: "Axis labels",
         displayNameKey: "Prop_AxisLabels",
         items: axisLabelFormatItems,
-        value: axisLabelFormatItems[0]
+        value: axisLabelFormatItems[2]
     });
 
     weekendShading = new formattingSettings.ToggleSwitch({
         name: "weekendShading",
         displayName: "Weekend shading",
         displayNameKey: "Prop_WeekendShading",
-        value: false
+        value: true
     });
 
     name: string = "general";
@@ -154,10 +151,67 @@ class GeneralCardSettings extends FormattingSettingsCard {
     ];
 }
 
+class LabCardSettings extends FormattingSettingsCard {
+    showToolbar = new formattingSettings.ToggleSwitch({
+        name: "showToolbar",
+        displayName: "Show toolbar",
+        displayNameKey: "Prop_ShowToolbar",
+        value: true
+    });
+
+    colorByStatus = new formattingSettings.ToggleSwitch({
+        name: "colorByStatus",
+        displayName: "Color by status",
+        displayNameKey: "Prop_ColorByStatus",
+        value: true
+    });
+
+    showDependencies = new formattingSettings.ToggleSwitch({
+        name: "showDependencies",
+        displayName: "Show dependencies",
+        displayNameKey: "Prop_ShowDependencies",
+        value: true
+    });
+
+    fancyGraphics = new formattingSettings.ToggleSwitch({
+        name: "fancyGraphics",
+        displayName: "Fancy graphics",
+        displayNameKey: "Prop_FancyGraphics",
+        value: true
+    });
+
+    animateBars = new formattingSettings.ToggleSwitch({
+        name: "animateBars",
+        displayName: "Animate bars",
+        displayNameKey: "Prop_AnimateBars",
+        value: true
+    });
+
+    showMonthGrid = new formattingSettings.ToggleSwitch({
+        name: "showMonthGrid",
+        displayName: "Month grid",
+        displayNameKey: "Prop_ShowMonthGrid",
+        value: true
+    });
+
+    name: string = "lab";
+    displayName: string = "Lab";
+    displayNameKey: string = "Objects_Lab";
+    slices: Array<FormattingSettingsSlice> = [
+        this.showToolbar,
+        this.colorByStatus,
+        this.showDependencies,
+        this.fancyGraphics,
+        this.animateBars,
+        this.showMonthGrid
+    ];
+}
+
 export class VisualFormattingSettingsModel extends FormattingSettingsModel {
     barsCard = new BarsCardSettings();
     labelsCard = new LabelsCardSettings();
     generalCard = new GeneralCardSettings();
+    labCard = new LabCardSettings();
 
-    cards = [this.barsCard, this.labelsCard, this.generalCard];
+    cards = [this.barsCard, this.labelsCard, this.generalCard, this.labCard];
 }

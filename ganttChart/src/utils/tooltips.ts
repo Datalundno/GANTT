@@ -23,12 +23,21 @@ export function buildTooltipDataItems(task: TaskRow): VisualTooltipDataItem[] {
         });
     }
 
+    items.push({
+        displayName: "Status",
+        value: task.status
+    });
+
     if (task.group) {
         items.push({ displayName: "Group", value: task.group });
     }
 
     if (task.resource) {
         items.push({ displayName: "Resource", value: task.resource });
+    }
+
+    if (task.predecessor) {
+        items.push({ displayName: "Predecessor", value: task.predecessor });
     }
 
     task.tooltipFields.forEach((field) => {

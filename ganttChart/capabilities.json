@@ -88,6 +88,19 @@
             ]
         },
         {
+            "displayName": "Predecessor",
+            "displayNameKey": "Role_Predecessor",
+            "name": "predecessor",
+            "kind": "Grouping",
+            "description": "Upstream task name for finish-to-start dependency arrows (Lab).",
+            "descriptionKey": "Role_Predecessor_Desc",
+            "preferredTypes": [
+                {
+                    "text": true
+                }
+            ]
+        },
+        {
             "displayName": "Tooltips",
             "displayNameKey": "Role_Tooltips",
             "name": "tooltipFields",
@@ -255,6 +268,54 @@
                     }
                 }
             }
+        },
+        "lab": {
+            "displayName": "Lab",
+            "displayNameKey": "Objects_Lab",
+            "properties": {
+                "showToolbar": {
+                    "displayName": "Show toolbar",
+                    "displayNameKey": "Prop_ShowToolbar",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "colorByStatus": {
+                    "displayName": "Color by status",
+                    "displayNameKey": "Prop_ColorByStatus",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showDependencies": {
+                    "displayName": "Show dependencies",
+                    "displayNameKey": "Prop_ShowDependencies",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fancyGraphics": {
+                    "displayName": "Fancy graphics",
+                    "displayNameKey": "Prop_FancyGraphics",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "animateBars": {
+                    "displayName": "Animate bars",
+                    "displayNameKey": "Prop_AnimateBars",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showMonthGrid": {
+                    "displayName": "Month grid",
+                    "displayNameKey": "Prop_ShowMonthGrid",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
         }
     },
     "dataViewMappings": [
@@ -268,6 +329,7 @@
                     "progress": { "max": 1 },
                     "group": { "max": 1 },
                     "resource": { "max": 1 },
+                    "predecessor": { "max": 1 },
                     "tooltipFields": { "max": 8 }
                 }
             ],
@@ -281,6 +343,7 @@
                         { "bind": { "to": "progress" } },
                         { "for": { "in": "group" } },
                         { "for": { "in": "resource" } },
+                        { "for": { "in": "predecessor" } },
                         { "for": { "in": "tooltipFields" } }
                     ],
                     "dataReductionAlgorithm": {

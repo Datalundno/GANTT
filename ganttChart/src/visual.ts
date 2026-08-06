@@ -19,9 +19,18 @@ import ISelectionId = powerbi.visuals.ISelectionId;
 import { VisualFormattingSettingsModel } from "./settings";
 import { convertDataView } from "./data/converter";
 import { buildDisplayRows, visibleTaskRows } from "./data/groups";
-import { AxisGranularity, AxisGranularityOption, AxisLabelFormat, TaskRow, ViewModel } from "./data/types";
+import {
+    AxisGranularity,
+    AxisGranularityOption,
+    AxisLabelFormat,
+    STATUS_COLORS,
+    TaskRow,
+    TimeWindowMonths,
+    ViewModel
+} from "./data/types";
 import { computeLayout, ChartLayout, RIGHT_PADDING } from "./render/layout";
 import { createBandScale, createTimeScale, renderBottomAxis, renderWeekendShading } from "./render/axis";
+import { renderDependencies, renderMonthGrid } from "./render/deps";
 import {
     renderBars,
     renderGroupBands,
@@ -31,6 +40,7 @@ import {
 } from "./render/bars";
 import { getContrastColors } from "./utils/contrast";
 import { buildTooltipDataItems, pointerCoordinates } from "./utils/tooltips";
+import { chooseGranularity } from "./utils/dates";
 
 export class Visual implements IVisual {
     private host: IVisualHost;
@@ -42,6 +52,7 @@ export class Visual implements IVisual {
     private formattingSettingsService: FormattingSettingsService;
 
     private root: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private toolbar: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private message: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private landing: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private chart: d3.Selection<HTMLDivElement, unknown, null, undefined>;
@@ -58,9 +69,11 @@ export class Visual implements IVisual {
     private axisSvg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
 
     private labelLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
+    private gridLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private weekendLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private rowBandLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private bandLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
+    private depsLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private barsLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private todayLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private axisLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -71,6 +84,8 @@ export class Visual implements IVisual {
     private syncingScroll = false;
     private lastViewport: { width: number; height: number } | null = null;
     private isLandingPageOn = false;
+    private timeWindowMonths: TimeWindowMonths = 6;
+    private didAnimateOnce = false;
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
@@ -87,8 +102,14 @@ export class Visual implements IVisual {
 
         this.root = d3.select(options.element)
             .append("div")
-            .classed("gantt-root", true)
+            .classed("gantt-root gantt-lab", true)
             .attr("tabindex", "0");
+
+        this.toolbar = this.root
+            .append("div")
+            .classed("gantt-toolbar", true);
+
+        this.buildToolbar();
 
         this.message = this.root
             .append("div")
@@ -128,9 +149,11 @@ export class Visual implements IVisual {
             .append("svg")
             .classed("gantt-plot-svg", true);
 
+        this.gridLayer = this.plotSvg.append("g").classed("grid", true);
         this.weekendLayer = this.plotSvg.append("g").classed("weekends", true);
         this.rowBandLayer = this.plotSvg.append("g").classed("row-bands", true);
         this.bandLayer = this.plotSvg.append("g").classed("bands", true);
+        this.depsLayer = this.plotSvg.append("g").classed("deps", true);
         this.todayLayer = this.plotSvg.append("g").classed("today", true);
         this.barsLayer = this.plotSvg.append("g").classed("bars", true);
 
@@ -175,15 +198,96 @@ export class Visual implements IVisual {
             this.syncingScroll = false;
         });
 
-        // Clear selection when clicking empty plot canvas.
         this.plotSvg.on("click", () => {
             this.clearSelection();
         });
 
-        // AppSource requires context menu on empty space and data points.
         this.root.on("contextmenu", (event: MouseEvent) => {
             this.showEmptyContextMenu(event);
         });
+    }
+
+    private buildToolbar(): void {
+        const brand = this.toolbar.append("div").classed("gantt-toolbar-brand", true);
+        brand.append("span").classed("gantt-toolbar-mark", true).attr("aria-hidden", "true");
+        brand.append("span").classed("gantt-toolbar-title", true).text("Gantt Lab");
+
+        const windows = this.toolbar.append("div").classed("gantt-toolbar-group", true);
+        const windowOptions: Array<{ label: string; value: TimeWindowMonths }> = [
+            { label: "3M", value: 3 },
+            { label: "6M", value: 6 },
+            { label: "9M", value: 9 },
+            { label: "12M", value: 12 },
+            { label: "All", value: null }
+        ];
+        windowOptions.forEach((option) => {
+            windows.append("button")
+                .attr("type", "button")
+                .classed("gantt-tool-btn", true)
+                .attr("data-window", option.value == null ? "all" : String(option.value))
+                .text(option.label)
+                .on("click", (event: MouseEvent) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (!this.host.hostCapabilities?.allowInteractions) {
+                        return;
+                    }
+                    this.timeWindowMonths = option.value;
+                    this.syncToolbarActive();
+                    this.renderFromState();
+                });
+        });
+
+        const groups = this.toolbar.append("div").classed("gantt-toolbar-group", true);
+        groups.append("button")
+            .attr("type", "button")
+            .classed("gantt-tool-btn", true)
+            .text("Expand")
+            .on("click", (event: MouseEvent) => {
+                event.preventDefault();
+                event.stopPropagation();
+                this.collapsedGroups.clear();
+                this.renderFromState();
+            });
+        groups.append("button")
+            .attr("type", "button")
+            .classed("gantt-tool-btn", true)
+            .text("Collapse")
+            .on("click", (event: MouseEvent) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (!this.viewModel) {
+                    return;
+                }
+                this.viewModel.tasks.forEach((task) => {
+                    if (task.group) {
+                        this.collapsedGroups.add(task.group);
+                    }
+                });
+                this.collapsedGroups.add("__ungrouped__");
+                this.renderFromState();
+            });
+
+        const legend = this.toolbar.append("div").classed("gantt-toolbar-legend", true);
+        (Object.keys(STATUS_COLORS) as Array<keyof typeof STATUS_COLORS>).forEach((key) => {
+            const item = legend.append("span").classed("gantt-legend-item", true);
+            item.append("i").style("background", STATUS_COLORS[key].progress);
+            item.append("span").text(STATUS_COLORS[key].label);
+        });
+
+        this.syncToolbarActive();
+    }
+
+    private syncToolbarActive(): void {
+        this.toolbar.selectAll<HTMLButtonElement, unknown>("button.gantt-tool-btn[data-window]")
+            .classed("is-active", (_d, _i, nodes) => {
+                const node = nodes[_i] as HTMLButtonElement;
+                const value = node.getAttribute("data-window");
+                if (this.timeWindowMonths == null) {
+                    return value === "all";
+                }
+                return value === String(this.timeWindowMonths);
+            });
     }
 
     public update(options: VisualUpdateOptions): void {
@@ -219,6 +323,7 @@ export class Visual implements IVisual {
                 this.viewModel = convertDataView(dataView, this.host);
                 this.pruneCollapsedGroups();
                 this.syncSelectionFromManager();
+                this.didAnimateOnce = false;
             }
 
             this.lastViewport = {
@@ -259,20 +364,27 @@ export class Visual implements IVisual {
             .classed("gantt-landing-mark", true)
             .attr("aria-hidden", "true");
 
+        card.append("p")
+            .classed("gantt-landing-eyebrow", true)
+            .text("Experimental");
+
         card.append("h2")
             .classed("gantt-landing-title", true)
-            .text(this.t("Landing_Title", "DataLund Gantt"));
+            .text(this.t("Landing_Title", "DataLund Gantt Lab"));
 
         card.append("p")
             .classed("gantt-landing-subtitle", true)
-            .text(this.t("Landing_Subtitle", "Visualize project schedules on a clear timeline."));
+            .text(this.t(
+                "Landing_Subtitle",
+                "Time windows, dependency arrows, status colors, and richer graphics — not for AppSource."
+            ));
 
         const steps = card.append("ul").classed("gantt-landing-steps", true);
         const stepKeys: Array<[string, string]> = [
             ["Landing_Step1", "1. Drag Task into the Task field"],
             ["Landing_Step2", "2. Drag a date into Start Date"],
             ["Landing_Step3", "3. Add End Date or Duration"],
-            ["Landing_Step4", "Optional: Progress, Group, Resource, Tooltips"]
+            ["Landing_Step4", "Optional: Progress, Group, Resource, Predecessor, Tooltips"]
         ];
         for (const [key, fallback] of stepKeys) {
             steps.append("li").text(this.t(key, fallback));
@@ -282,6 +394,7 @@ export class Visual implements IVisual {
     private showLandingPage(): void {
         this.isLandingPageOn = true;
         this.chart.style("display", "none");
+        this.toolbar.style("display", "none");
         this.message.style("display", "none").text("");
         this.landing.style("display", "flex");
     }
@@ -367,7 +480,29 @@ export class Visual implements IVisual {
         if (raw === "week" || raw === "both" || raw === "date") {
             return raw;
         }
-        return "date";
+        return "both";
+    }
+
+    private resolveDomain(): { start: Date; end: Date; granularity: AxisGranularity } {
+        const fullStart = this.viewModel?.domainStart ?? new Date();
+        const fullEnd = this.viewModel?.domainEnd ?? new Date();
+        if (this.timeWindowMonths == null) {
+            return {
+                start: fullStart,
+                end: fullEnd,
+                granularity: chooseGranularity(fullStart, fullEnd)
+            };
+        }
+        const today = new Date();
+        const ms = this.timeWindowMonths * 30.4375 * 24 * 60 * 60 * 1000;
+        const half = ms / 2;
+        const start = new Date(today.getTime() - half);
+        const end = new Date(today.getTime() + half);
+        return {
+            start,
+            end,
+            granularity: chooseGranularity(start, end)
+        };
     }
 
     private toggleGroup(groupKey: string): void {
@@ -445,28 +580,35 @@ export class Visual implements IVisual {
             return;
         }
 
-        const labelWidth = this.formattingSettings?.labelsCard?.width?.value ?? 200;
-        const barHeight = this.formattingSettings?.barsCard?.barHeight?.value ?? 28;
-        const rowHeight = barHeight + 12;
+        const showToolbar = this.formattingSettings?.labCard?.showToolbar?.value ?? true;
+        this.toolbar.style("display", showToolbar ? "flex" : "none");
+        this.syncToolbarActive();
+
+        const toolbarHeight = showToolbar ? 44 : 0;
+        const labelWidth = this.formattingSettings?.labelsCard?.width?.value ?? 210;
+        const barHeight = this.formattingSettings?.barsCard?.barHeight?.value ?? 30;
+        const rowHeight = barHeight + 14;
         const displayRows = buildDisplayRows(this.viewModel.tasks, this.collapsedGroups);
-        const domainStart = this.viewModel.domainStart ?? new Date();
-        const domainEnd = this.viewModel.domainEnd ?? new Date();
+        const domain = this.resolveDomain();
 
         const layout = computeLayout(
             this.lastViewport.width,
-            this.lastViewport.height,
+            Math.max(1, this.lastViewport.height - toolbarHeight),
             displayRows.length,
-            domainStart,
-            domainEnd,
+            domain.start,
+            domain.end,
             labelWidth,
             rowHeight
         );
-        this.render(layout, displayRows);
+        this.render(layout, displayRows, domain.start, domain.end, domain.granularity);
     }
 
     private render(
         layout: ChartLayout,
-        displayRows: ReturnType<typeof buildDisplayRows>
+        displayRows: ReturnType<typeof buildDisplayRows>,
+        domainStart: Date,
+        domainEnd: Date,
+        autoGranularity: AxisGranularity
     ): void {
         const viewModel = this.viewModel;
         if (!viewModel || viewModel.errorMessage || viewModel.tasks.length === 0) {
@@ -477,44 +619,48 @@ export class Visual implements IVisual {
             return;
         }
 
-        if (!viewModel.domainStart || !viewModel.domainEnd) {
-            this.showMessage(this.t("Msg_InvalidRange", "Could not determine a valid date range."));
-            return;
-        }
-
         this.hideMessage();
 
         const contrast = getContrastColors(this.host.colorPalette);
+        const fancy = (this.formattingSettings?.labCard?.fancyGraphics?.value ?? true) && !contrast.isHighContrast;
+        const animate = (this.formattingSettings?.labCard?.animateBars?.value ?? true) && !this.didAnimateOnce && fancy;
+        const colorByStatus = this.formattingSettings?.labCard?.colorByStatus?.value ?? true;
+        const showDependencies = this.formattingSettings?.labCard?.showDependencies?.value ?? true;
+        const showMonthGrid = this.formattingSettings?.labCard?.showMonthGrid?.value ?? true;
+
         const defaultBarFill = contrast.isHighContrast
             ? contrast.foreground
-            : (this.formattingSettings?.barsCard?.fill?.value?.value || "#0ea5e9");
+            : (this.formattingSettings?.barsCard?.fill?.value?.value || "#0E7490");
         const defaultProgressFill = contrast.isHighContrast
             ? contrast.foregroundSelected
-            : (this.formattingSettings?.barsCard?.progressFill?.value?.value || "#0284c7");
+            : (this.formattingSettings?.barsCard?.progressFill?.value?.value || "#22D3EE");
         const colorByResource = this.formattingSettings?.generalCard?.colorByResource?.value ?? false;
         const todayColor = contrast.isHighContrast
             ? contrast.foreground
-            : (this.formattingSettings?.generalCard?.todayLineColor?.value?.value || "#e81123");
+            : (this.formattingSettings?.generalCard?.todayLineColor?.value?.value || "#F59E0B");
         const showToday = this.formattingSettings?.generalCard?.showTodayLine?.value ?? true;
-        const weekendShading = this.formattingSettings?.generalCard?.weekendShading?.value ?? false;
-        const granularity = this.resolveGranularity(viewModel.granularity);
+        const weekendShading = this.formattingSettings?.generalCard?.weekendShading?.value ?? true;
+        const granularity = this.resolveGranularity(autoGranularity);
         const labelFormat = this.resolveLabelFormat();
         const textColor = contrast.foreground;
-        const cornerRadius = this.formattingSettings?.barsCard?.cornerRadius?.value ?? 4;
+        const cornerRadius = this.formattingSettings?.barsCard?.cornerRadius?.value ?? 7;
         const fontSize = this.formattingSettings?.labelsCard?.fontSize?.value ?? 12;
         const fontFamily = this.formattingSettings?.labelsCard?.fontFamily?.value
             ?? "Segoe UI, wf_segoe-ui_normal, helvetica, arial, sans-serif";
         const bandFill = contrast.isHighContrast
             ? contrast.background
-            : "rgba(15, 23, 42, 0.06)";
+            : "rgba(15, 61, 54, 0.07)";
         const zebraFill = contrast.isHighContrast
             ? contrast.background
-            : "rgba(15, 23, 42, 0.035)";
+            : "rgba(15, 23, 42, 0.03)";
         const hasSelection = this.selectedKeys.size > 0;
 
         const getBarColor = (task: TaskRow): string => {
             if (contrast.isHighContrast) {
                 return contrast.foreground;
+            }
+            if (colorByStatus) {
+                return STATUS_COLORS[task.status].bar;
             }
             if (colorByResource && task.resource) {
                 return this.host.colorPalette.getColor(task.resource).value;
@@ -526,13 +672,19 @@ export class Visual implements IVisual {
             if (contrast.isHighContrast) {
                 return contrast.foregroundSelected;
             }
+            if (colorByStatus) {
+                return STATUS_COLORS[task.status].progress;
+            }
             if (colorByResource && task.resource) {
                 return this.host.colorPalette.getColor(task.resource).value;
             }
             return defaultProgressFill;
         };
 
-        this.root.style("background", contrast.background);
+        this.root
+            .style("background", contrast.isHighContrast
+                ? contrast.background
+                : "linear-gradient(180deg, #F4FAF7 0%, #EEF6F2 48%, #E8F2EE 100%)");
 
         this.labelsCol
             .style("width", `${layout.labelWidth}px`)
@@ -565,18 +717,19 @@ export class Visual implements IVisual {
             .attr("height", layout.axisHeight);
 
         this.labelLayer.attr("transform", `translate(0,${layout.plotTop})`);
+        this.gridLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.weekendLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.rowBandLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.bandLayer.attr("transform", `translate(0,${layout.plotTop})`);
+        this.depsLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.todayLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.barsLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.axisLayer.attr("transform", "translate(0,0)");
 
-        const domainStart = viewModel.domainStart;
-        const domainEnd = viewModel.domainEnd;
         const rowIds = displayRows.map((r) => r.id);
         const tasks = visibleTaskRows(displayRows);
         const contentRowsHeight = displayRows.length * layout.rowHeight;
+        const tasksById = new Map(tasks.map((task) => [task.id, task]));
 
         const xScale = createTimeScale(domainStart, domainEnd, 0, plotWidth);
         const yScale = createBandScale(
@@ -588,7 +741,7 @@ export class Visual implements IVisual {
 
         const weekendFill = contrast.isHighContrast
             ? contrast.foreground
-            : "rgba(15, 23, 42, 0.06)";
+            : "rgba(15, 61, 54, 0.055)";
 
         renderLabelRows(
             this.labelLayer,
@@ -601,6 +754,16 @@ export class Visual implements IVisual {
             zebraFill,
             bandFill,
             (groupKey) => this.toggleGroup(groupKey)
+        );
+
+        renderMonthGrid(
+            this.gridLayer,
+            xScale,
+            domainStart,
+            domainEnd,
+            contentRowsHeight,
+            contrast.isHighContrast ? contrast.foreground : "rgba(15, 61, 54, 0.16)",
+            showMonthGrid && fancy
         );
 
         renderWeekendShading(
@@ -616,6 +779,16 @@ export class Visual implements IVisual {
         renderRowBands(this.rowBandLayer, displayRows, yScale, plotWidth, zebraFill);
         renderGroupBands(this.bandLayer, displayRows, yScale, plotWidth, bandFill);
 
+        renderDependencies(
+            this.depsLayer,
+            viewModel.dependencies,
+            tasksById,
+            xScale,
+            yScale,
+            contrast.isHighContrast ? contrast.foreground : "#145C4F",
+            showDependencies
+        );
+
         renderTodayLine(
             this.todayLayer,
             xScale,
@@ -623,7 +796,8 @@ export class Visual implements IVisual {
             domainEnd,
             contentRowsHeight,
             showToday,
-            todayColor
+            todayColor,
+            fancy
         );
 
         renderBars(this.barsLayer, tasks, {
@@ -636,11 +810,17 @@ export class Visual implements IVisual {
             trackStroke: contrast.background,
             hasSelection,
             isSelected: (task) => this.isTaskSelected(task),
+            fancy,
+            animate,
             onClick: (event, task) => this.onBarClick(event, task),
             onContextMenu: (event, task) => this.onBarContextMenu(event, task),
             onMouseMove: (event, task) => this.onBarMouseMove(event, task),
             onMouseOut: (event, task) => this.onBarMouseOut(event, task)
         });
+
+        if (animate) {
+            this.didAnimateOnce = true;
+        }
 
         renderBottomAxis(this.axisLayer, xScale, granularity, labelFormat, textColor, plotWidth);
     }
@@ -648,6 +828,7 @@ export class Visual implements IVisual {
     private showMessage(text: string): void {
         this.hideLandingPage();
         this.chart.style("display", "none");
+        this.toolbar.style("display", "none");
         this.message
             .style("display", "flex")
             .text(text);

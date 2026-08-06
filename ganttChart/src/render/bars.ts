@@ -6,15 +6,15 @@ import { DisplayRow, TaskRow } from "../data/types";
 export interface BarRenderOptions {
     xScale: d3.ScaleTime<number, number>;
     yScale: d3.ScaleBand<string>;
-    /** Color for track, milestones, and unprogressed solid bars. */
     getBarColor: (task: TaskRow) => string;
-    /** Solid progress fill (left overlay). */
     getProgressColor: (task: TaskRow) => string;
     cornerRadius: number;
     flaggedStroke: string;
     trackStroke: string;
     hasSelection: boolean;
     isSelected: (task: TaskRow) => boolean;
+    fancy: boolean;
+    animate: boolean;
     onClick: (event: MouseEvent, task: TaskRow) => void;
     onContextMenu: (event: MouseEvent, task: TaskRow) => void;
     onMouseMove: (event: MouseEvent, task: TaskRow) => void;
@@ -34,6 +34,14 @@ export function darkenColor(hex: string, k: number = 0.55): string {
     return c.darker(k).formatHex();
 }
 
+export function lightenColor(hex: string, k: number = 0.6): string {
+    const c = d3.color(hex);
+    if (!c) {
+        return hex;
+    }
+    return c.brighter(k).formatHex();
+}
+
 export function withAlpha(hex: string, alpha: number): string {
     const c = d3.color(hex);
     if (!c) {
@@ -43,9 +51,92 @@ export function withAlpha(hex: string, alpha: number): string {
     return c.formatRgb();
 }
 
+function ensureFancyDefs(svg: SVGSVGElement | null): void {
+    if (!svg) {
+        return;
+    }
+    const root = d3.select(svg);
+    let defs = root.select<SVGDefsElement>("defs.gantt-defs");
+    if (defs.empty()) {
+        defs = root.insert("defs", ":first-child").attr("class", "gantt-defs");
+    }
+
+    if (defs.select("#gantt-bar-shadow").empty()) {
+        const filter = defs.append("filter")
+            .attr("id", "gantt-bar-shadow")
+            .attr("x", "-20%")
+            .attr("y", "-40%")
+            .attr("width", "140%")
+            .attr("height", "200%");
+        filter.append("feDropShadow")
+            .attr("dx", 0)
+            .attr("dy", 1.5)
+            .attr("stdDeviation", 1.6)
+            .attr("flood-color", "#0F172A")
+            .attr("flood-opacity", 0.28);
+    }
+
+    if (defs.select("#gantt-sheen").empty()) {
+        const sheen = defs.append("linearGradient")
+            .attr("id", "gantt-sheen")
+            .attr("x1", "0%")
+            .attr("x2", "0%")
+            .attr("y1", "0%")
+            .attr("y2", "100%");
+        sheen.append("stop").attr("offset", "0%").attr("stop-color", "#fff").attr("stop-opacity", 0.35);
+        sheen.append("stop").attr("offset", "55%").attr("stop-color", "#fff").attr("stop-opacity", 0.05);
+        sheen.append("stop").attr("offset", "100%").attr("stop-color", "#fff").attr("stop-opacity", 0);
+    }
+
+    if (defs.select("#gantt-late-hatch").empty()) {
+        const pattern = defs.append("pattern")
+            .attr("id", "gantt-late-hatch")
+            .attr("patternUnits", "userSpaceOnUse")
+            .attr("width", 6)
+            .attr("height", 6)
+            .attr("patternTransform", "rotate(35)");
+        pattern.append("rect").attr("width", 6).attr("height", 6).attr("fill", "transparent");
+        pattern.append("line")
+            .attr("x1", 0).attr("y1", 0).attr("x2", 0).attr("y2", 6)
+            .attr("stroke", "#9F1239")
+            .attr("stroke-width", 2)
+            .attr("stroke-opacity", 0.45);
+    }
+}
+
+function barGradientId(taskId: string, kind: "bar" | "progress"): string {
+    const safe = taskId.replace(/[^a-zA-Z0-9_-]/g, "_");
+    return `gantt-grad-${kind}-${safe}`;
+}
+
+function upsertGradient(
+    svg: SVGSVGElement | null,
+    id: string,
+    from: string,
+    to: string
+): string {
+    if (!svg) {
+        return from;
+    }
+    const defs = d3.select(svg).select<SVGDefsElement>("defs.gantt-defs");
+    let grad = defs.select<SVGLinearGradientElement>(`#${id}`);
+    if (grad.empty()) {
+        grad = defs.append("linearGradient")
+            .attr("id", id)
+            .attr("x1", "0%")
+            .attr("x2", "100%")
+            .attr("y1", "0%")
+            .attr("y2", "0%");
+        grad.append("stop").attr("class", "from").attr("offset", "0%");
+        grad.append("stop").attr("class", "to").attr("offset", "100%");
+    }
+    grad.select("stop.from").attr("stop-color", from);
+    grad.select("stop.to").attr("stop-color", to);
+    return `url(#${id})`;
+}
+
 /**
  * D3 data join for task bars, progress overlays, and milestone diamonds.
- * Track = muted full span; progress = solid fill from the left.
  */
 export function renderBars(
     container: d3.Selection<SVGGElement, unknown, null, undefined>,
@@ -62,11 +153,19 @@ export function renderBars(
         trackStroke,
         hasSelection,
         isSelected,
+        fancy,
+        animate,
         onClick,
         onContextMenu,
         onMouseMove,
         onMouseOut
     } = options;
+
+    const svgNode = (container.node() as SVGGElement | null)?.ownerSVGElement ?? null;
+    if (fancy) {
+        ensureFancyDefs(svgNode);
+    }
+
     const bandwidth = Math.max(4, yScale.bandwidth());
     const barHeight = Math.max(4, bandwidth * 0.72);
     const barY = (bandwidth - barHeight) / 2;
@@ -83,7 +182,19 @@ export function renderBars(
 
     enter.append("rect").attr("class", "task-track");
     enter.append("rect").attr("class", "task-progress");
+    enter.append("rect").attr("class", "task-sheen");
+    enter.append("rect").attr("class", "task-late");
     enter.append("polygon").attr("class", "task-milestone");
+    enter.append("polygon").attr("class", "task-milestone-inner");
+    enter.append("text").attr("class", "task-progress-label");
+
+    if (animate) {
+        enter.style("opacity", 0)
+            .transition()
+            .duration(420)
+            .ease(d3.easeCubicOut)
+            .style("opacity", null);
+    }
 
     const merged = enter.merge(join);
 
@@ -97,7 +208,7 @@ export function renderBars(
             if (!hasSelection) {
                 return "1";
             }
-            return isSelected(d) ? "1" : "0.28";
+            return isSelected(d) ? "1" : "0.22";
         });
 
     merged.select<SVGRectElement>("rect.task-track")
@@ -109,18 +220,20 @@ export function renderBars(
         .attr("height", barHeight)
         .attr("width", (d) => Math.max(1, xScale(d.end) - xScale(d.start)))
         .attr("fill", (d) => {
-            // No progress field → solid scheduled bar; otherwise muted track.
+            const base = getBarColor(d);
             if (d.progress == null) {
-                return getBarColor(d);
+                return fancy
+                    ? upsertGradient(svgNode, barGradientId(d.id, "bar"), lightenColor(base, 0.35), darkenColor(base, 0.25))
+                    : base;
             }
-            return withAlpha(getBarColor(d), 0.22);
+            return withAlpha(base, fancy ? 0.18 : 0.22);
         })
         .attr("stroke", (d) => {
             if (d.flaggedInvalidRange) {
                 return flaggedStroke;
             }
             if (d.progress == null) {
-                return "none";
+                return fancy ? withAlpha(getBarColor(d), 0.35) : "none";
             }
             return withAlpha(getBarColor(d), 0.55);
         })
@@ -128,8 +241,9 @@ export function renderBars(
             if (d.flaggedInvalidRange) {
                 return 1.5;
             }
-            return d.progress == null ? 0 : 1;
-        });
+            return d.progress == null ? (fancy ? 1 : 0) : 1;
+        })
+        .attr("filter", fancy ? "url(#gantt-bar-shadow)" : null);
 
     merged.select<SVGRectElement>("rect.task-progress")
         .attr("display", (d) => {
@@ -148,7 +262,57 @@ export function renderBars(
             const p = Math.max(0, Math.min(1, d.progress ?? 0));
             return Math.min(barWidth, barWidth * p);
         })
-        .attr("fill", (d) => getProgressColor(d))
+        .attr("fill", (d) => {
+            const base = getProgressColor(d);
+            return fancy
+                ? upsertGradient(svgNode, barGradientId(d.id, "progress"), lightenColor(base, 0.55), darkenColor(base, 0.15))
+                : base;
+        })
+        .attr("pointer-events", "none");
+
+    merged.select<SVGRectElement>("rect.task-sheen")
+        .attr("display", (d) => {
+            if (!fancy || d.isMilestone || d.progress == null || d.progress <= 0) {
+                return "none";
+            }
+            return null;
+        })
+        .attr("x", (d) => xScale(d.start))
+        .attr("y", barY)
+        .attr("rx", Math.max(0, cornerRadius - 1))
+        .attr("ry", Math.max(0, cornerRadius - 1))
+        .attr("height", Math.max(2, barHeight * 0.45))
+        .attr("width", (d) => {
+            const barWidth = Math.max(1, xScale(d.end) - xScale(d.start));
+            const p = Math.max(0, Math.min(1, d.progress ?? 0));
+            return Math.min(barWidth, barWidth * p);
+        })
+        .attr("fill", "url(#gantt-sheen)")
+        .attr("pointer-events", "none");
+
+    // Hatch remaining work when late
+    merged.select<SVGRectElement>("rect.task-late")
+        .attr("display", (d) => {
+            if (!fancy || d.isMilestone || d.status !== "late" || (d.progress ?? 0) >= 1) {
+                return "none";
+            }
+            return null;
+        })
+        .attr("x", (d) => {
+            const barWidth = Math.max(1, xScale(d.end) - xScale(d.start));
+            const p = Math.max(0, Math.min(1, d.progress ?? 0));
+            return xScale(d.start) + barWidth * p;
+        })
+        .attr("y", barY)
+        .attr("rx", Math.max(0, cornerRadius - 1))
+        .attr("ry", Math.max(0, cornerRadius - 1))
+        .attr("height", barHeight)
+        .attr("width", (d) => {
+            const barWidth = Math.max(1, xScale(d.end) - xScale(d.start));
+            const p = Math.max(0, Math.min(1, d.progress ?? 0));
+            return Math.max(0, barWidth * (1 - p));
+        })
+        .attr("fill", "url(#gantt-late-hatch)")
         .attr("pointer-events", "none");
 
     merged.select<SVGPolygonElement>("polygon.task-milestone")
@@ -156,12 +320,45 @@ export function renderBars(
         .attr("points", (d) => {
             const cx = xScale(d.start);
             const cy = bandwidth / 2;
-            const size = Math.max(11, bandwidth * 0.88);
+            const size = Math.max(12, bandwidth * 0.9);
             return diamondPoints(cx, cy, size);
         })
-        .attr("fill", (d) => getBarColor(d))
-        .attr("stroke", (d) => d.flaggedInvalidRange ? flaggedStroke : trackStroke)
-        .attr("stroke-width", 1.25);
+        .attr("fill", (d) => {
+            const base = getBarColor(d);
+            return fancy ? lightenColor(base, 0.25) : base;
+        })
+        .attr("stroke", (d) => d.flaggedInvalidRange ? flaggedStroke : (fancy ? darkenColor(getBarColor(d), 0.4) : trackStroke))
+        .attr("stroke-width", fancy ? 1.5 : 1.25)
+        .attr("filter", fancy ? "url(#gantt-bar-shadow)" : null);
+
+    merged.select<SVGPolygonElement>("polygon.task-milestone-inner")
+        .attr("display", (d) => fancy && d.isMilestone ? null : "none")
+        .attr("points", (d) => {
+            const cx = xScale(d.start);
+            const cy = bandwidth / 2;
+            const size = Math.max(6, bandwidth * 0.42);
+            return diamondPoints(cx, cy, size);
+        })
+        .attr("fill", "#F8FAFC")
+        .attr("opacity", 0.85)
+        .attr("pointer-events", "none");
+
+    merged.select<SVGTextElement>("text.task-progress-label")
+        .attr("display", (d) => {
+            if (!fancy || d.isMilestone || d.progress == null) {
+                return "none";
+            }
+            const barWidth = Math.max(1, xScale(d.end) - xScale(d.start));
+            return barWidth < 36 ? "none" : null;
+        })
+        .attr("x", (d) => xScale(d.start) + 6)
+        .attr("y", bandwidth / 2)
+        .attr("dy", "0.35em")
+        .attr("fill", "#F8FAFC")
+        .style("font-size", `${Math.max(9, Math.min(11, barHeight - 6))}px`)
+        .style("font-weight", "600")
+        .style("pointer-events", "none")
+        .text((d) => `${Math.round((d.progress ?? 0) * 100)}%`);
 
     merged
         .on("click", (event: MouseEvent, d: TaskRow) => {
@@ -191,28 +388,68 @@ export function renderTodayLine(
     domainEnd: Date,
     contentHeight: number,
     visible: boolean,
-    color: string
+    color: string,
+    fancy: boolean
 ): void {
     const today = new Date();
     const inRange = today >= domainStart && today <= domainEnd;
+    const show = visible && inRange;
 
-    const join = container
+    const lineJoin = container
         .selectAll<SVGLineElement, Date>("line.today-line")
-        .data(visible && inRange ? [today] : []);
+        .data(show ? [today] : []);
 
-    join.exit().remove();
+    lineJoin.exit().remove();
 
-    join.enter()
+    lineJoin.enter()
         .append("line")
         .attr("class", "today-line")
-        .merge(join)
+        .merge(lineJoin)
         .attr("x1", (d) => xScale(d))
         .attr("x2", (d) => xScale(d))
         .attr("y1", 0)
         .attr("y2", contentHeight)
         .attr("stroke", color)
+        .attr("stroke-width", fancy ? 2.25 : 2)
+        .attr("stroke-dasharray", fancy ? "0" : "5,4")
+        .attr("opacity", fancy ? 0.9 : 1)
+        .attr("pointer-events", "none");
+
+    const capJoin = container
+        .selectAll<SVGCircleElement, Date>("circle.today-cap")
+        .data(show && fancy ? [today] : []);
+
+    capJoin.exit().remove();
+
+    capJoin.enter()
+        .append("circle")
+        .attr("class", "today-cap")
+        .merge(capJoin)
+        .attr("cx", (d) => xScale(d))
+        .attr("cy", 0)
+        .attr("r", 5)
+        .attr("fill", color)
+        .attr("stroke", "#FFF7ED")
         .attr("stroke-width", 2)
-        .attr("stroke-dasharray", "5,4")
+        .attr("pointer-events", "none");
+
+    const labelJoin = container
+        .selectAll<SVGTextElement, Date>("text.today-label")
+        .data(show && fancy ? [today] : []);
+
+    labelJoin.exit().remove();
+
+    labelJoin.enter()
+        .append("text")
+        .attr("class", "today-label")
+        .merge(labelJoin)
+        .attr("x", (d) => xScale(d) + 8)
+        .attr("y", 11)
+        .attr("fill", color)
+        .style("font-size", "10px")
+        .style("font-weight", "700")
+        .style("letter-spacing", "0.04em")
+        .text("TODAY")
         .attr("pointer-events", "none");
 }
 
@@ -244,9 +481,6 @@ export function renderGroupBands(
         .attr("pointer-events", "none");
 }
 
-/**
- * Subtle zebra striping on task rows for cross-timeline tracking.
- */
 export function renderRowBands(
     container: d3.Selection<SVGGElement, unknown, null, undefined>,
     displayRows: DisplayRow[],
@@ -303,6 +537,7 @@ export function renderLabelRows(
     enter.append("rect").attr("class", "label-bg");
     enter.append("rect").attr("class", "label-hit");
     enter.append("text").attr("class", "label-chevron");
+    enter.append("circle").attr("class", "label-status");
     enter.append("text").attr("class", "label-text");
 
     const merged = enter.merge(join);
@@ -342,6 +577,20 @@ export function renderLabelRows(
         .style("font-size", `${Math.max(10, fontSize - 1)}px`)
         .style("font-family", fontFamily)
         .text((d) => d.collapsed ? "▸" : "▾");
+
+    merged.select<SVGCircleElement>("circle.label-status")
+        .attr("display", (d) => d.kind === "task" && d.task ? null : "none")
+        .attr("cx", 12)
+        .attr("cy", bandwidth / 2)
+        .attr("r", 3.5)
+        .attr("fill", (d) => {
+            const status = d.task?.status;
+            if (status === "done") return "#2DD4BF";
+            if (status === "late") return "#FB7185";
+            if (status === "atrisk") return "#FBBF24";
+            if (status === "future") return "#94A3B8";
+            return "#22D3EE";
+        });
 
     merged.select<SVGTextElement>("text.label-text")
         .attr("x", (d) => d.kind === "group" ? 24 : labelWidth - 10)

@@ -6,9 +6,11 @@ import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 
 import {
+    DependencyLink,
     ROLE_DURATION,
     ROLE_END,
     ROLE_GROUP,
+    ROLE_PREDECESSOR,
     ROLE_PROGRESS,
     ROLE_RESOURCE,
     ROLE_START,
@@ -16,6 +18,7 @@ import {
     ROLE_TOOLTIPS,
     RoleColumnIndex,
     TaskRow,
+    TaskStatus,
     TooltipField,
     ViewModel
 } from "./types";
@@ -30,6 +33,7 @@ import {
 function emptyViewModel(errorMessage: string | null): ViewModel {
     return {
         tasks: [],
+        dependencies: [],
         hasGroups: false,
         domainStart: null,
         domainEnd: null,
@@ -38,9 +42,6 @@ function emptyViewModel(errorMessage: string | null): ViewModel {
     };
 }
 
-/**
- * Map column indexes by inspecting metadata column roles — never by field-well order.
- */
 export function resolveRoleIndexes(columns: DataViewMetadataColumn[] | undefined): RoleColumnIndex {
     const indexes: RoleColumnIndex = {
         task: null,
@@ -50,6 +51,7 @@ export function resolveRoleIndexes(columns: DataViewMetadataColumn[] | undefined
         progress: null,
         group: null,
         resource: null,
+        predecessor: null,
         tooltips: []
     };
 
@@ -82,6 +84,9 @@ export function resolveRoleIndexes(columns: DataViewMetadataColumn[] | undefined
         }
         if (roles[ROLE_RESOURCE]) {
             indexes.resource = index;
+        }
+        if (roles[ROLE_PREDECESSOR]) {
+            indexes.predecessor = index;
         }
         if (roles[ROLE_TOOLTIPS]) {
             indexes.tooltips.push(index);
@@ -136,6 +141,51 @@ function buildTooltipFields(
     });
 }
 
+export function computeTaskStatus(start: Date, end: Date, progress: number | null, today: Date = new Date()): TaskStatus {
+    const p = progress == null ? 0 : Math.max(0, Math.min(1, progress));
+    if (p >= 0.999) {
+        return "done";
+    }
+    if (today < start) {
+        return "future";
+    }
+    if (today > end) {
+        return "late";
+    }
+    const span = Math.max(1, end.getTime() - start.getTime());
+    const expected = Math.max(0, Math.min(1, (today.getTime() - start.getTime()) / span));
+    if (p + 0.12 < expected) {
+        return "atrisk";
+    }
+    return "ontrack";
+}
+
+function buildDependencies(tasks: TaskRow[]): DependencyLink[] {
+    const byName = new Map<string, TaskRow>();
+    tasks.forEach((task) => {
+        if (!byName.has(task.task)) {
+            byName.set(task.task, task);
+        }
+    });
+
+    const links: DependencyLink[] = [];
+    tasks.forEach((task) => {
+        if (!task.predecessor) {
+            return;
+        }
+        const pred = byName.get(task.predecessor);
+        if (!pred || pred.id === task.id) {
+            return;
+        }
+        links.push({
+            id: `${pred.id}->${task.id}`,
+            fromTaskId: pred.id,
+            toTaskId: task.id
+        });
+    });
+    return links;
+}
+
 export function convertDataView(
     dataView: DataView | undefined,
     host?: IVisualHost
@@ -164,6 +214,7 @@ export function convertDataView(
     const tasks: TaskRow[] = [];
     let domainStart: Date | null = null;
     let domainEnd: Date | null = null;
+    const today = new Date();
 
     rows.forEach((row, rowIndex) => {
         const taskName = asText(cellValue(row, roles.task));
@@ -208,6 +259,8 @@ export function convertDataView(
             progress,
             group: asText(cellValue(row, roles.group)),
             resource: asText(cellValue(row, roles.resource)),
+            predecessor: asText(cellValue(row, roles.predecessor)),
+            status: computeTaskStatus(start, end, progress, today),
             isMilestone,
             flaggedInvalidRange,
             tooltipFields: buildTooltipFields(row, columns, roles.tooltips),
@@ -234,6 +287,7 @@ export function convertDataView(
 
     return {
         tasks,
+        dependencies: buildDependencies(tasks),
         hasGroups: tasks.some((t) => t.group != null && t.group !== ""),
         domainStart,
         domainEnd,
