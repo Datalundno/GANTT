@@ -48,7 +48,7 @@ pbiviz package --certification-audit   # expect: no external requests
 npm audit                              # expect: 0 high/moderate ideally
 ```
 
-- [ ] Use packaged file: `dist/ganttChart…1.6.0.0.pbiviz` (also copied to `downloads/ganttChart.pbiviz`)
+- [ ] Use packaged file: `dist/ganttChart…1.7.0.0.pbiviz` (also copied to `downloads/ganttChart.pbiviz`)
 - [ ] Confirm `pbiviz.json` has real author name/email, supportUrl, description (no `localhost`)
 - [ ] GUID unchanged
 - [ ] Store logo ready: `assets/store/logo-300.png` (exactly **300×300** PNG, sharp, not blurry)
@@ -185,7 +185,7 @@ Run through [submission testing](https://learn.microsoft.com/en-us/power-bi/deve
 - [ ] **Save draft** → **Review and publish** → submit
 - [ ] Watch Partner Center certification / validation email
 - [ ] AppSource listing link appears hours after approval; Desktop/Service catalog can take **~10–14 days** to update
-- [ ] Do **not** change GUID on updates; bump four-part version (`1.6.0.0` → `1.6.1.0` / `1.7.0.0`)
+- [ ] Do **not** change GUID on updates; bump four-part version (`1.7.0.0` → `1.6.1.0` / `1.7.0.0`)
 - [ ] Keep datalund.no privacy/support pages online for the life of the listing
 
 ---
