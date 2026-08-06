@@ -18,13 +18,13 @@ export function createBandScale(
     taskIds: string[],
     rangeStart: number,
     rangeEnd: number,
-    paddingInner: number = 0.25
+    paddingInner: number = 0.3
 ): d3.ScaleBand<string> {
     return d3.scaleBand<string>()
         .domain(taskIds)
         .range([rangeStart, rangeEnd])
         .paddingInner(paddingInner)
-        .paddingOuter(0.1);
+        .paddingOuter(0.15);
 }
 
 function tickInterval(granularity: AxisGranularity): d3.TimeInterval {
@@ -55,17 +55,37 @@ function tickFormat(granularity: AxisGranularity): (date: Date) => string {
     }
 }
 
+/**
+ * Render a bottom axis with tick density capped by available pixel width.
+ */
 export function renderBottomAxis(
     selection: d3.Selection<SVGGElement, unknown, null, undefined>,
     xScale: d3.ScaleTime<number, number>,
     granularity: AxisGranularity,
-    color: string
+    color: string,
+    chartWidth: number
 ): void {
+    const maxTicks = Math.max(2, Math.floor(chartWidth / 90));
+    const interval = tickInterval(granularity);
+    const domain = xScale.domain();
+    let ticks = interval.range(domain[0], d3.timeDay.offset(domain[1], 1));
+
+    if (ticks.length > maxTicks) {
+        const step = Math.ceil(ticks.length / maxTicks);
+        ticks = ticks.filter((_, i) => i % step === 0);
+    }
+
     const axis = d3.axisBottom(xScale)
-        .ticks(tickInterval(granularity))
+        .tickValues(ticks)
+        .tickSizeOuter(0)
+        .tickPadding(8)
         .tickFormat((domainValue) => tickFormat(granularity)(domainValue as Date));
 
     selection.call(axis);
-    selection.selectAll("text").attr("fill", color);
-    selection.selectAll("path, line").attr("stroke", color);
+    selection.selectAll("text")
+        .attr("fill", color)
+        .style("font-size", "11px");
+    selection.selectAll("path, line")
+        .attr("stroke", color)
+        .attr("stroke-opacity", 0.55);
 }

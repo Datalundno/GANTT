@@ -15,7 +15,7 @@ import VisualUpdateType = powerbi.VisualUpdateType;
 import { VisualFormattingSettingsModel } from "./settings";
 import { convertDataView } from "./data/converter";
 import { ViewModel } from "./data/types";
-import { computeLayout, ChartLayout } from "./render/layout";
+import { computeLayout, ChartLayout, RIGHT_PADDING } from "./render/layout";
 import { createBandScale, createTimeScale, renderBottomAxis } from "./render/axis";
 import { renderBars, renderTaskLabels, renderTodayLine } from "./render/bars";
 import { getContrastColors } from "./utils/contrast";
@@ -29,18 +29,25 @@ export class Visual implements IVisual {
     private root: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private message: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private chart: d3.Selection<HTMLDivElement, unknown, null, undefined>;
-    private scrollArea: d3.Selection<HTMLDivElement, unknown, null, undefined>;
-    private axisArea: d3.Selection<HTMLDivElement, unknown, null, undefined>;
 
-    private bodySvg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+    private bodyRow: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private labelsCol: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private plotCol: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private axisRow: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private axisGutter: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private axisCol: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+
+    private labelsSvg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+    private plotSvg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
     private axisSvg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+
     private labelLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
-    private plotLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private barsLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private todayLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private axisLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
 
     private viewModel: ViewModel | null = null;
+    private syncingScroll = false;
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
@@ -60,28 +67,71 @@ export class Visual implements IVisual {
             .append("div")
             .classed("gantt-chart", true);
 
-        this.scrollArea = this.chart
+        this.bodyRow = this.chart
             .append("div")
-            .classed("gantt-scroll", true);
+            .classed("gantt-body-row", true);
 
-        this.bodySvg = this.scrollArea
+        this.labelsCol = this.bodyRow
+            .append("div")
+            .classed("gantt-labels-col", true);
+
+        this.labelsSvg = this.labelsCol
             .append("svg")
-            .classed("gantt-body-svg", true);
+            .classed("gantt-labels-svg", true);
 
-        this.labelLayer = this.bodySvg.append("g").classed("labels", true);
-        this.plotLayer = this.bodySvg.append("g").classed("plot", true);
-        this.todayLayer = this.plotLayer.append("g").classed("today", true);
-        this.barsLayer = this.plotLayer.append("g").classed("bars", true);
+        this.labelLayer = this.labelsSvg.append("g").classed("labels", true);
 
-        this.axisArea = this.chart
+        this.plotCol = this.bodyRow
             .append("div")
-            .classed("gantt-axis-pin", true);
+            .classed("gantt-plot-col", true);
 
-        this.axisSvg = this.axisArea
+        this.plotSvg = this.plotCol
+            .append("svg")
+            .classed("gantt-plot-svg", true);
+
+        this.todayLayer = this.plotSvg.append("g").classed("today", true);
+        this.barsLayer = this.plotSvg.append("g").classed("bars", true);
+
+        this.axisRow = this.chart
+            .append("div")
+            .classed("gantt-axis-row", true);
+
+        this.axisGutter = this.axisRow
+            .append("div")
+            .classed("gantt-axis-gutter", true);
+
+        this.axisCol = this.axisRow
+            .append("div")
+            .classed("gantt-axis-col", true);
+
+        this.axisSvg = this.axisCol
             .append("svg")
             .classed("gantt-axis-svg", true);
 
         this.axisLayer = this.axisSvg.append("g").classed("x-axis", true);
+
+        const plotNode = this.plotCol.node() as HTMLDivElement;
+        const labelsNode = this.labelsCol.node() as HTMLDivElement;
+        const axisNode = this.axisCol.node() as HTMLDivElement;
+
+        plotNode.addEventListener("scroll", () => {
+            if (this.syncingScroll) {
+                return;
+            }
+            this.syncingScroll = true;
+            labelsNode.scrollTop = plotNode.scrollTop;
+            axisNode.scrollLeft = plotNode.scrollLeft;
+            this.syncingScroll = false;
+        });
+
+        labelsNode.addEventListener("scroll", () => {
+            if (this.syncingScroll) {
+                return;
+            }
+            this.syncingScroll = true;
+            plotNode.scrollTop = labelsNode.scrollTop;
+            this.syncingScroll = false;
+        });
     }
 
     public update(options: VisualUpdateOptions): void {
@@ -103,14 +153,19 @@ export class Visual implements IVisual {
                 this.viewModel = convertDataView(dataView);
             }
 
-            const labelWidth = this.formattingSettings?.labelsCard?.width?.value ?? 160;
-            const barHeight = this.formattingSettings?.barsCard?.barHeight?.value ?? 22;
-            const rowHeight = barHeight + 8;
+            const labelWidth = this.formattingSettings?.labelsCard?.width?.value ?? 200;
+            const barHeight = this.formattingSettings?.barsCard?.barHeight?.value ?? 28;
+            const rowHeight = barHeight + 12;
             const taskCount = this.viewModel?.tasks?.length ?? 0;
+            const domainStart = this.viewModel?.domainStart ?? new Date();
+            const domainEnd = this.viewModel?.domainEnd ?? new Date();
+
             const layout = computeLayout(
                 options.viewport.width,
                 options.viewport.height,
                 taskCount,
+                domainStart,
+                domainEnd,
                 labelWidth,
                 rowHeight
             );
@@ -149,52 +204,58 @@ export class Visual implements IVisual {
             : (this.formattingSettings?.generalCard?.todayLineColor?.value?.value || "#e81123");
         const showToday = this.formattingSettings?.generalCard?.showTodayLine?.value ?? true;
         const textColor = contrast.foreground;
-        const cornerRadius = this.formattingSettings?.barsCard?.cornerRadius?.value ?? 3;
-        const fontSize = this.formattingSettings?.labelsCard?.fontSize?.value ?? 11;
+        const cornerRadius = this.formattingSettings?.barsCard?.cornerRadius?.value ?? 4;
+        const fontSize = this.formattingSettings?.labelsCard?.fontSize?.value ?? 12;
         const fontFamily = this.formattingSettings?.labelsCard?.fontFamily?.value
             ?? "Segoe UI, wf_segoe-ui_normal, helvetica, arial, sans-serif";
 
         this.root.style("background", contrast.background);
 
-        this.scrollArea
-            .style("height", `${layout.viewportBodyHeight}px`)
-            .style("overflow-y", layout.needsScroll ? "auto" : "hidden");
+        this.labelsCol
+            .style("width", `${layout.labelWidth}px`)
+            .style("height", `${layout.bodyViewportHeight}px`);
 
-        this.axisArea.style("height", `${layout.axisHeight}px`);
+        this.plotCol
+            .style("height", `${layout.bodyViewportHeight}px`)
+            .style("overflow-x", layout.needsHorizontalScroll ? "auto" : "hidden")
+            .style("overflow-y", layout.needsVerticalScroll ? "auto" : "hidden");
 
-        this.bodySvg
-            .attr("width", layout.width)
+        this.axisGutter.style("width", `${layout.labelWidth}px`);
+        this.axisRow.style("height", `${layout.axisHeight}px`);
+        this.axisCol
+            .style("height", `${layout.axisHeight}px`)
+            .style("overflow-x", "hidden")
+            .style("overflow-y", "hidden");
+
+        const plotWidth = Math.max(1, layout.contentWidth - RIGHT_PADDING);
+
+        this.labelsSvg
+            .attr("width", layout.labelWidth)
+            .attr("height", layout.contentHeight);
+
+        this.plotSvg
+            .attr("width", layout.contentWidth)
             .attr("height", layout.contentHeight);
 
         this.axisSvg
-            .attr("width", layout.width)
+            .attr("width", layout.contentWidth)
             .attr("height", layout.axisHeight);
 
         this.labelLayer.attr("transform", `translate(0,${layout.plotTop})`);
-        this.plotLayer.attr("transform", `translate(${layout.plotLeft},${layout.plotTop})`);
-        this.axisLayer.attr("transform", `translate(${layout.plotLeft},0)`);
+        this.todayLayer.attr("transform", `translate(0,${layout.plotTop})`);
+        this.barsLayer.attr("transform", `translate(0,${layout.plotTop})`);
+        this.axisLayer.attr("transform", "translate(0,0)");
 
+        const domainStart = viewModel.domainStart;
+        const domainEnd = viewModel.domainEnd;
         const taskIds = viewModel.tasks.map((t) => t.id);
 
-        let domainStart = viewModel.domainStart;
-        let domainEnd = viewModel.domainEnd;
-        // Keep today visible on the axis when the reference line is enabled.
-        if (showToday) {
-            const today = new Date();
-            if (today < domainStart) {
-                domainStart = today;
-            }
-            if (today > domainEnd) {
-                domainEnd = today;
-            }
-        }
-
-        const xScale = createTimeScale(domainStart, domainEnd, 0, layout.chartWidth);
+        const xScale = createTimeScale(domainStart, domainEnd, 0, plotWidth);
         const yScale = createBandScale(
             taskIds,
             0,
             viewModel.tasks.length * layout.rowHeight,
-            0.2
+            0.28
         );
 
         renderTaskLabels(
@@ -207,6 +268,7 @@ export class Visual implements IVisual {
             textColor
         );
 
+        // Today line only when "today" falls inside the task date range (no domain stretch).
         renderTodayLine(
             this.todayLayer,
             xScale,
@@ -226,7 +288,7 @@ export class Visual implements IVisual {
             flaggedStroke: contrast.isHighContrast ? contrast.foreground : "#a80000"
         });
 
-        renderBottomAxis(this.axisLayer, xScale, viewModel.granularity, textColor);
+        renderBottomAxis(this.axisLayer, xScale, viewModel.granularity, textColor, plotWidth);
     }
 
     private showMessage(text: string): void {

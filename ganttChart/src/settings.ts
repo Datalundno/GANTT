@@ -14,13 +14,13 @@ class BarsCardSettings extends FormattingSettingsCard {
     barHeight = new formattingSettings.NumUpDown({
         name: "barHeight",
         displayName: "Bar height",
-        value: 22
+        value: 28
     });
 
     cornerRadius = new formattingSettings.NumUpDown({
         name: "cornerRadius",
         displayName: "Corner radius",
-        value: 3
+        value: 4
     });
 
     fill = new formattingSettings.ColorPicker({
@@ -49,7 +49,7 @@ class LabelsCardSettings extends FormattingSettingsCard {
     fontSize = new formattingSettings.NumUpDown({
         name: "fontSize",
         displayName: "Font size",
-        value: 11
+        value: 12
     });
 
     fontFamily = new formattingSettings.FontPicker({
@@ -61,7 +61,7 @@ class LabelsCardSettings extends FormattingSettingsCard {
     width = new formattingSettings.NumUpDown({
         name: "width",
         displayName: "Label pane width",
-        value: 160
+        value: 200
     });
 
     name: string = "labels";

@@ -215,8 +215,8 @@ export function convertDataView(dataView: DataView | undefined): ViewModel {
         return emptyViewModel("No valid tasks with parseable dates were found.");
     }
 
-    // Pad domain slightly so bars are not flush against edges
-    const padDays = Math.max(1, Math.ceil(dayDiff(domainStart!, domainEnd!) * 0.02));
+    // Pad domain a few days so bars are not flush against edges
+    const padDays = 3;
     domainStart = addDays(domainStart!, -padDays);
     domainEnd = addDays(domainEnd!, padDays);
 

@@ -1,55 +1,83 @@
 "use strict";
 
 export interface ChartLayout {
-    width: number;
-    height: number;
+    /** Full visual viewport width */
+    viewportWidth: number;
+    /** Full visual viewport height */
+    viewportHeight: number;
     labelWidth: number;
-    chartWidth: number;
-    /** Height of the scrollable task viewport (excludes pinned axis). */
-    viewportBodyHeight: number;
-    /** Total SVG content height for all rows (may exceed viewport). */
+    /** Visible width of the plot/axis viewport (right of labels) */
+    plotViewportWidth: number;
+    /** Visible height of the body (above axis) */
+    bodyViewportHeight: number;
+    /** Rendered plot content width (may exceed plotViewportWidth → horizontal scroll) */
+    contentWidth: number;
+    /** Rendered body content height (may exceed bodyViewportHeight → vertical scroll) */
     contentHeight: number;
-    plotLeft: number;
     plotTop: number;
     axisHeight: number;
     rowHeight: number;
-    needsScroll: boolean;
+    needsVerticalScroll: boolean;
+    needsHorizontalScroll: boolean;
 }
 
-export const AXIS_HEIGHT = 28;
-export const TOP_PADDING = 4;
-export const RIGHT_PADDING = 12;
-export const DEFAULT_ROW_HEIGHT = 28;
-export const DEFAULT_LABEL_WIDTH = 160;
+export const AXIS_HEIGHT = 36;
+export const TOP_PADDING = 8;
+export const RIGHT_PADDING = 16;
+export const DEFAULT_ROW_HEIGHT = 36;
+export const DEFAULT_LABEL_WIDTH = 200;
+/** Keep bars readable: at least this many pixels per day on the time axis. */
+export const MIN_PIXELS_PER_DAY = 12;
+export const MIN_PLOT_WIDTH = 320;
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+export function daySpan(start: Date, end: Date): number {
+    return Math.max(1, (end.getTime() - start.getTime()) / MS_PER_DAY);
+}
 
 export function computeLayout(
     viewportWidth: number,
     viewportHeight: number,
     taskCount: number,
+    domainStart: Date,
+    domainEnd: Date,
     labelWidth: number = DEFAULT_LABEL_WIDTH,
     rowHeight: number = DEFAULT_ROW_HEIGHT
 ): ChartLayout {
     const width = Math.max(1, viewportWidth);
     const height = Math.max(1, viewportHeight);
-    const clampedLabel = Math.max(60, Math.min(labelWidth, Math.floor(width * 0.45)));
-    const safeRowHeight = Math.max(14, rowHeight);
+    const clampedLabel = Math.max(80, Math.min(labelWidth, Math.floor(width * 0.4)));
+    const safeRowHeight = Math.max(22, rowHeight);
     const axisHeight = AXIS_HEIGHT;
     const plotTop = TOP_PADDING;
-    const viewportBodyHeight = Math.max(1, height - axisHeight);
-    const contentHeight = Math.max(viewportBodyHeight, plotTop + taskCount * safeRowHeight);
-    const chartWidth = Math.max(1, width - clampedLabel - RIGHT_PADDING);
+
+    const plotViewportWidth = Math.max(1, width - clampedLabel);
+    const bodyViewportHeight = Math.max(1, height - axisHeight);
+
+    const days = daySpan(domainStart, domainEnd);
+    const contentWidth = Math.max(
+        MIN_PLOT_WIDTH,
+        plotViewportWidth,
+        Math.ceil(days * MIN_PIXELS_PER_DAY) + RIGHT_PADDING
+    );
+    const contentHeight = Math.max(
+        bodyViewportHeight,
+        plotTop + Math.max(1, taskCount) * safeRowHeight + 8
+    );
 
     return {
-        width,
-        height,
+        viewportWidth: width,
+        viewportHeight: height,
         labelWidth: clampedLabel,
-        chartWidth,
-        viewportBodyHeight,
+        plotViewportWidth,
+        bodyViewportHeight,
+        contentWidth,
         contentHeight,
-        plotLeft: clampedLabel,
         plotTop,
         axisHeight,
         rowHeight: safeRowHeight,
-        needsScroll: contentHeight > viewportBodyHeight + 1
+        needsVerticalScroll: contentHeight > bodyViewportHeight + 1,
+        needsHorizontalScroll: contentWidth > plotViewportWidth + 1
     };
 }
