@@ -1,0 +1,50 @@
+.gantt-root {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    font-family: "Segoe UI", wf_segoe-ui_normal, helvetica, arial, sans-serif;
+}
+
+.gantt-message {
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #605e5c;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.gantt-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.gantt-svg .task-bar {
+    shape-rendering: geometricPrecision;
+}
+
+.gantt-svg .task-milestone {
+    shape-rendering: geometricPrecision;
+}
+
+.gantt-svg .task-label {
+    pointer-events: none;
+    user-select: none;
+}
+
+.gantt-svg .x-axis path,
+.gantt-svg .x-axis line {
+    fill: none;
+    shape-rendering: crispEdges;
+}
+
+.gantt-svg .x-axis text {
+    font-size: 10px;
+}

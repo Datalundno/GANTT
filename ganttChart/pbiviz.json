@@ -1,0 +1,26 @@
+{
+  "visual": {
+    "name": "ganttChart",
+    "displayName": "Gantt Chart",
+    "guid": "ganttChartF8E34E29596A403E8E39808FA17C9CE9",
+    "visualClassName": "Visual",
+    "version": "1.0.0.0",
+    "description": "Internal custom Gantt chart visual for Power BI Desktop.",
+    "supportUrl": "https://localhost",
+    "gitHubUrl": ""
+  },
+  "apiVersion": "5.11.1",
+  "author": {
+    "name": "Internal",
+    "email": "dev@example.com"
+  },
+  "assets": {
+    "icon": "assets/icon.png"
+  },
+  "externalJS": null,
+  "style": "style/visual.less",
+  "capabilities": "capabilities.json",
+  "dependencies": null,
+  "stringResources": [],
+  "version": "1.0.0.0"
+}
