@@ -1,22 +1,21 @@
-# Support — Chartvik Gantt Chart
+# Support — DataLund Gantt
 
-## Get help
+**Canonical live URL:** https://datalund.no/support/
 
-- **GitHub Issues (preferred):** https://github.com/Chartvik/GANTT/issues
-- **Email:** jonas.lundervold@gmail.com
+## Contact
 
-## Before you open an issue
+- Website: https://datalund.no/support/
+- Product / help: https://datalund.no/visuals/gantt/
+- Email: jonas.lundervold@gmail.com
+- GitHub Issues: https://github.com/Chartvik/GANTT/issues
 
-1. Confirm you are on the latest `.pbiviz` from this repository or AppSource.
+## Before you open a ticket
+
+1. Confirm you are on the latest `.pbiviz` / AppSource version.
 2. Bind at least **Task** and **Start Date**, plus **End Date** or **Duration**.
-3. Include:
-   - Power BI Desktop / Service version
-   - Visual version (`pbiviz.json` / AppSource version)
-   - Screenshot of the field well bindings
-   - Sample (sanitized) data if possible
+3. Include Power BI version, visual version, field-well screenshot, and sanitized sample data if possible.
 
-## Documentation
+## Docs
 
-- Product README: `/ganttChart/README.md`
-- AppSource submission checklist: `/ganttChart/docs/APPSOURCE.md`
-- Sample Excel: `/ganttChart/downloads/GanttSampleData.xlsx`
+- AppSource checklist: [`APPSOURCE.md`](./APPSOURCE.md)
+- Sample Excel: `../downloads/GanttSampleData.xlsx`

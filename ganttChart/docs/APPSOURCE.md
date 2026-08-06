@@ -1,60 +1,41 @@
-# AppSource / Power BI Visualization Shop checklist
+# AppSource upload checklist — DataLund Gantt
 
-This visual is packaged for submission to [Microsoft AppSource (Power BI visuals)](https://appsource.microsoft.com/marketplace/apps?product=power-bi-visuals).
+Publisher brand: **DataLund** (`datalund.no`)  
+Visual display name: **DataLund Gantt**  
+GUID (never change after first publish): `ganttChartF8E34E29596A403E8E39808FA17C9CE9`
 
-Keep the visual **GUID** stable forever: `ganttChartF8E34E29596A403E8E39808FA17C9CE9`.
+This checklist is written to stay within Microsoft Marketplace / Power BI visual policies (including [§1180](https://learn.microsoft.com/en-us/legal/marketplace/certification-policies#1180-power-bi-visuals)). It is practical guidance, not legal advice.
 
-## Package metadata (done in repo)
+---
 
-| Field | Value |
+## 0) Naming recommendation
+
+| Option | Verdict |
 | --- | --- |
-| Display name | Gantt Chart |
-| Version | See `pbiviz.json` (four-part `x.x.x.x`) |
-| Author | Chartvik / jonas.lundervold@gmail.com |
-| Support URL | https://github.com/Chartvik/GANTT/issues |
-| GitHub URL | https://github.com/Chartvik/GANTT |
-| Privacy policy | https://github.com/Chartvik/GANTT/blob/main/ganttChart/docs/PRIVACY.md *(use `main` after merge)* |
-| Pane icon | `assets/icon.png` (20×20) |
-| Store logo | `assets/store/logo-300.png` (300×300 PNG) |
+| **DataLund Gantt** (chosen) | Branded, searchable, under 50 chars, not a Microsoft trademark |
+| “Gantt Chart” alone | Too generic; hard to find; easy to look like a Microsoft-owned visual |
+| Names with “Microsoft”, “Power BI Certified”, or Office logos | Avoid — trademark / affiliation risk |
 
-## Visual capabilities required by AppSource guidelines
+In Partner Center **Offer name**, use **DataLund Gantt**.  
+Offer ID example (immutable): `datalund-gantt` (lowercase, hyphens OK).
 
-Implemented in this package:
+---
 
-- [x] Context menu on empty space **and** data points
-- [x] Landing page (`supportsLandingPage` + `supportsEmptyDataView`)
-- [x] Keyboard focus capability (`supportsKeyboardFocus`)
-- [x] Host tooltips + selection / cross-filter
-- [x] High-contrast palette support
-- [x] English `stringResources`
-- [x] No external network privileges (`privileges: []`)
-- [x] Rendering events (`renderingStarted` / `Finished` / `Failed`)
+## 1) Before Partner Center — go-live on datalund.no
 
-## Partner Center assets you must upload
+Do this **first**. AppSource rejects broken privacy/support links.
 
-Create these outside the package (Partner Center listing):
+- [ ] Point DNS for `datalund.no` at your host (see `/website/README.md`)
+- [ ] Deploy the `/website` folder so these resolve over **HTTPS**:
+  - [ ] `https://datalund.no/visuals/gantt/` ← Help / learn more
+  - [ ] `https://datalund.no/support/` ← Support (must be **different** from Help)
+  - [ ] `https://datalund.no/privacy/` ← Privacy policy
+- [ ] Open each URL in a private browser window (no login wall)
+- [ ] Confirm privacy policy accurately describes: no telemetry, no external calls, sandbox-only
 
-| Asset | Spec | Status |
-| --- | --- | --- |
-| `.pbiviz` package | Built with `pbiviz package` | `downloads/ganttChart.pbiviz` |
-| Sample `.pbix` | Offline sample report highlighting value | **Create in Power BI Desktop** using `downloads/GanttSampleData.xlsx` |
-| Logo | PNG **300×300** | `assets/store/logo-300.png` |
-| Screenshots | 1–5 PNG, **1366×768**, ≤1024 KB, with callout text | Capture in Desktop; mock starter: `assets/store/screenshot-placeholder-1366x768.png` |
-| Support URL | `https://…` | GitHub Issues (or your site) |
-| Privacy URL | `https://…` | `docs/PRIVACY.md` on GitHub |
-| EULA | Standard Microsoft contract, PBI visuals contract, or custom | MIT license + Partner Center legal tab |
+---
 
-### Screenshot ideas (1366×768)
-
-1. Full Gantt with groups expanded, progress fills, today line  
-2. Color-by-resource + tooltips  
-3. Week-number axis labels + weekend shading  
-4. Milestones + collapsed groups  
-5. Format pane open showing Bars / Labels / General  
-
-Add short text bubbles explaining the feature shown.
-
-## Build & certification hygiene
+## 2) Build the submission package
 
 From `ganttChart/`:
 
@@ -62,23 +43,175 @@ From `ganttChart/`:
 npm install
 npm run lint
 pbiviz package
-pbiviz package --certification-audit
-npm audit
+pbiviz package --certification-audit   # expect: no external requests
+npm audit                              # expect: 0 high/moderate ideally
 ```
 
-For **Power BI certification** (optional, after AppSource publish):
+- [ ] Use packaged file: `dist/ganttChart…1.6.0.0.pbiviz` (also copied to `downloads/ganttChart.pbiviz`)
+- [ ] Confirm `pbiviz.json` has real author name/email, supportUrl, description (no `localhost`)
+- [ ] GUID unchanged
+- [ ] Store logo ready: `assets/store/logo-300.png` (exactly **300×300** PNG, sharp, not blurry)
 
-1. Publish to AppSource first (recommended).
-2. Create a lowercase `certification` branch matching the submitted package.
-3. Ensure `.gitignore` excludes `node_modules`, `.tmp`, `dist`.
-4. In Partner Center, check **Request Power BI certification** and provide source access notes for `pbicvsupport`.
+### Sample `.pbix` (required)
 
-## Submit
+- [ ] In Power BI Desktop, create a report using `downloads/GanttSampleData.xlsx`
+- [ ] Import **this same** `.pbiviz` version
+- [ ] Show progress, groups, milestones, today line, and format pane
+- [ ] Add a short “Tips” page
+- [ ] Save offline `.pbix` (no live gateway / external dataset required to open)
+- [ ] Version of visual inside `.pbix` **matches** the uploaded `.pbiviz`
 
-1. Enroll in [Partner Center](https://partner.microsoft.com/dashboard).
-2. Create a **Power BI visual** offer.
-3. Upload `.pbiviz`, sample `.pbix`, logo, screenshots, privacy/support links, EULA.
-4. Do **not** change the GUID on updates.
-5. After approval, optionally request certification.
+### Screenshots (required)
 
-Docs: [Publish Power BI visuals](https://learn.microsoft.com/en-us/power-bi/developer/visuals/office-store) · [Guidelines](https://learn.microsoft.com/en-us/power-bi/developer/visuals/guidelines-powerbi-visuals) · [Certification](https://learn.microsoft.com/en-us/power-bi/developer/visuals/power-bi-custom-visuals-certified)
+- [ ] 1–5 PNG screenshots, exactly **1366×768**, each ≤ **1024 KB**
+- [ ] Capture real Power BI Desktop UI (replace the mock in `assets/store/screenshot-placeholder-1366x768.png`)
+- [ ] Add short callout text for key features
+- [ ] No misleading Microsoft logos implying Microsoft built your visual
+- [ ] Inclusive / accessible imagery (Partner Center expectation)
+
+---
+
+## 3) TOS / policy self-check (do not skip)
+
+### Pricing & acquisition (§1180.1)
+
+- [ ] Listing is **free** to acquire from AppSource
+- [ ] If you later add paid features, mark “additional purchase may be required”, keep prior free features free, and follow IAP guidelines — **this visual currently has no IAP**
+
+### Functionality (§1180.2)
+
+- [ ] Works in Power BI Desktop **and** Power BI service
+- [ ] Context menu on empty space **and** on data points (implemented)
+- [ ] Pin to dashboard, filters, focus mode, formatting behave reasonably
+- [ ] Handles strings, empties, negatives, large row counts, large numbers without console crashes
+- [ ] Does **not** open external windows / sites without explicit user action
+- [ ] Does **not** ask users to install extra files
+- [ ] Does **not** ask for Microsoft credentials outside approved OAuth (N/A — no auth)
+- [ ] No pop-ups except user-triggered (N/A — none)
+- [ ] No unreasonable privileges (`privileges: []`)
+
+### Listing honesty
+
+- [ ] Description does **not** claim Microsoft affiliation or “official Microsoft visual”
+- [ ] Description does **not** claim **Power BI Certified** until Microsoft actually certifies it
+- [ ] Do not use Microsoft product logos as your commercial logo
+- [ ] Screenshots match real product behavior
+- [ ] Privacy policy matches reality (this visual has no outbound network)
+
+### Intellectual property
+
+- [ ] You own or have rights to name **DataLund**, logo, screenshots, sample data
+- [ ] No scraped third-party charts / stock you cannot license
+- [ ] MIT license in repo is fine for source; Partner Center still needs an **EULA** selection (standard Microsoft contract **or** [Power BI visuals default EULA PDF](https://visuals.azureedge.net/app-store/Power%20BI%20-%20Default%20Custom%20Visual%20EULA.pdf) **or** your own)
+
+### Certification (optional, later)
+
+- [ ] Publish to AppSource first (recommended), then request certification
+- [ ] Certification needs a `certification` branch matching the package, source access for Microsoft, `npm audit` / eslint clean, no external calls
+- [ ] Do **not** check certification until those are ready — false certification claims violate listing rules
+
+---
+
+## 4) Partner Center account
+
+- [ ] Create / sign in to [Partner Center](https://partner.microsoft.com/dashboard)
+- [ ] Enroll in **Microsoft Marketplace** (commercial marketplace) program
+- [ ] Complete publisher profile (legal business info, tax/payout as required — even for free visuals)
+- [ ] Use a work email if required by enrollment path
+- [ ] Publisher display name should be **DataLund** (or your legal entity that owns datalund.no)
+
+---
+
+## 5) Create the Power BI visual offer
+
+1. Partner Center → Marketplace offers → **New offer** → **Power BI visual**
+2. **Offer ID:** `datalund-gantt` (cannot change later)
+3. **Offer alias:** internal name, e.g. `DataLund Gantt`
+4. Product setup:
+   - [ ] Free (not “requires purchase of a service” unless you truly have IAP)
+   - [ ] Do **not** request Power BI certification on the first pass unless repo/`certification` branch is ready
+
+### Properties / legal
+
+- [ ] Categories appropriate for project / timeline visuals
+- [ ] EULA: prefer **Standard Contract** *or* Power BI default visual EULA link (simplest TOS-safe path)
+- [ ] Privacy URL: `https://datalund.no/privacy/`
+- [ ] Support document URL: `https://datalund.no/support/`
+
+### Offer listing
+
+- [ ] Name: `DataLund Gantt`
+- [ ] Summary (≤100 chars), e.g.  
+  `Free Power BI Gantt for tasks, progress, milestones, groups, and resources.`
+- [ ] Description: value, how to bind fields, features, link to `https://datalund.no/visuals/gantt/`, state it is free, state it works offline in the sandbox
+- [ ] Keywords (up to 3): e.g. `gantt`, `timeline`, `project`
+- [ ] Logo: 300×300 PNG
+- [ ] Screenshots: 1366×768 PNGs + captions
+- [ ] Optional video (YouTube/Vimeo HTTPS)
+
+### Packages
+
+- [ ] Upload `.pbiviz`
+- [ ] Upload sample `.pbix`
+- [ ] Notes for certification / reviewers: brief test instructions, field bindings, link to source if requesting certification
+
+### Availability
+
+- [ ] Markets / countries you can support
+- [ ] Hide from discovery only if you intentionally want soft-launch (usually leave discoverable)
+
+---
+
+## 6) Pre-submit test matrix (rejection prevention)
+
+Run through [submission testing](https://learn.microsoft.com/en-us/power-bi/developer/visuals/submission-testing):
+
+- [ ] Convert column chart ↔ DataLund Gantt without errors
+- [ ] Selection cross-filters other visuals; other visuals filter this one
+- [ ] Remove fields in random order — no console errors
+- [ ] Format pane with empty / partial buckets
+- [ ] Filters + slicers; tooltips stay correct
+- [ ] Resize / scroll / pin to dashboard
+- [ ] Reading view + edit view
+- [ ] Bad data: nulls, inverted dates, huge row counts
+- [ ] High contrast (Windows) smoke test
+- [ ] Touch / click targets usable
+
+---
+
+## 7) Submit & after approval
+
+- [ ] **Save draft** → **Review and publish** → submit
+- [ ] Watch Partner Center certification / validation email
+- [ ] AppSource listing link appears hours after approval; Desktop/Service catalog can take **~10–14 days** to update
+- [ ] Do **not** change GUID on updates; bump four-part version (`1.6.0.0` → `1.6.1.0` / `1.7.0.0`)
+- [ ] Keep datalund.no privacy/support pages online for the life of the listing
+
+---
+
+## 8) What this repo already satisfies
+
+| Requirement | Status |
+| --- | --- |
+| Context menu (empty + datapoint) | Done |
+| Landing page | Done |
+| No external network privileges | Done |
+| Certification audit (no fetch/XHR) | Done |
+| English string resources | Done |
+| allowInteractions | Done |
+| Real support/privacy target URLs | Point to datalund.no (deploy site) |
+| 300×300 logo | `ganttChart/assets/store/logo-300.png` |
+| Sample Excel | `ganttChart/downloads/GanttSampleData.xlsx` |
+| Sample `.pbix` | **You create in Desktop** |
+| Live HTTPS pages | **You deploy `/website`** |
+
+---
+
+## Official docs
+
+- [Publish Power BI visuals](https://learn.microsoft.com/en-us/power-bi/developer/visuals/office-store)
+- [Create Power BI visual offer](https://learn.microsoft.com/en-us/partner-center/marketplace-offers/power-bi-visual-offer-setup)
+- [Offer listing details](https://learn.microsoft.com/en-us/partner-center/marketplace-offers/power-bi-visual-offer-listing)
+- [Submission testing](https://learn.microsoft.com/en-us/power-bi/developer/visuals/submission-testing)
+- [Marketplace certification policies §1180](https://learn.microsoft.com/en-us/legal/marketplace/certification-policies#1180-power-bi-visuals)
+- [Power BI certification (optional)](https://learn.microsoft.com/en-us/power-bi/developer/visuals/power-bi-custom-visuals-certified)

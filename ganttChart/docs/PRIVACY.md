@@ -1,12 +1,13 @@
-# Privacy Policy — Chartvik Gantt Chart
+# Privacy Policy — DataLund Gantt
 
+**Canonical live URL:** https://datalund.no/privacy/  
 **Last updated:** 2026-08-06  
-**Publisher:** Chartvik  
-**Product:** Gantt Chart custom visual for Microsoft Power BI
+**Publisher:** DataLund  
+**Product:** DataLund Gantt custom visual for Microsoft Power BI
 
 ## Summary
 
-The Chartvik Gantt Chart visual runs entirely inside the Power BI sandbox. It does **not** collect, store, transmit, or sell personal data.
+DataLund Gantt runs entirely inside the Power BI sandbox. It does **not** collect, store, transmit, or sell personal data.
 
 ## Data processing
 
@@ -20,12 +21,9 @@ The visual declares no network or storage privileges in `capabilities.json`.
 
 ## Contact
 
-For privacy questions about this visual, open an issue at:
-
-https://github.com/Chartvik/GANTT/issues
-
-Or email: jonas.lundervold@gmail.com
+- Privacy / support site: https://datalund.no/support/
+- Email: jonas.lundervold@gmail.com
 
 ## Changes
 
-If this policy changes, the updated version will be published in this repository and linked from the AppSource listing.
+If this policy changes, the updated version will be published at https://datalund.no/privacy/ and reflected in the AppSource listing.
