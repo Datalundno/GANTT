@@ -1,29 +1,21 @@
-# GANTT / Datalund
+# DataLund Gantt
 
-Power BI custom visuals and the **Datalund** marketing site ([datalund.no](https://datalund.no)).
+Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.no](https://datalund.no/)).
 
 | Path | Purpose |
 | --- | --- |
-| [`ganttChart/`](ganttChart/) | **DataLund Gantt** Power BI visual + AppSource package |
-| [`website/`](website/) | Public site (Vite) for datalund.no |
-| [`ganttChart/docs/APPSOURCE.md`](ganttChart/docs/APPSOURCE.md) | Step-by-step AppSource upload checklist (TOS-safe) |
-
-## Live URLs (after Pages deploy)
-
-- https://datalund.no/
-- https://datalund.no/visuals/gantt/ (Help)
-- https://datalund.no/support/
-- https://datalund.no/privacy/
+| [`ganttChart/`](ganttChart/) | Power BI visual + AppSource package |
+| [`ganttChart/docs/APPSOURCE.md`](ganttChart/docs/APPSOURCE.md) | AppSource upload checklist |
 
 ## Website
 
-```bash
-cd website
-npm install
-npm run dev
-```
+Marketing and AppSource support pages live in a separate repo:
 
-Deployed with GitHub Pages. DNS: [`website/DOMAIN.md`](website/DOMAIN.md).
+**https://github.com/Datalundno/Website** → [datalund.no](https://datalund.no)
+
+- https://datalund.no/visuals/gantt/ (Help)
+- https://datalund.no/support/
+- https://datalund.no/privacy/
 
 ## Visual package
 

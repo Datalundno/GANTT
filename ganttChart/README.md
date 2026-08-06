@@ -6,7 +6,7 @@ Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.n
 - Support: https://datalund.no/support/
 - Privacy: https://datalund.no/privacy/
 - **AppSource step-by-step (TOS-safe):** [`docs/APPSOURCE.md`](docs/APPSOURCE.md)
-- Site: [`/website`](../website/README.md) (Vite + GitHub Pages)
+- Site: [Datalundno/Website](https://github.com/Datalundno/Website)
 
 ## Download (latest package)
 
