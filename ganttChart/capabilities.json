@@ -253,6 +253,14 @@
                     "type": {
                         "bool": true
                     }
+                },
+                "showTimeWindow": {
+                    "displayName": "Show time window",
+                    "displayNameKey": "Prop_ShowTimeWindow",
+                    "description": "Toolbar buttons for 3 / 6 / 9 / 12 months and All.",
+                    "type": {
+                        "bool": true
+                    }
                 }
             }
         }
