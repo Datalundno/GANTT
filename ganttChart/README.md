@@ -1,8 +1,8 @@
 # DataLund Gantt Lab (experimental branch)
 
-> **Not for AppSource.** Stable store visual lives on `main`. This branch is a playground: toolbar time windows, dependency arrows, status colors, richer graphics.
+> **Not for AppSource or the public website download.** Stable store visual lives on `main`.
 
-See [`docs/EXPERIMENTAL.md`](docs/EXPERIMENTAL.md).
+See [`docs/EXPERIMENTAL.md`](docs/EXPERIMENTAL.md) — including why Lab should **not** replace the simpler website package yet.
 
 | | Value |
 | --- | --- |
@@ -16,7 +16,7 @@ cd ganttChart
 npm install
 npm run lint
 pbiviz package
-cp dist/ganttChartLab9F2E4A1B7C8D4056AE12F34B56C78D90.0.1.0.0.pbiviz downloads/DataLundGanttLab.pbiviz
+cp dist/ganttChartLab9F2E4A1B7C8D4056AE12F34B56C78D90.*.pbiviz downloads/DataLundGanttLab.pbiviz
 ```
 
-Import the Lab `.pbiviz` alongside the stable visual — different GUID, so both can coexist in Desktop.
+Import Lab alongside the stable visual — different GUID, so both can coexist in Desktop.

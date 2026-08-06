@@ -159,27 +159,6 @@ class LabCardSettings extends FormattingSettingsCard {
         value: true
     });
 
-    showStatusLegend = new formattingSettings.ToggleSwitch({
-        name: "showStatusLegend",
-        displayName: "Show status legend",
-        displayNameKey: "Prop_ShowStatusLegend",
-        value: false
-    });
-
-    colorByStatus = new formattingSettings.ToggleSwitch({
-        name: "colorByStatus",
-        displayName: "Color by status",
-        displayNameKey: "Prop_ColorByStatus",
-        value: true
-    });
-
-    showProgress = new formattingSettings.ToggleSwitch({
-        name: "showProgress",
-        displayName: "Show progress",
-        displayNameKey: "Prop_ShowProgress",
-        value: false
-    });
-
     showBaseline = new formattingSettings.ToggleSwitch({
         name: "showBaseline",
         displayName: "Show planned bars",
@@ -194,18 +173,39 @@ class LabCardSettings extends FormattingSettingsCard {
         value: true
     });
 
-    fancyGraphics = new formattingSettings.ToggleSwitch({
+    colorByStatus = new formattingSettings.ToggleSwitch({
+        name: "colorByStatus",
+        displayName: "Color by status",
+        displayNameKey: "Prop_ColorByStatus",
+        value: false
+    });
+
+    showStatusLegend = new formattingSettings.ToggleSwitch({
+        name: "showStatusLegend",
+        displayName: "Show status legend",
+        displayNameKey: "Prop_ShowStatusLegend",
+        value: false
+    });
+
+    showProgress = new formattingSettings.ToggleSwitch({
+        name: "showProgress",
+        displayName: "Show progress",
+        displayNameKey: "Prop_ShowProgress",
+        value: false
+    });
+
+    enhancedGraphics = new formattingSettings.ToggleSwitch({
         name: "fancyGraphics",
-        displayName: "Fancy graphics",
+        displayName: "Rounded bars",
         displayNameKey: "Prop_FancyGraphics",
-        value: true
+        value: false
     });
 
     animateBars = new formattingSettings.ToggleSwitch({
         name: "animateBars",
         displayName: "Animate bars",
         displayNameKey: "Prop_AnimateBars",
-        value: true
+        value: false
     });
 
     showMonthGrid = new formattingSettings.ToggleSwitch({
@@ -220,12 +220,12 @@ class LabCardSettings extends FormattingSettingsCard {
     displayNameKey: string = "Objects_Lab";
     slices: Array<FormattingSettingsSlice> = [
         this.showToolbar,
-        this.showStatusLegend,
-        this.colorByStatus,
-        this.showProgress,
         this.showBaseline,
         this.showDependencies,
-        this.fancyGraphics,
+        this.colorByStatus,
+        this.showStatusLegend,
+        this.showProgress,
+        this.enhancedGraphics,
         this.animateBars,
         this.showMonthGrid
     ];

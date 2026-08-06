@@ -624,7 +624,7 @@ export function renderLabelRows(
         .text((d) => d.collapsed ? "▸" : "▾");
 
     merged.select<SVGCircleElement>("circle.label-status")
-        .attr("display", (d) => d.kind === "task" && d.task ? null : "none")
+        .attr("display", (d) => (d.kind === "task" && d.task && getStatusColor ? null : "none"))
         .attr("cx", 12)
         .attr("cy", bandwidth / 2)
         .attr("r", 3.5)
@@ -632,19 +632,19 @@ export function renderLabelRows(
             if (d.task && getStatusColor) {
                 return getStatusColor(d.task);
             }
-            const status = d.task?.status;
-            if (status === "done") return "#2DD4BF";
-            if (status === "late") return "#FB7185";
-            if (status === "atrisk") return "#FBBF24";
-            if (status === "future") return "#94A3B8";
-            return "#22D3EE";
+            return "transparent";
         });
 
     merged.select<SVGTextElement>("text.label-text")
-        .attr("x", (d) => d.kind === "group" ? 24 : labelWidth - 10)
+        .attr("x", (d) => {
+            if (d.kind === "group") {
+                return 24;
+            }
+            return getStatusColor ? 22 : 10;
+        })
         .attr("y", bandwidth / 2)
         .attr("dy", "0.35em")
-        .attr("text-anchor", (d) => d.kind === "group" ? "start" : "end")
+        .attr("text-anchor", (d) => d.kind === "group" ? "start" : "start")
         .attr("fill", textColor)
         .style("font-size", `${fontSize}px`)
         .style("font-family", fontFamily)

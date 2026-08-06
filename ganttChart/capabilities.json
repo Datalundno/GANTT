@@ -332,7 +332,7 @@
                     }
                 },
                 "fancyGraphics": {
-                    "displayName": "Fancy graphics",
+                    "displayName": "Rounded bars",
                     "displayNameKey": "Prop_FancyGraphics",
                     "type": {
                         "bool": true

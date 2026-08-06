@@ -208,9 +208,9 @@ export class Visual implements IVisual {
     }
 
     private buildToolbar(): void {
-        const brand = this.toolbar.append("div").classed("gantt-toolbar-brand", true);
-        brand.append("span").classed("gantt-toolbar-mark", true).attr("aria-hidden", "true");
-        brand.append("span").classed("gantt-toolbar-title", true).text("Gantt Lab");
+        this.toolbar.append("span")
+            .classed("gantt-toolbar-title", true)
+            .text("Lab");
 
         const windows = this.toolbar.append("div").classed("gantt-toolbar-group", true);
         const windowOptions: Array<{ label: string; value: TimeWindowMonths }> = [
@@ -360,14 +360,6 @@ export class Visual implements IVisual {
 
         const card = this.landing.append("div").classed("gantt-landing-card", true);
 
-        card.append("div")
-            .classed("gantt-landing-mark", true)
-            .attr("aria-hidden", "true");
-
-        card.append("p")
-            .classed("gantt-landing-eyebrow", true)
-            .text("Experimental");
-
         card.append("h2")
             .classed("gantt-landing-title", true)
             .text(this.t("Landing_Title", "DataLund Gantt Lab"));
@@ -376,15 +368,15 @@ export class Visual implements IVisual {
             .classed("gantt-landing-subtitle", true)
             .text(this.t(
                 "Landing_Subtitle",
-                "Time windows, dependency arrows, status colors, and richer graphics — not for AppSource."
+                "Add Task, Start Date, and End Date. Optional fields unlock planned bars, groups, and dependencies."
             ));
 
         const steps = card.append("ul").classed("gantt-landing-steps", true);
         const stepKeys: Array<[string, string]> = [
-            ["Landing_Step1", "1. Required: Task + Start Date + End Date"],
-            ["Landing_Step2", "2. Optional: Planned Start / Planned End (baseline)"],
-            ["Landing_Step3", "3. Optional: Group, Resource, Predecessor"],
-            ["Landing_Step4", "4. Optional: Progress, Duration, Tooltips"]
+            ["Landing_Step1", "Task + Start Date + End Date"],
+            ["Landing_Step2", "Optional: Planned Start / Planned End"],
+            ["Landing_Step3", "Optional: Group, Resource, Predecessor"],
+            ["Landing_Step4", "Format → Lab for toolbar and extras"]
         ];
         for (const [key, fallback] of stepKeys) {
             steps.append("li").text(this.t(key, fallback));
@@ -590,7 +582,7 @@ export class Visual implements IVisual {
             .style("display", showStatusLegend ? "inline-flex" : "none");
         this.syncToolbarActive();
 
-        const toolbarHeight = showToolbar ? 44 : 0;
+        const toolbarHeight = showToolbar ? 40 : 0;
         const labelWidth = this.formattingSettings?.labelsCard?.width?.value ?? 210;
         const barHeight = this.formattingSettings?.barsCard?.barHeight?.value ?? 22;
         const rowHeight = Math.max(28, barHeight + 12);
@@ -628,9 +620,9 @@ export class Visual implements IVisual {
         this.hideMessage();
 
         const contrast = getContrastColors(this.host.colorPalette);
-        const fancy = (this.formattingSettings?.labCard?.fancyGraphics?.value ?? true) && !contrast.isHighContrast;
-        const animate = (this.formattingSettings?.labCard?.animateBars?.value ?? true) && !this.didAnimateOnce && fancy;
-        const colorByStatus = this.formattingSettings?.labCard?.colorByStatus?.value ?? true;
+        const fancy = (this.formattingSettings?.labCard?.enhancedGraphics?.value ?? false) && !contrast.isHighContrast;
+        const animate = (this.formattingSettings?.labCard?.animateBars?.value ?? false) && !this.didAnimateOnce;
+        const colorByStatus = this.formattingSettings?.labCard?.colorByStatus?.value ?? false;
         const showProgress = this.formattingSettings?.labCard?.showProgress?.value ?? false;
         const showBaseline = this.formattingSettings?.labCard?.showBaseline?.value ?? true;
         const showDependencies = this.formattingSettings?.labCard?.showDependencies?.value ?? true;
@@ -691,10 +683,7 @@ export class Visual implements IVisual {
             return defaultProgressFill;
         };
 
-        this.root
-            .style("background", contrast.isHighContrast
-                ? contrast.background
-                : "linear-gradient(180deg, #F4FAF7 0%, #EEF6F2 48%, #E8F2EE 100%)");
+        this.root.style("background", contrast.background);
 
         this.labelsCol
             .style("width", `${layout.labelWidth}px`)
@@ -764,10 +753,12 @@ export class Visual implements IVisual {
             zebraFill,
             bandFill,
             (groupKey) => this.toggleGroup(groupKey),
-            (task) => {
-                const status = computeTaskStatus(task.start, task.end, task.progress, new Date(), showProgress);
-                return STATUS_COLORS[status].progress;
-            }
+            colorByStatus
+                ? (task) => {
+                    const status = computeTaskStatus(task.start, task.end, task.progress, new Date(), showProgress);
+                    return STATUS_COLORS[status].progress;
+                }
+                : undefined
         );
 
         renderMonthGrid(

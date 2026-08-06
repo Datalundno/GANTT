@@ -1,53 +1,44 @@
-# DataLund Gantt Lab (experimental)
+# DataLund Gantt Lab
 
-**Not for AppSource.** This branch pushes the visual with lab-only features so you can try ideas without touching the store package.
+Personal / experimental build. Separate visual identity from the AppSource package so both can sit in one `.pbix`.
 
-| | Stable (AppSource) | Lab (this branch) |
-| --- | --- | --- |
-| Display name | DataLund Gantt | **DataLund Gantt Lab** |
+| | Stable (AppSource) | Lab |
+|---|---|---|
+| Display name | DataLund Gantt | DataLund Gantt Lab |
 | GUID | `ganttChartF8E34E29596A403E8E39808FA17C9CE9` | `ganttChartLab9F2E4A1B7C8D4056AE12F34B56C78D90` |
-| Download | `DataLundGantt.pbiviz` (main) | `downloads/DataLundGanttLab.pbiviz` |
-| Coexist in Desktop? | Yes — different GUID |
+| Package | `downloads/DataLundGantt.pbiviz` | `downloads/DataLundGanttLab.pbiviz` |
 
-## Lab features
+## Should Lab replace the website download?
 
-- **Time window toolbar** — 3M / 6M / 9M / 12M / All (centered on today)
-- **Expand / Collapse all** groups
-- **Dependency arrows** — bind **Predecessor** (task name of the upstream task, finish-to-start)
-- **Planned vs actual** — optional **Planned Start / Planned End**; thinner baseline bars under actual (Format → Lab → Show planned bars)
-- **Status colors** — done / late / at risk / on track / future (format pane toggle)
-- **Status legend** — Done / Late / … chips on the toolbar (**off by default**; Format → Lab → Show status legend)
-- **Progress fill** — optional (**off by default**; Format → Lab → Show progress)
-- **Richer graphics** — gradients, progress sheen, milestone gems, today marker + label, month grid, bar motion
-- **Weekend shading** on by default
+**No.** Keep **DataLund Gantt** (stable) as the public download on datalund.no and for AppSource.
 
-## Field wells
+| Audience | Offer |
+|---|---|
+| Website visitors / AppSource | Stable — fewer fields, familiar chart |
+| You / early testers | Lab — optional extras, still simple defaults |
 
-**Required:** Task + Start Date + End Date (Duration can replace End Date).
+Lab can be a secondary “Preview / Lab” link later if you want. Do not make it the primary download until you are ready to certify those extras (or drop them from the certified build).
 
-| Well | Required? | Purpose |
-| --- | --- | --- |
-| Task | Yes | Task name |
-| Start Date | Yes | Actual / current start |
-| End Date | Yes* | Actual / current end (*or Duration) |
-| Duration | No | Alternative to End Date |
-| Planned Start | No | Baseline / plan start |
-| Planned End | No | Baseline / plan end |
-| Progress | No | % complete (Format → Lab → Show progress) |
-| Group / Resource / Predecessor / Tooltips | No | Layout, color, FS links, extras |
+## Required vs optional
+
+**Required:** Task, Start Date, and End Date (or Duration instead of End).
+
+**Optional:** Category, Progress, Status, Planned Start/End, Predecessor, Milestone, Description.
+
+## What Lab adds (all optional)
+
+- Toolbar: 3 / 6 / 9 / 12 months and All
+- Expand / collapse categories
+- Planned baseline (when Planned Start/End are mapped)
+- Soft FS dependency lines (when Predecessor is mapped)
+- Format pane **Lab**: status colors, legend, progress, baseline, deps, rounded bars, animation, month grid
+
+**Quiet by default:** status colors, legend, progress, rounded bars, animation, and month grid are **off**. Baseline and dependencies stay **on** so mapped fields appear without opening Format.
 
 ## Build
 
 ```bash
 cd ganttChart
-npm install
-npm run lint
-pbiviz package
-cp dist/ganttChartLab9F2E4A1B7C8D4056AE12F34B56C78D90.0.1.0.0.pbiviz downloads/DataLundGanttLab.pbiviz
+npm run package
+# → dist/datalundGanttLab.*.pbiviz → copy to downloads/DataLundGanttLab.pbiviz
 ```
-
-## Notes
-
-- Lab chrome (toolbar buttons) is intentional; do not copy into the AppSource visual without a design pass and certification review.
-- Prefer Power BI date slicers for production windowing; the toolbar is for exploration.
-- Dependency matching is by exact task name (first match wins).
