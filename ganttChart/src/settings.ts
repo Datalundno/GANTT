@@ -26,14 +26,14 @@ class BarsCardSettings extends FormattingSettingsCard {
         name: "barHeight",
         displayName: "Bar height",
         displayNameKey: "Prop_BarHeight",
-        value: 30
+        value: 22
     });
 
     cornerRadius = new formattingSettings.NumUpDown({
         name: "cornerRadius",
         displayName: "Corner radius",
         displayNameKey: "Prop_CornerRadius",
-        value: 7
+        value: 3
     });
 
     fill = new formattingSettings.ColorPicker({
@@ -212,7 +212,7 @@ class LabCardSettings extends FormattingSettingsCard {
         name: "showMonthGrid",
         displayName: "Month grid",
         displayNameKey: "Prop_ShowMonthGrid",
-        value: true
+        value: false
     });
 
     name: string = "lab";

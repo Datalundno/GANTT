@@ -592,8 +592,8 @@ export class Visual implements IVisual {
 
         const toolbarHeight = showToolbar ? 44 : 0;
         const labelWidth = this.formattingSettings?.labelsCard?.width?.value ?? 210;
-        const barHeight = this.formattingSettings?.barsCard?.barHeight?.value ?? 30;
-        const rowHeight = barHeight + 14;
+        const barHeight = this.formattingSettings?.barsCard?.barHeight?.value ?? 22;
+        const rowHeight = Math.max(28, barHeight + 12);
         const displayRows = buildDisplayRows(this.viewModel.tasks, this.collapsedGroups);
         const domain = this.resolveDomain();
 
@@ -634,7 +634,7 @@ export class Visual implements IVisual {
         const showProgress = this.formattingSettings?.labCard?.showProgress?.value ?? false;
         const showBaseline = this.formattingSettings?.labCard?.showBaseline?.value ?? true;
         const showDependencies = this.formattingSettings?.labCard?.showDependencies?.value ?? true;
-        const showMonthGrid = this.formattingSettings?.labCard?.showMonthGrid?.value ?? true;
+        const showMonthGrid = this.formattingSettings?.labCard?.showMonthGrid?.value ?? false;
 
         const defaultBarFill = contrast.isHighContrast
             ? contrast.foreground
@@ -746,12 +746,12 @@ export class Visual implements IVisual {
             rowIds,
             0,
             contentRowsHeight,
-            0.28
+            0.18
         );
 
         const weekendFill = contrast.isHighContrast
             ? contrast.foreground
-            : "rgba(15, 61, 54, 0.055)";
+            : "rgba(15, 61, 54, 0.035)";
 
         renderLabelRows(
             this.labelLayer,
@@ -776,8 +776,8 @@ export class Visual implements IVisual {
             domainStart,
             domainEnd,
             contentRowsHeight,
-            contrast.isHighContrast ? contrast.foreground : "rgba(15, 61, 54, 0.16)",
-            showMonthGrid && fancy
+            contrast.isHighContrast ? contrast.foreground : "rgba(15, 61, 54, 0.1)",
+            showMonthGrid && !contrast.isHighContrast
         );
 
         renderWeekendShading(
@@ -799,7 +799,7 @@ export class Visual implements IVisual {
             tasksById,
             xScale,
             yScale,
-            contrast.isHighContrast ? contrast.foreground : "#145C4F",
+            contrast.isHighContrast ? contrast.foreground : "rgba(20, 92, 79, 0.65)",
             showDependencies
         );
 
@@ -830,7 +830,7 @@ export class Visual implements IVisual {
             showBaseline,
             baselineFill: contrast.isHighContrast
                 ? contrast.foreground
-                : "rgba(100, 116, 139, 0.55)",
+                : "rgba(148, 163, 184, 0.55)",
             onClick: (event, task) => this.onBarClick(event, task),
             onContextMenu: (event, task) => this.onBarContextMenu(event, task),
             onMouseMove: (event, task) => this.onBarMouseMove(event, task),

@@ -21,13 +21,13 @@ export interface ChartLayout {
     needsHorizontalScroll: boolean;
 }
 
-export const AXIS_HEIGHT = 36;
-export const TOP_PADDING = 8;
-export const RIGHT_PADDING = 16;
+export const AXIS_HEIGHT = 44;
+export const TOP_PADDING = 6;
+export const RIGHT_PADDING = 20;
 export const DEFAULT_ROW_HEIGHT = 36;
 export const DEFAULT_LABEL_WIDTH = 200;
 /** Keep bars readable: at least this many pixels per day on the time axis. */
-export const MIN_PIXELS_PER_DAY = 12;
+export const MIN_PIXELS_PER_DAY = 11;
 export const MIN_PLOT_WIDTH = 320;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;

@@ -5,6 +5,7 @@ import { DependencyLink, TaskRow } from "../data/types";
 
 /**
  * Finish-to-start dependency elbows with arrowheads.
+ * Routes with short stubs so vertical segments sit in open space between bars.
  */
 export function renderDependencies(
     container: d3.Selection<SVGGElement, unknown, null, undefined>,
@@ -21,7 +22,7 @@ export function renderDependencies(
             && yScale(link.fromTaskId) != null && yScale(link.toTaskId) != null)
         : [];
 
-    const defs = ensureArrowMarker(container, color);
+    const markerId = ensureArrowMarker(container, color);
 
     const join = container
         .selectAll<SVGPathElement, DependencyLink>("path.dep-link")
@@ -36,25 +37,32 @@ export function renderDependencies(
         .attr("d", (link) => {
             const from = tasksById.get(link.fromTaskId)!;
             const to = tasksById.get(link.toTaskId)!;
-            const x1 = xScale(from.end);
             const y1 = (yScale(from.id) ?? 0) + bandwidth / 2;
-            const x2 = xScale(to.start);
             const y2 = (yScale(to.id) ?? 0) + bandwidth / 2;
-            const midX = x1 + Math.max(12, Math.min(28, (x2 - x1) / 2));
-            if (x2 >= x1 + 8) {
+
+            // Anchor to bar edges with a small gap so arrows don't sit inside fills.
+            const fromEndX = xScale(from.end);
+            const toStartX = xScale(to.start);
+            const x1 = from.isMilestone ? fromEndX : fromEndX + 1;
+            const x2 = to.isMilestone ? toStartX : Math.max(toStartX - 2, toStartX - 6);
+
+            const stub = 10;
+            if (x2 >= x1 + stub * 2) {
+                const midX = x1 + Math.max(stub, Math.min(20, (x2 - x1) * 0.35));
                 return `M${x1},${y1} H${midX} V${y2} H${x2}`;
             }
-            // Backward / overlapping: route around
-            const lane = Math.max(x1, x2) + 18;
+
+            // Overlap / backward: step out to the right of both, then in.
+            const lane = Math.max(x1, x2) + stub + 8;
             return `M${x1},${y1} H${lane} V${y2} H${x2}`;
         })
         .attr("fill", "none")
         .attr("stroke", color)
-        .attr("stroke-width", 1.6)
+        .attr("stroke-width", 1.25)
         .attr("stroke-linejoin", "round")
         .attr("stroke-linecap", "round")
-        .attr("marker-end", `url(#${defs})`)
-        .attr("opacity", 0.75)
+        .attr("marker-end", `url(#${markerId})`)
+        .attr("opacity", 0.55)
         .attr("pointer-events", "none");
 }
 
@@ -80,8 +88,8 @@ function ensureArrowMarker(
             .attr("viewBox", "0 0 10 10")
             .attr("refX", 8)
             .attr("refY", 5)
-            .attr("markerWidth", 7)
-            .attr("markerHeight", 7)
+            .attr("markerWidth", 6)
+            .attr("markerHeight", 6)
             .attr("orient", "auto-start-reverse");
         marker.append("path")
             .attr("d", "M 0 0 L 10 5 L 0 10 z");
@@ -119,6 +127,6 @@ export function renderMonthGrid(
         .attr("y2", contentHeight)
         .attr("stroke", color)
         .attr("stroke-width", 1)
-        .attr("opacity", 0.35)
+        .attr("opacity", 0.22)
         .attr("pointer-events", "none");
 }

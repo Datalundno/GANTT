@@ -3,6 +3,8 @@
 import * as d3 from "d3";
 import { DisplayRow, TaskRow } from "../data/types";
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
 export interface BarRenderOptions {
     xScale: d3.ScaleTime<number, number>;
     yScale: d3.ScaleBand<string>;
@@ -179,13 +181,16 @@ export function renderBars(
     }
 
     const bandwidth = Math.max(4, yScale.bandwidth());
-    const barHeight = Math.max(4, bandwidth * 0.72);
-    const barY = (bandwidth - barHeight) / 2;
-    // Planned bar sits slightly lower/thinner when both are shown.
-    const baselineHeight = Math.max(3, barHeight * 0.38);
-    const baselineY = barY + barHeight - baselineHeight + 1;
-    const actualHeight = (d: TaskRow) => (hasBaseline(d) ? Math.max(4, barHeight * 0.62) : barHeight);
-    const actualY = (d: TaskRow) => (hasBaseline(d) ? barY : barY);
+    // Keep bars visually centered on the same midline as labels/status dots.
+    const barHeight = Math.max(4, Math.min(bandwidth * 0.58, bandwidth - 8));
+    const midY = bandwidth / 2;
+    const actualHeight = barHeight;
+    const actualY = midY - actualHeight / 2;
+    // Planned = thinner bar on the same centerline (drawn behind actual).
+    const baselineHeight = Math.max(3, actualHeight * 0.42);
+    const baselineY = midY - baselineHeight / 2;
+    const milestoneSize = Math.max(10, Math.min(bandwidth * 0.62, 18));
+    const baselineMilestoneSize = Math.max(8, milestoneSize - 4);
 
     const join = container
         .selectAll<SVGGElement, TaskRow>("g.task-row")
@@ -234,29 +239,29 @@ export function renderBars(
         .attr("display", (d) => (!d.isMilestone && hasBaseline(d) ? null : "none"))
         .attr("x", (d) => xScale(d.baselineStart!))
         .attr("y", baselineY)
-        .attr("rx", Math.max(1, cornerRadius - 2))
-        .attr("ry", Math.max(1, cornerRadius - 2))
+        .attr("rx", Math.max(1, Math.min(cornerRadius, 3)))
+        .attr("ry", Math.max(1, Math.min(cornerRadius, 3)))
         .attr("height", baselineHeight)
         .attr("width", (d) => Math.max(1, xScale(d.baselineEnd!) - xScale(d.baselineStart!)))
         .attr("fill", baselineFill)
-        .attr("stroke", withAlpha("#0F172A", 0.18))
+        .attr("stroke", withAlpha("#0F172A", 0.2))
         .attr("stroke-width", 1)
         .attr("pointer-events", "none");
 
     merged.select<SVGRectElement>("rect.task-track")
         .attr("display", (d) => d.isMilestone ? "none" : null)
         .attr("x", (d) => xScale(d.start))
-        .attr("y", (d) => actualY(d))
-        .attr("rx", cornerRadius)
-        .attr("ry", cornerRadius)
-        .attr("height", (d) => actualHeight(d))
+        .attr("y", actualY)
+        .attr("rx", Math.min(cornerRadius, 4))
+        .attr("ry", Math.min(cornerRadius, 4))
+        .attr("height", actualHeight)
         .attr("width", (d) => Math.max(1, xScale(d.end) - xScale(d.start)))
         .attr("fill", (d) => {
             const base = getBarColor(d);
             const progress = effectiveProgress(d);
             if (progress == null) {
                 return fancy
-                    ? upsertGradient(svgNode, barGradientId(d.id, "bar"), lightenColor(base, 0.35), darkenColor(base, 0.25))
+                    ? upsertGradient(svgNode, barGradientId(d.id, "bar"), lightenColor(base, 0.2), darkenColor(base, 0.15))
                     : base;
             }
             return withAlpha(base, fancy ? 0.18 : 0.22);
@@ -267,17 +272,17 @@ export function renderBars(
             }
             const progress = effectiveProgress(d);
             if (progress == null) {
-                return fancy ? withAlpha(getBarColor(d), 0.35) : "none";
+                return fancy ? withAlpha(getBarColor(d), 0.25) : "none";
             }
-            return withAlpha(getBarColor(d), 0.55);
+            return withAlpha(getBarColor(d), 0.45);
         })
         .attr("stroke-width", (d) => {
             if (d.flaggedInvalidRange) {
                 return 1.5;
             }
-            return effectiveProgress(d) == null ? (fancy ? 1 : 0) : 1;
+            return effectiveProgress(d) == null ? (fancy ? 0.75 : 0) : 1;
         })
-        .attr("filter", fancy ? "url(#gantt-bar-shadow)" : null);
+        .attr("filter", null);
 
     merged.select<SVGRectElement>("rect.task-progress")
         .attr("display", (d) => {
@@ -288,10 +293,10 @@ export function renderBars(
             return null;
         })
         .attr("x", (d) => xScale(d.start))
-        .attr("y", (d) => actualY(d))
-        .attr("rx", Math.max(0, cornerRadius - 1))
-        .attr("ry", Math.max(0, cornerRadius - 1))
-        .attr("height", (d) => actualHeight(d))
+        .attr("y", actualY)
+        .attr("rx", Math.max(0, Math.min(cornerRadius, 4) - 1))
+        .attr("ry", Math.max(0, Math.min(cornerRadius, 4) - 1))
+        .attr("height", actualHeight)
         .attr("width", (d) => {
             const barWidth = Math.max(1, xScale(d.end) - xScale(d.start));
             const p = Math.max(0, Math.min(1, effectiveProgress(d) ?? 0));
@@ -300,7 +305,7 @@ export function renderBars(
         .attr("fill", (d) => {
             const base = getProgressColor(d);
             return fancy
-                ? upsertGradient(svgNode, barGradientId(d.id, "progress"), lightenColor(base, 0.55), darkenColor(base, 0.15))
+                ? upsertGradient(svgNode, barGradientId(d.id, "progress"), lightenColor(base, 0.35), darkenColor(base, 0.1))
                 : base;
         })
         .attr("pointer-events", "none");
@@ -314,10 +319,10 @@ export function renderBars(
             return null;
         })
         .attr("x", (d) => xScale(d.start))
-        .attr("y", (d) => actualY(d))
-        .attr("rx", Math.max(0, cornerRadius - 1))
-        .attr("ry", Math.max(0, cornerRadius - 1))
-        .attr("height", (d) => Math.max(2, actualHeight(d) * 0.45))
+        .attr("y", actualY)
+        .attr("rx", Math.max(0, Math.min(cornerRadius, 4) - 1))
+        .attr("ry", Math.max(0, Math.min(cornerRadius, 4) - 1))
+        .attr("height", Math.max(2, actualHeight * 0.4))
         .attr("width", (d) => {
             const barWidth = Math.max(1, xScale(d.end) - xScale(d.start));
             const p = Math.max(0, Math.min(1, effectiveProgress(d) ?? 0));
@@ -340,10 +345,10 @@ export function renderBars(
             const p = Math.max(0, Math.min(1, effectiveProgress(d) ?? 0));
             return xScale(d.start) + barWidth * p;
         })
-        .attr("y", (d) => actualY(d))
-        .attr("rx", Math.max(0, cornerRadius - 1))
-        .attr("ry", Math.max(0, cornerRadius - 1))
-        .attr("height", (d) => actualHeight(d))
+        .attr("y", actualY)
+        .attr("rx", Math.max(0, Math.min(cornerRadius, 4) - 1))
+        .attr("ry", Math.max(0, Math.min(cornerRadius, 4) - 1))
+        .attr("height", actualHeight)
         .attr("width", (d) => {
             const barWidth = Math.max(1, xScale(d.end) - xScale(d.start));
             const p = Math.max(0, Math.min(1, effectiveProgress(d) ?? 0));
@@ -352,45 +357,34 @@ export function renderBars(
         .attr("fill", "url(#gantt-late-hatch)")
         .attr("pointer-events", "none");
 
+    // Planned milestone: outline only, same midline; hide if same day as actual.
     merged.select<SVGPolygonElement>("polygon.task-baseline-milestone")
-        .attr("display", (d) => (d.isMilestone && hasBaseline(d) ? null : "none"))
-        .attr("points", (d) => {
-            const cx = xScale(d.baselineStart!);
-            const cy = bandwidth / 2 + 4;
-            const size = Math.max(8, bandwidth * 0.55);
-            return diamondPoints(cx, cy, size);
+        .attr("display", (d) => {
+            if (!d.isMilestone || !hasBaseline(d)) {
+                return "none";
+            }
+            const sameDay = Math.abs(d.baselineStart!.getTime() - d.start.getTime()) < MS_PER_DAY;
+            return sameDay ? "none" : null;
         })
-        .attr("fill", baselineFill)
-        .attr("stroke", withAlpha("#0F172A", 0.25))
-        .attr("stroke-width", 1)
+        .attr("points", (d) => diamondPoints(xScale(d.baselineStart!), midY, baselineMilestoneSize))
+        .attr("fill", "none")
+        .attr("stroke", withAlpha("#64748B", 0.95))
+        .attr("stroke-width", 1.5)
         .attr("pointer-events", "none");
 
     merged.select<SVGPolygonElement>("polygon.task-milestone")
         .attr("display", (d) => d.isMilestone ? null : "none")
-        .attr("points", (d) => {
-            const cx = xScale(d.start);
-            const cy = hasBaseline(d) ? bandwidth / 2 - 3 : bandwidth / 2;
-            const size = Math.max(12, bandwidth * (hasBaseline(d) ? 0.72 : 0.9));
-            return diamondPoints(cx, cy, size);
-        })
-        .attr("fill", (d) => {
-            const base = getBarColor(d);
-            return fancy ? lightenColor(base, 0.25) : base;
-        })
-        .attr("stroke", (d) => d.flaggedInvalidRange ? flaggedStroke : (fancy ? darkenColor(getBarColor(d), 0.4) : trackStroke))
-        .attr("stroke-width", fancy ? 1.5 : 1.25)
-        .attr("filter", fancy ? "url(#gantt-bar-shadow)" : null);
+        .attr("points", (d) => diamondPoints(xScale(d.start), midY, milestoneSize))
+        .attr("fill", (d) => getBarColor(d))
+        .attr("stroke", (d) => d.flaggedInvalidRange ? flaggedStroke : darkenColor(getBarColor(d), 0.35))
+        .attr("stroke-width", 1.25)
+        .attr("filter", null);
 
     merged.select<SVGPolygonElement>("polygon.task-milestone-inner")
         .attr("display", (d) => fancy && d.isMilestone ? null : "none")
-        .attr("points", (d) => {
-            const cx = xScale(d.start);
-            const cy = hasBaseline(d) ? bandwidth / 2 - 3 : bandwidth / 2;
-            const size = Math.max(6, bandwidth * (hasBaseline(d) ? 0.34 : 0.42));
-            return diamondPoints(cx, cy, size);
-        })
+        .attr("points", (d) => diamondPoints(xScale(d.start), midY, Math.max(4, milestoneSize * 0.38)))
         .attr("fill", "#F8FAFC")
-        .attr("opacity", 0.85)
+        .attr("opacity", 0.8)
         .attr("pointer-events", "none");
 
     merged.select<SVGTextElement>("text.task-progress-label")
@@ -400,13 +394,13 @@ export function renderBars(
                 return "none";
             }
             const barWidth = Math.max(1, xScale(d.end) - xScale(d.start));
-            return barWidth < 36 ? "none" : null;
+            return barWidth < 40 ? "none" : null;
         })
         .attr("x", (d) => xScale(d.start) + 6)
-        .attr("y", (d) => actualY(d) + actualHeight(d) / 2)
+        .attr("y", midY)
         .attr("dy", "0.35em")
         .attr("fill", "#F8FAFC")
-        .style("font-size", `${Math.max(9, Math.min(11, barHeight - 6))}px`)
+        .style("font-size", `${Math.max(9, Math.min(11, actualHeight - 6))}px`)
         .style("font-weight", "600")
         .style("pointer-events", "none")
         .text((d) => `${Math.round((effectiveProgress(d) ?? 0) * 100)}%`);
