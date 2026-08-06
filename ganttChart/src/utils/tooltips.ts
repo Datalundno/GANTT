@@ -5,7 +5,11 @@ import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import { TaskRow } from "../data/types";
 import { toDisplayString } from "../utils/dates";
 
-export function buildTooltipDataItems(task: TaskRow): VisualTooltipDataItem[] {
+export function buildTooltipDataItems(
+    task: TaskRow,
+    options: { showProgress?: boolean } = {}
+): VisualTooltipDataItem[] {
+    const showProgress = options.showProgress ?? false;
     const items: VisualTooltipDataItem[] = [
         { displayName: "Task", value: task.task },
         { displayName: "Start", value: toDisplayString(task.start) },
@@ -16,7 +20,7 @@ export function buildTooltipDataItems(task: TaskRow): VisualTooltipDataItem[] {
         }
     ];
 
-    if (task.progress != null) {
+    if (showProgress && task.progress != null) {
         items.push({
             displayName: "Progress",
             value: `${Math.round(task.progress * 100)}%`

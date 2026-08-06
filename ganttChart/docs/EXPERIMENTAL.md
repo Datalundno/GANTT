@@ -15,6 +15,8 @@
 - **Expand / Collapse all** groups
 - **Dependency arrows** — bind **Predecessor** (task name of the upstream task, finish-to-start)
 - **Status colors** — done / late / at risk / on track / future (format pane toggle)
+- **Status legend** — Done / Late / … chips on the toolbar (**off by default**; Format → Lab → Show status legend)
+- **Progress fill** — optional (**off by default**; Format → Lab → Show progress)
 - **Richer graphics** — gradients, progress sheen, milestone gems, today marker + label, month grid, bar motion
 - **Weekend shading** on by default
 

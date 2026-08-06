@@ -17,7 +17,7 @@ import VisualUpdateType = powerbi.VisualUpdateType;
 import ISelectionId = powerbi.visuals.ISelectionId;
 
 import { VisualFormattingSettingsModel } from "./settings";
-import { convertDataView } from "./data/converter";
+import { convertDataView, computeTaskStatus } from "./data/converter";
 import { buildDisplayRows, visibleTaskRows } from "./data/groups";
 import {
     AxisGranularity,
@@ -563,7 +563,9 @@ export class Visual implements IVisual {
         this.tooltipService.show({
             coordinates: pointerCoordinates(event, rootNode),
             isTouchEvent: false,
-            dataItems: buildTooltipDataItems(task),
+            dataItems: buildTooltipDataItems(task, {
+                showProgress: this.formattingSettings?.labCard?.showProgress?.value ?? false
+            }),
             identities
         });
     }
@@ -581,7 +583,10 @@ export class Visual implements IVisual {
         }
 
         const showToolbar = this.formattingSettings?.labCard?.showToolbar?.value ?? true;
+        const showStatusLegend = this.formattingSettings?.labCard?.showStatusLegend?.value ?? false;
         this.toolbar.style("display", showToolbar ? "flex" : "none");
+        this.toolbar.select(".gantt-toolbar-legend")
+            .style("display", showStatusLegend ? "inline-flex" : "none");
         this.syncToolbarActive();
 
         const toolbarHeight = showToolbar ? 44 : 0;
@@ -625,6 +630,7 @@ export class Visual implements IVisual {
         const fancy = (this.formattingSettings?.labCard?.fancyGraphics?.value ?? true) && !contrast.isHighContrast;
         const animate = (this.formattingSettings?.labCard?.animateBars?.value ?? true) && !this.didAnimateOnce && fancy;
         const colorByStatus = this.formattingSettings?.labCard?.colorByStatus?.value ?? true;
+        const showProgress = this.formattingSettings?.labCard?.showProgress?.value ?? false;
         const showDependencies = this.formattingSettings?.labCard?.showDependencies?.value ?? true;
         const showMonthGrid = this.formattingSettings?.labCard?.showMonthGrid?.value ?? true;
 
@@ -660,7 +666,8 @@ export class Visual implements IVisual {
                 return contrast.foreground;
             }
             if (colorByStatus) {
-                return STATUS_COLORS[task.status].bar;
+                const status = computeTaskStatus(task.start, task.end, task.progress, new Date(), showProgress);
+                return STATUS_COLORS[status].bar;
             }
             if (colorByResource && task.resource) {
                 return this.host.colorPalette.getColor(task.resource).value;
@@ -673,7 +680,8 @@ export class Visual implements IVisual {
                 return contrast.foregroundSelected;
             }
             if (colorByStatus) {
-                return STATUS_COLORS[task.status].progress;
+                const status = computeTaskStatus(task.start, task.end, task.progress, new Date(), showProgress);
+                return STATUS_COLORS[status].progress;
             }
             if (colorByResource && task.resource) {
                 return this.host.colorPalette.getColor(task.resource).value;
@@ -753,7 +761,11 @@ export class Visual implements IVisual {
             textColor,
             zebraFill,
             bandFill,
-            (groupKey) => this.toggleGroup(groupKey)
+            (groupKey) => this.toggleGroup(groupKey),
+            (task) => {
+                const status = computeTaskStatus(task.start, task.end, task.progress, new Date(), showProgress);
+                return STATUS_COLORS[status].progress;
+            }
         );
 
         renderMonthGrid(
@@ -812,6 +824,7 @@ export class Visual implements IVisual {
             isSelected: (task) => this.isTaskSelected(task),
             fancy,
             animate,
+            showProgress,
             onClick: (event, task) => this.onBarClick(event, task),
             onContextMenu: (event, task) => this.onBarContextMenu(event, task),
             onMouseMove: (event, task) => this.onBarMouseMove(event, task),

@@ -280,9 +280,23 @@
                         "bool": true
                     }
                 },
+                "showStatusLegend": {
+                    "displayName": "Show status legend",
+                    "displayNameKey": "Prop_ShowStatusLegend",
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "colorByStatus": {
                     "displayName": "Color by status",
                     "displayNameKey": "Prop_ColorByStatus",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showProgress": {
+                    "displayName": "Show progress",
+                    "displayNameKey": "Prop_ShowProgress",
                     "type": {
                         "bool": true
                     }

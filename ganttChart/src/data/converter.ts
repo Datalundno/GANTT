@@ -141,8 +141,24 @@ function buildTooltipFields(
     });
 }
 
-export function computeTaskStatus(start: Date, end: Date, progress: number | null, today: Date = new Date()): TaskStatus {
-    const p = progress == null ? 0 : Math.max(0, Math.min(1, progress));
+export function computeTaskStatus(
+    start: Date,
+    end: Date,
+    progress: number | null,
+    today: Date = new Date(),
+    useProgress: boolean = true
+): TaskStatus {
+    if (!useProgress || progress == null) {
+        if (today < start) {
+            return "future";
+        }
+        if (today > end) {
+            return "late";
+        }
+        return "ontrack";
+    }
+
+    const p = Math.max(0, Math.min(1, progress));
     if (p >= 0.999) {
         return "done";
     }

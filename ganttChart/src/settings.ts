@@ -159,11 +159,25 @@ class LabCardSettings extends FormattingSettingsCard {
         value: true
     });
 
+    showStatusLegend = new formattingSettings.ToggleSwitch({
+        name: "showStatusLegend",
+        displayName: "Show status legend",
+        displayNameKey: "Prop_ShowStatusLegend",
+        value: false
+    });
+
     colorByStatus = new formattingSettings.ToggleSwitch({
         name: "colorByStatus",
         displayName: "Color by status",
         displayNameKey: "Prop_ColorByStatus",
         value: true
+    });
+
+    showProgress = new formattingSettings.ToggleSwitch({
+        name: "showProgress",
+        displayName: "Show progress",
+        displayNameKey: "Prop_ShowProgress",
+        value: false
     });
 
     showDependencies = new formattingSettings.ToggleSwitch({
@@ -199,7 +213,9 @@ class LabCardSettings extends FormattingSettingsCard {
     displayNameKey: string = "Objects_Lab";
     slices: Array<FormattingSettingsSlice> = [
         this.showToolbar,
+        this.showStatusLegend,
         this.colorByStatus,
+        this.showProgress,
         this.showDependencies,
         this.fancyGraphics,
         this.animateBars,

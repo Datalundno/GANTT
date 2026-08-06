@@ -15,6 +15,8 @@ export interface BarRenderOptions {
     isSelected: (task: TaskRow) => boolean;
     fancy: boolean;
     animate: boolean;
+    /** When false, ignore progress and draw solid schedule bars. */
+    showProgress: boolean;
     onClick: (event: MouseEvent, task: TaskRow) => void;
     onContextMenu: (event: MouseEvent, task: TaskRow) => void;
     onMouseMove: (event: MouseEvent, task: TaskRow) => void;
@@ -155,11 +157,14 @@ export function renderBars(
         isSelected,
         fancy,
         animate,
+        showProgress,
         onClick,
         onContextMenu,
         onMouseMove,
         onMouseOut
     } = options;
+
+    const effectiveProgress = (d: TaskRow): number | null => (showProgress ? d.progress : null);
 
     const svgNode = (container.node() as SVGGElement | null)?.ownerSVGElement ?? null;
     if (fancy) {
@@ -221,7 +226,8 @@ export function renderBars(
         .attr("width", (d) => Math.max(1, xScale(d.end) - xScale(d.start)))
         .attr("fill", (d) => {
             const base = getBarColor(d);
-            if (d.progress == null) {
+            const progress = effectiveProgress(d);
+            if (progress == null) {
                 return fancy
                     ? upsertGradient(svgNode, barGradientId(d.id, "bar"), lightenColor(base, 0.35), darkenColor(base, 0.25))
                     : base;
@@ -232,7 +238,8 @@ export function renderBars(
             if (d.flaggedInvalidRange) {
                 return flaggedStroke;
             }
-            if (d.progress == null) {
+            const progress = effectiveProgress(d);
+            if (progress == null) {
                 return fancy ? withAlpha(getBarColor(d), 0.35) : "none";
             }
             return withAlpha(getBarColor(d), 0.55);
@@ -241,13 +248,14 @@ export function renderBars(
             if (d.flaggedInvalidRange) {
                 return 1.5;
             }
-            return d.progress == null ? (fancy ? 1 : 0) : 1;
+            return effectiveProgress(d) == null ? (fancy ? 1 : 0) : 1;
         })
         .attr("filter", fancy ? "url(#gantt-bar-shadow)" : null);
 
     merged.select<SVGRectElement>("rect.task-progress")
         .attr("display", (d) => {
-            if (d.isMilestone || d.progress == null || d.progress <= 0) {
+            const progress = effectiveProgress(d);
+            if (d.isMilestone || progress == null || progress <= 0) {
                 return "none";
             }
             return null;
@@ -259,7 +267,7 @@ export function renderBars(
         .attr("height", barHeight)
         .attr("width", (d) => {
             const barWidth = Math.max(1, xScale(d.end) - xScale(d.start));
-            const p = Math.max(0, Math.min(1, d.progress ?? 0));
+            const p = Math.max(0, Math.min(1, effectiveProgress(d) ?? 0));
             return Math.min(barWidth, barWidth * p);
         })
         .attr("fill", (d) => {
@@ -272,7 +280,8 @@ export function renderBars(
 
     merged.select<SVGRectElement>("rect.task-sheen")
         .attr("display", (d) => {
-            if (!fancy || d.isMilestone || d.progress == null || d.progress <= 0) {
+            const progress = effectiveProgress(d);
+            if (!fancy || d.isMilestone || progress == null || progress <= 0) {
                 return "none";
             }
             return null;
@@ -284,23 +293,24 @@ export function renderBars(
         .attr("height", Math.max(2, barHeight * 0.45))
         .attr("width", (d) => {
             const barWidth = Math.max(1, xScale(d.end) - xScale(d.start));
-            const p = Math.max(0, Math.min(1, d.progress ?? 0));
+            const p = Math.max(0, Math.min(1, effectiveProgress(d) ?? 0));
             return Math.min(barWidth, barWidth * p);
         })
         .attr("fill", "url(#gantt-sheen)")
         .attr("pointer-events", "none");
 
-    // Hatch remaining work when late
+    // Hatch remaining work when late (only when progress is shown)
     merged.select<SVGRectElement>("rect.task-late")
         .attr("display", (d) => {
-            if (!fancy || d.isMilestone || d.status !== "late" || (d.progress ?? 0) >= 1) {
+            const progress = effectiveProgress(d);
+            if (!fancy || d.isMilestone || d.status !== "late" || progress == null || progress >= 1) {
                 return "none";
             }
             return null;
         })
         .attr("x", (d) => {
             const barWidth = Math.max(1, xScale(d.end) - xScale(d.start));
-            const p = Math.max(0, Math.min(1, d.progress ?? 0));
+            const p = Math.max(0, Math.min(1, effectiveProgress(d) ?? 0));
             return xScale(d.start) + barWidth * p;
         })
         .attr("y", barY)
@@ -309,7 +319,7 @@ export function renderBars(
         .attr("height", barHeight)
         .attr("width", (d) => {
             const barWidth = Math.max(1, xScale(d.end) - xScale(d.start));
-            const p = Math.max(0, Math.min(1, d.progress ?? 0));
+            const p = Math.max(0, Math.min(1, effectiveProgress(d) ?? 0));
             return Math.max(0, barWidth * (1 - p));
         })
         .attr("fill", "url(#gantt-late-hatch)")
@@ -345,7 +355,8 @@ export function renderBars(
 
     merged.select<SVGTextElement>("text.task-progress-label")
         .attr("display", (d) => {
-            if (!fancy || d.isMilestone || d.progress == null) {
+            const progress = effectiveProgress(d);
+            if (!fancy || d.isMilestone || progress == null) {
                 return "none";
             }
             const barWidth = Math.max(1, xScale(d.end) - xScale(d.start));
@@ -358,7 +369,7 @@ export function renderBars(
         .style("font-size", `${Math.max(9, Math.min(11, barHeight - 6))}px`)
         .style("font-weight", "600")
         .style("pointer-events", "none")
-        .text((d) => `${Math.round((d.progress ?? 0) * 100)}%`);
+        .text((d) => `${Math.round((effectiveProgress(d) ?? 0) * 100)}%`);
 
     merged
         .on("click", (event: MouseEvent, d: TaskRow) => {
@@ -519,7 +530,8 @@ export function renderLabelRows(
     textColor: string,
     zebraFill: string,
     groupBandFill: string,
-    onToggleGroup: (groupKey: string) => void
+    onToggleGroup: (groupKey: string) => void,
+    getStatusColor?: (task: TaskRow) => string
 ): void {
     const bandwidth = yScale.bandwidth();
     const rowIndex = new Map(displayRows.map((row, index) => [row.id, index]));
@@ -584,6 +596,9 @@ export function renderLabelRows(
         .attr("cy", bandwidth / 2)
         .attr("r", 3.5)
         .attr("fill", (d) => {
+            if (d.task && getStatusColor) {
+                return getStatusColor(d.task);
+            }
             const status = d.task?.status;
             if (status === "done") return "#2DD4BF";
             if (status === "late") return "#FB7185";
