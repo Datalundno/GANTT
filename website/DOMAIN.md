@@ -1,7 +1,11 @@
 # Domains — datalund.no / datalund.online
 
 **Status:** Registered at Domeneshop (navnetjenere `ns1/ns2/ns3.hyp.net`).  
+**GitHub org:** [Datalundno](https://github.com/Datalundno) (renamed from Chartvik)  
+**Repo:** https://github.com/Datalundno/GANTT  
 Hosting: **GitHub Pages** (Actions build of `/website`).
+
+Temporary Pages URL (before / without custom domain): https://datalundno.github.io/GANTT/
 
 ## DNS hos Domeneshop
 
@@ -24,18 +28,21 @@ Fire `A`-pekere til GitHub Pages:
 | --- | --- | --- |
 | CNAME | `www` | `datalundno.github.io` |
 
+> After the org rename, the Pages host is **`datalundno.github.io`** (not `chartvik.github.io`). Update DNS if you still have the old CNAME.
+
 ### Valgfritt — `datalund.online`
 
 Samme A/CNAME-oppsett, eller en videresending til `https://datalund.no`.
 
-## GitHub
+## GitHub Pages (Datalundno/GANTT)
 
-1. Merge PR med website + workflow til `main` (eller kjør workflow manuelt etter merge).
-2. Repo → **Settings → Pages**: Source = **GitHub Actions**.
-3. Etter første deploy: Settings → Pages → Custom domain = `datalund.no` (CNAME-filen i `website/public/CNAME` følger med i bygget).
-4. Kryss av **Enforce HTTPS** når DNS er grønn (kan ta litt tid).
-
-Midlertidig før DNS: test lokalt med `npm run preview`, eller åpne Pages-URLen GitHub viser under Settings → Pages etter første deploy.
+1. Repo → **Settings → Pages**: Source = **GitHub Actions**.
+2. Custom domain = `datalund.no` (the `website/public/CNAME` file ships in the build).
+3. Enable **Enforce HTTPS** when DNS is green.
+4. Confirm these AppSource URLs resolve:
+   - https://datalund.no/visuals/gantt/
+   - https://datalund.no/support/
+   - https://datalund.no/privacy/
 
 ## Lokal build
 
