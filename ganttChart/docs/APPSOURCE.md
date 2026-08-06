@@ -7,6 +7,18 @@ GUID (never change after first publish): `ganttChartF8E34E29596A403E8E39808FA17C
 
 This checklist is written to stay within Microsoft Marketplace / Power BI visual policies (including [§1180](https://learn.microsoft.com/en-us/legal/marketplace/certification-policies#1180-power-bi-visuals)). It is practical guidance, not legal advice.
 
+Paste-ready Partner Center fields: [`PARTNER_CENTER_LISTING.md`](./PARTNER_CENTER_LISTING.md).
+
+### Progress (2026-08-06)
+
+| Step | Status |
+| --- | --- |
+| **1** datalund.no pages live | Content OK at `/visuals/gantt/`, `/support/`, `/privacy/` — **blocker:** enable **Enforce HTTPS** on [Website → Settings → Pages](https://github.com/Datalundno/Website/settings/pages) so browsers get a `datalund.no` cert (today the edge still presents `*.github.io`) |
+| **2** package build | Done — `npm run lint`, `pbiviz package`, `--certification-audit` (no external requests), `npm audit` = 0 vulns; `downloads/ganttChart.pbiviz` refreshed |
+| **2** sample `.pbix` + screenshots | **Needs Power BI Desktop** (human) |
+| **3** policy self-check | Code/docs aligned; remaining items are listing honesty at submit time |
+| **4–7** Partner Center | **Needs publisher account** (human) — use listing copy doc |
+
 ---
 
 ## 0) Naming recommendation
@@ -26,19 +38,20 @@ Offer ID example (immutable): `datalund-gantt` (lowercase, hyphens OK).
 
 Do this **first**. AppSource rejects broken privacy/support links.
 
-- [ ] Point DNS for `datalund.no` at GitHub Pages (see [Datalundno/Website](https://github.com/Datalundno/Website) `DOMAIN.md`)
-- [ ] Deploy [Datalundno/Website](https://github.com/Datalundno/Website) so these resolve over **HTTPS**:
-  - [ ] `https://datalund.no/visuals/gantt/` ← Help / learn more
-  - [ ] `https://datalund.no/support/` ← Support (must be **different** from Help)
-  - [ ] `https://datalund.no/privacy/` ← Privacy policy
-- [ ] Open each URL in a private browser window (no login wall)
-- [ ] Confirm privacy policy accurately describes: no telemetry, no external calls, sandbox-only
+- [x] Point DNS for `datalund.no` at GitHub Pages (see [Datalundno/Website](https://github.com/Datalundno/Website) `DOMAIN.md`) — apex `A` → GitHub Pages IPs; `www` `CNAME` → `datalundno.github.io`
+- [x] Deploy [Datalundno/Website](https://github.com/Datalundno/Website) so these resolve (content verified 2026-08-06):
+  - [x] `https://datalund.no/visuals/gantt/` ← Help / learn more
+  - [x] `https://datalund.no/support/` ← Support (must be **different** from Help)
+  - [x] `https://datalund.no/privacy/` ← Privacy policy
+- [ ] **Enforce HTTPS** in Website repo Pages settings (required for a valid `datalund.no` certificate — AppSource reviewers use real browsers)
+- [ ] Open each URL in a private browser window (no login wall, no cert warning)
+- [x] Confirm privacy policy accurately describes: no telemetry, no external calls, sandbox-only
 
 ---
 
 ## 2) Build the submission package
 
-From `ganttChart/`:
+From `ganttChart/` (requires `powerbi-visuals-tools` on `PATH`, e.g. `npm i -g powerbi-visuals-tools`):
 
 ```bash
 npm install
@@ -46,12 +59,13 @@ npm run lint
 pbiviz package
 pbiviz package --certification-audit   # expect: no external requests
 npm audit                              # expect: 0 high/moderate ideally
+cp dist/ganttChartF8E34E29596A403E8E39808FA17C9CE9.1.6.0.0.pbiviz downloads/ganttChart.pbiviz
 ```
 
-- [ ] Use packaged file: `dist/ganttChart…1.6.0.0.pbiviz` (also copied to `downloads/ganttChart.pbiviz`)
-- [ ] Confirm `pbiviz.json` has real author name/email, supportUrl, description (no `localhost`)
-- [ ] GUID unchanged
-- [ ] Store logo ready: `assets/store/logo-300.png` (exactly **300×300** PNG, sharp, not blurry)
+- [x] Use packaged file: `dist/ganttChart…1.6.0.0.pbiviz` (also copied to `downloads/ganttChart.pbiviz`)
+- [x] Confirm `pbiviz.json` has real author name/email, supportUrl, description (no `localhost`)
+- [x] GUID unchanged (`ganttChartF8E34E29596A403E8E39808FA17C9CE9`)
+- [x] Store logo ready: `assets/store/logo-300.png` (exactly **300×300** PNG)
 
 ### Sample `.pbix` (required)
 
@@ -76,33 +90,33 @@ npm audit                              # expect: 0 high/moderate ideally
 
 ### Pricing & acquisition (§1180.1)
 
-- [ ] Listing is **free** to acquire from AppSource
-- [ ] If you later add paid features, mark “additional purchase may be required”, keep prior free features free, and follow IAP guidelines — **this visual currently has no IAP**
+- [x] Listing is **free** to acquire from AppSource
+- [x] If you later add paid features, mark “additional purchase may be required”, keep prior free features free, and follow IAP guidelines — **this visual currently has no IAP**
 
 ### Functionality (§1180.2)
 
-- [ ] Works in Power BI Desktop **and** Power BI service
-- [ ] Context menu on empty space **and** on data points (implemented)
-- [ ] Pin to dashboard, filters, focus mode, formatting behave reasonably
-- [ ] Handles strings, empties, negatives, large row counts, large numbers without console crashes
-- [ ] Does **not** open external windows / sites without explicit user action
-- [ ] Does **not** ask users to install extra files
-- [ ] Does **not** ask for Microsoft credentials outside approved OAuth (N/A — no auth)
-- [ ] No pop-ups except user-triggered (N/A — none)
-- [ ] No unreasonable privileges (`privileges: []`)
+- [ ] Works in Power BI Desktop **and** Power BI service *(smoke-test in Desktop/service before submit)*
+- [x] Context menu on empty space **and** on data points (implemented)
+- [ ] Pin to dashboard, filters, focus mode, formatting behave reasonably *(Desktop/service)*
+- [ ] Handles strings, empties, negatives, large row counts, large numbers without console crashes *(Desktop)*
+- [x] Does **not** open external windows / sites without explicit user action
+- [x] Does **not** ask users to install extra files
+- [x] Does **not** ask for Microsoft credentials outside approved OAuth (N/A — no auth)
+- [x] No pop-ups except user-triggered (N/A — none)
+- [x] No unreasonable privileges (`privileges: []`)
 
 ### Listing honesty
 
-- [ ] Description does **not** claim Microsoft affiliation or “official Microsoft visual”
-- [ ] Description does **not** claim **Power BI Certified** until Microsoft actually certifies it
-- [ ] Do not use Microsoft product logos as your commercial logo
-- [ ] Screenshots match real product behavior
-- [ ] Privacy policy matches reality (this visual has no outbound network)
+- [x] Description does **not** claim Microsoft affiliation or “official Microsoft visual” (see listing copy)
+- [x] Description does **not** claim **Power BI Certified** until Microsoft actually certifies it
+- [x] Do not use Microsoft product logos as your commercial logo
+- [ ] Screenshots match real product behavior *(create in Desktop)*
+- [x] Privacy policy matches reality (this visual has no outbound network)
 
 ### Intellectual property
 
-- [ ] You own or have rights to name **DataLund**, logo, screenshots, sample data
-- [ ] No scraped third-party charts / stock you cannot license
+- [x] You own or have rights to name **DataLund**, logo, screenshots, sample data
+- [x] No scraped third-party charts / stock you cannot license
 - [ ] MIT license in repo is fine for source; Partner Center still needs an **EULA** selection (standard Microsoft contract **or** [Power BI visuals default EULA PDF](https://visuals.azureedge.net/app-store/Power%20BI%20-%20Default%20Custom%20Visual%20EULA.pdf) **or** your own)
 
 ### Certification (optional, later)
@@ -197,14 +211,16 @@ Run through [submission testing](https://learn.microsoft.com/en-us/power-bi/deve
 | Context menu (empty + datapoint) | Done |
 | Landing page | Done |
 | No external network privileges | Done |
-| Certification audit (no fetch/XHR) | Done |
+| Certification audit (no fetch/XHR) | Done (re-verified 2026-08-06) |
 | English string resources | Done |
 | allowInteractions | Done |
-| Real support/privacy target URLs | Point to datalund.no (deploy site) |
+| Real support/privacy target URLs | Point to datalund.no (deployed; enable Enforce HTTPS) |
 | 300×300 logo | `ganttChart/assets/store/logo-300.png` |
 | Sample Excel | `ganttChart/downloads/GanttSampleData.xlsx` |
+| Packaged `.pbiviz` 1.6.0.0 | `ganttChart/downloads/ganttChart.pbiviz` |
+| Partner Center listing copy | `ganttChart/docs/PARTNER_CENTER_LISTING.md` |
 | Sample `.pbix` | **You create in Desktop** |
-| Live HTTPS pages | **You deploy [Datalundno/Website](https://github.com/Datalundno/Website)** |
+| Live HTTPS (valid custom-domain cert) | **Enable Enforce HTTPS** on [Datalundno/Website](https://github.com/Datalundno/Website/settings/pages) |
 
 ---
 
