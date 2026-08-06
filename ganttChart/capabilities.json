@@ -4,48 +4,79 @@
             "displayName": "Task",
             "name": "task",
             "kind": "Grouping",
-            "description": "Task name (required)."
+            "description": "Task name (required).",
+            "preferredTypes": [
+                {
+                    "text": true
+                }
+            ]
         },
         {
             "displayName": "Start Date",
             "name": "startDate",
-            "kind": "Grouping",
+            "kind": "GroupingOrMeasure",
             "description": "Task start date (required)."
         },
         {
             "displayName": "End Date",
             "name": "endDate",
-            "kind": "Grouping",
+            "kind": "GroupingOrMeasure",
             "description": "Task end date. Optional when Duration is supplied."
         },
         {
             "displayName": "Duration",
             "name": "duration",
             "kind": "Measure",
-            "description": "Duration in days. Used when End Date is absent."
+            "description": "Duration in days. Used when End Date is absent.",
+            "requiredTypes": [
+                {
+                    "numeric": true
+                },
+                {
+                    "integer": true
+                }
+            ]
         },
         {
             "displayName": "Progress",
             "name": "progress",
             "kind": "Measure",
-            "description": "Progress as 0–1 or 0–100."
+            "description": "Progress as 0–1 or 0–100.",
+            "requiredTypes": [
+                {
+                    "numeric": true
+                },
+                {
+                    "integer": true
+                }
+            ]
         },
         {
             "displayName": "Group",
             "name": "group",
             "kind": "Grouping",
-            "description": "Parent/phase for collapsible grouping."
+            "description": "Parent/phase for collapsible grouping.",
+            "preferredTypes": [
+                {
+                    "text": true
+                }
+            ]
         },
         {
             "displayName": "Resource",
             "name": "resource",
             "kind": "Grouping",
-            "description": "Assignee; used for optional color-by."
+            "description": "Assignee; used for optional color-by.",
+            "preferredTypes": [
+                {
+                    "text": true
+                }
+            ]
         },
         {
             "displayName": "Tooltips",
-            "name": "tooltips",
-            "kind": "Measure",
+            "name": "tooltipFields",
+            "kind": "Grouping",
             "description": "Extra fields shown in tooltips."
         }
     ],
@@ -179,78 +210,43 @@
         {
             "conditions": [
                 {
-                    "task": {
-                        "min": 1,
-                        "max": 1
-                    },
-                    "startDate": {
-                        "min": 1,
-                        "max": 1
-                    },
-                    "endDate": {
-                        "max": 1
-                    },
-                    "duration": {
-                        "max": 1
-                    },
-                    "progress": {
-                        "max": 1
-                    },
-                    "group": {
-                        "max": 1
-                    },
-                    "resource": {
-                        "max": 1
-                    },
-                    "tooltips": {
-                        "max": 8
-                    }
+                    "task": { "min": 1, "max": 1 },
+                    "startDate": { "min": 0, "max": 1 },
+                    "endDate": { "min": 0, "max": 1 },
+                    "duration": { "max": 0 },
+                    "progress": { "max": 1 },
+                    "group": { "max": 1 },
+                    "resource": { "max": 1 },
+                    "tooltipFields": { "max": 8 }
+                },
+                {
+                    "task": { "min": 1, "max": 1 },
+                    "startDate": { "min": 0, "max": 1 },
+                    "endDate": { "max": 0 },
+                    "duration": { "min": 0, "max": 1 },
+                    "progress": { "max": 1 },
+                    "group": { "max": 1 },
+                    "resource": { "max": 1 },
+                    "tooltipFields": { "max": 8 }
                 }
             ],
             "table": {
                 "rows": {
                     "select": [
-                        {
-                            "for": {
-                                "in": "task"
-                            }
-                        },
-                        {
-                            "for": {
-                                "in": "startDate"
-                            }
-                        },
-                        {
-                            "for": {
-                                "in": "endDate"
-                            }
-                        },
-                        {
-                            "for": {
-                                "in": "duration"
-                            }
-                        },
-                        {
-                            "for": {
-                                "in": "progress"
-                            }
-                        },
-                        {
-                            "for": {
-                                "in": "group"
-                            }
-                        },
-                        {
-                            "for": {
-                                "in": "resource"
-                            }
-                        },
-                        {
-                            "for": {
-                                "in": "tooltips"
-                            }
+                        { "for": { "in": "task" } },
+                        { "for": { "in": "startDate" } },
+                        { "for": { "in": "endDate" } },
+                        { "bind": { "to": "duration" } },
+                        { "bind": { "to": "progress" } },
+                        { "for": { "in": "group" } },
+                        { "for": { "in": "resource" } },
+                        { "for": { "in": "tooltipFields" } }
+                    ],
+                    "dataReductionAlgorithm": {
+                        "top": {
+                            "count": 30000
                         }
-                    ]
+                    }
                 }
             }
         }
@@ -263,7 +259,7 @@
             "canvas": true
         },
         "roles": [
-            "tooltips"
+            "tooltipFields"
         ]
     }
 }

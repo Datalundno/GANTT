@@ -7,7 +7,7 @@ export const ROLE_DURATION = "duration";
 export const ROLE_PROGRESS = "progress";
 export const ROLE_GROUP = "group";
 export const ROLE_RESOURCE = "resource";
-export const ROLE_TOOLTIPS = "tooltips";
+export const ROLE_TOOLTIPS = "tooltipFields";
 
 export interface TooltipField {
     displayName: string;
