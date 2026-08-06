@@ -180,6 +180,13 @@ class LabCardSettings extends FormattingSettingsCard {
         value: false
     });
 
+    showBaseline = new formattingSettings.ToggleSwitch({
+        name: "showBaseline",
+        displayName: "Show planned bars",
+        displayNameKey: "Prop_ShowBaseline",
+        value: true
+    });
+
     showDependencies = new formattingSettings.ToggleSwitch({
         name: "showDependencies",
         displayName: "Show dependencies",
@@ -216,6 +223,7 @@ class LabCardSettings extends FormattingSettingsCard {
         this.showStatusLegend,
         this.colorByStatus,
         this.showProgress,
+        this.showBaseline,
         this.showDependencies,
         this.fancyGraphics,
         this.animateBars,

@@ -381,10 +381,10 @@ export class Visual implements IVisual {
 
         const steps = card.append("ul").classed("gantt-landing-steps", true);
         const stepKeys: Array<[string, string]> = [
-            ["Landing_Step1", "1. Drag Task into the Task field"],
-            ["Landing_Step2", "2. Drag a date into Start Date"],
-            ["Landing_Step3", "3. Add End Date or Duration"],
-            ["Landing_Step4", "Optional: Progress, Group, Resource, Predecessor, Tooltips"]
+            ["Landing_Step1", "1. Required: Task + Start Date + End Date"],
+            ["Landing_Step2", "2. Optional: Planned Start / Planned End (baseline)"],
+            ["Landing_Step3", "3. Optional: Group, Resource, Predecessor"],
+            ["Landing_Step4", "4. Optional: Progress, Duration, Tooltips"]
         ];
         for (const [key, fallback] of stepKeys) {
             steps.append("li").text(this.t(key, fallback));
@@ -564,7 +564,8 @@ export class Visual implements IVisual {
             coordinates: pointerCoordinates(event, rootNode),
             isTouchEvent: false,
             dataItems: buildTooltipDataItems(task, {
-                showProgress: this.formattingSettings?.labCard?.showProgress?.value ?? false
+                showProgress: this.formattingSettings?.labCard?.showProgress?.value ?? false,
+                showBaseline: this.formattingSettings?.labCard?.showBaseline?.value ?? true
             }),
             identities
         });
@@ -631,6 +632,7 @@ export class Visual implements IVisual {
         const animate = (this.formattingSettings?.labCard?.animateBars?.value ?? true) && !this.didAnimateOnce && fancy;
         const colorByStatus = this.formattingSettings?.labCard?.colorByStatus?.value ?? true;
         const showProgress = this.formattingSettings?.labCard?.showProgress?.value ?? false;
+        const showBaseline = this.formattingSettings?.labCard?.showBaseline?.value ?? true;
         const showDependencies = this.formattingSettings?.labCard?.showDependencies?.value ?? true;
         const showMonthGrid = this.formattingSettings?.labCard?.showMonthGrid?.value ?? true;
 
@@ -825,6 +827,10 @@ export class Visual implements IVisual {
             fancy,
             animate,
             showProgress,
+            showBaseline,
+            baselineFill: contrast.isHighContrast
+                ? contrast.foreground
+                : "rgba(100, 116, 139, 0.55)",
             onClick: (event, task) => this.onBarClick(event, task),
             onContextMenu: (event, task) => this.onBarContextMenu(event, task),
             onMouseMove: (event, task) => this.onBarMouseMove(event, task),

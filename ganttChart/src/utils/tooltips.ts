@@ -7,9 +7,10 @@ import { toDisplayString } from "../utils/dates";
 
 export function buildTooltipDataItems(
     task: TaskRow,
-    options: { showProgress?: boolean } = {}
+    options: { showProgress?: boolean; showBaseline?: boolean } = {}
 ): VisualTooltipDataItem[] {
     const showProgress = options.showProgress ?? false;
+    const showBaseline = options.showBaseline ?? true;
     const items: VisualTooltipDataItem[] = [
         { displayName: "Task", value: task.task },
         { displayName: "Start", value: toDisplayString(task.start) },
@@ -19,6 +20,13 @@ export function buildTooltipDataItems(
             value: `${Math.round(task.durationDays * 10) / 10} days`
         }
     ];
+
+    if (showBaseline && task.baselineStart && task.baselineEnd) {
+        items.push(
+            { displayName: "Planned start", value: toDisplayString(task.baselineStart) },
+            { displayName: "Planned end", value: toDisplayString(task.baselineEnd) }
+        );
+    }
 
     if (showProgress && task.progress != null) {
         items.push({

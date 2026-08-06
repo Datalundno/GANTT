@@ -14,6 +14,7 @@
 - **Time window toolbar** — 3M / 6M / 9M / 12M / All (centered on today)
 - **Expand / Collapse all** groups
 - **Dependency arrows** — bind **Predecessor** (task name of the upstream task, finish-to-start)
+- **Planned vs actual** — optional **Planned Start / Planned End**; thinner baseline bars under actual (Format → Lab → Show planned bars)
 - **Status colors** — done / late / at risk / on track / future (format pane toggle)
 - **Status legend** — Done / Late / … chips on the toolbar (**off by default**; Format → Lab → Show status legend)
 - **Progress fill** — optional (**off by default**; Format → Lab → Show progress)
@@ -22,11 +23,18 @@
 
 ## Field wells
 
-Same as stable, plus optional:
+**Required:** Task + Start Date + End Date (Duration can replace End Date).
 
-| Well | Purpose |
-| --- | --- |
-| Predecessor | Name of the predecessor **Task** (FS link) |
+| Well | Required? | Purpose |
+| --- | --- | --- |
+| Task | Yes | Task name |
+| Start Date | Yes | Actual / current start |
+| End Date | Yes* | Actual / current end (*or Duration) |
+| Duration | No | Alternative to End Date |
+| Planned Start | No | Baseline / plan start |
+| Planned End | No | Baseline / plan end |
+| Progress | No | % complete (Format → Lab → Show progress) |
+| Group / Resource / Predecessor / Tooltips | No | Layout, color, FS links, extras |
 
 ## Build
 

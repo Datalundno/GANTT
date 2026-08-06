@@ -11,6 +11,8 @@ export const ROLE_PROGRESS = "progress";
 export const ROLE_GROUP = "group";
 export const ROLE_RESOURCE = "resource";
 export const ROLE_PREDECESSOR = "predecessor";
+export const ROLE_BASELINE_START = "baselineStart";
+export const ROLE_BASELINE_END = "baselineEnd";
 export const ROLE_TOOLTIPS = "tooltipFields";
 
 export const UNGROUPED_KEY = "__ungrouped__";
@@ -26,8 +28,14 @@ export interface TooltipField {
 export interface TaskRow {
     id: string;
     task: string;
+    /** Actual / current start (required). */
     start: Date;
+    /** Actual / current end (required, or via Duration). */
     end: Date;
+    /** Planned / baseline start (optional). */
+    baselineStart: Date | null;
+    /** Planned / baseline end (optional). */
+    baselineEnd: Date | null;
     durationDays: number;
     progress: number | null;
     group: string | null;
@@ -66,6 +74,7 @@ export interface ViewModel {
     tasks: TaskRow[];
     dependencies: DependencyLink[];
     hasGroups: boolean;
+    hasBaselines: boolean;
     domainStart: Date | null;
     domainEnd: Date | null;
     granularity: AxisGranularity;
@@ -81,6 +90,8 @@ export interface RoleColumnIndex {
     group: number | null;
     resource: number | null;
     predecessor: number | null;
+    baselineStart: number | null;
+    baselineEnd: number | null;
     tooltips: number[];
 }
 
