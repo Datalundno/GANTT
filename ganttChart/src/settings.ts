@@ -1,10 +1,19 @@
 "use strict";
 
 import { formattingSettings } from "powerbi-visuals-utils-formattingmodel";
+import powerbi from "powerbi-visuals-api";
 
 import FormattingSettingsCard = formattingSettings.SimpleCard;
 import FormattingSettingsSlice = formattingSettings.Slice;
 import FormattingSettingsModel = formattingSettings.Model;
+
+const axisGranularityItems: powerbi.IEnumMember[] = [
+    { value: "auto", displayName: "Auto" },
+    { value: "day", displayName: "Day" },
+    { value: "week", displayName: "Week" },
+    { value: "month", displayName: "Month" },
+    { value: "quarter", displayName: "Quarter" }
+];
 
 /**
  * Formatting cards aligned with capabilities.json.
@@ -91,6 +100,13 @@ class GeneralCardSettings extends FormattingSettingsCard {
         value: { value: "#e81123" }
     });
 
+    axisGranularity = new formattingSettings.ItemDropdown({
+        name: "axisGranularity",
+        displayName: "Axis granularity",
+        items: axisGranularityItems,
+        value: axisGranularityItems[0]
+    });
+
     weekendShading = new formattingSettings.ToggleSwitch({
         name: "weekendShading",
         displayName: "Weekend shading",
@@ -103,6 +119,7 @@ class GeneralCardSettings extends FormattingSettingsCard {
         this.colorByResource,
         this.showTodayLine,
         this.todayLineColor,
+        this.axisGranularity,
         this.weekendShading
     ];
 }

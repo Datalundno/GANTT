@@ -18,9 +18,9 @@ import ISelectionId = powerbi.visuals.ISelectionId;
 import { VisualFormattingSettingsModel } from "./settings";
 import { convertDataView } from "./data/converter";
 import { buildDisplayRows, visibleTaskRows } from "./data/groups";
-import { TaskRow, ViewModel } from "./data/types";
+import { AxisGranularity, AxisGranularityOption, TaskRow, ViewModel } from "./data/types";
 import { computeLayout, ChartLayout, RIGHT_PADDING } from "./render/layout";
-import { createBandScale, createTimeScale, renderBottomAxis } from "./render/axis";
+import { createBandScale, createTimeScale, renderBottomAxis, renderWeekendShading } from "./render/axis";
 import {
     darkenColor,
     renderBars,
@@ -55,6 +55,7 @@ export class Visual implements IVisual {
     private axisSvg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
 
     private labelLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
+    private weekendLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private bandLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private barsLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private todayLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -113,6 +114,7 @@ export class Visual implements IVisual {
             .append("svg")
             .classed("gantt-plot-svg", true);
 
+        this.weekendLayer = this.plotSvg.append("g").classed("weekends", true);
         this.bandLayer = this.plotSvg.append("g").classed("bands", true);
         this.todayLayer = this.plotSvg.append("g").classed("today", true);
         this.barsLayer = this.plotSvg.append("g").classed("bars", true);
@@ -217,6 +219,14 @@ export class Visual implements IVisual {
                 this.collapsedGroups.delete(key);
             }
         });
+    }
+
+    private resolveGranularity(autoGranularity: AxisGranularity): AxisGranularity {
+        const raw = this.formattingSettings?.generalCard?.axisGranularity?.value?.value as AxisGranularityOption | undefined;
+        if (!raw || raw === "auto") {
+            return autoGranularity;
+        }
+        return raw;
     }
 
     private toggleGroup(groupKey: string): void {
@@ -333,6 +343,8 @@ export class Visual implements IVisual {
             ? contrast.foreground
             : (this.formattingSettings?.generalCard?.todayLineColor?.value?.value || "#e81123");
         const showToday = this.formattingSettings?.generalCard?.showTodayLine?.value ?? true;
+        const weekendShading = this.formattingSettings?.generalCard?.weekendShading?.value ?? false;
+        const granularity = this.resolveGranularity(viewModel.granularity);
         const textColor = contrast.foreground;
         const cornerRadius = this.formattingSettings?.barsCard?.cornerRadius?.value ?? 4;
         const fontSize = this.formattingSettings?.labelsCard?.fontSize?.value ?? 12;
@@ -396,6 +408,7 @@ export class Visual implements IVisual {
             .attr("height", layout.axisHeight);
 
         this.labelLayer.attr("transform", `translate(0,${layout.plotTop})`);
+        this.weekendLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.bandLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.todayLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.barsLayer.attr("transform", `translate(0,${layout.plotTop})`);
@@ -405,14 +418,19 @@ export class Visual implements IVisual {
         const domainEnd = viewModel.domainEnd;
         const rowIds = displayRows.map((r) => r.id);
         const tasks = visibleTaskRows(displayRows);
+        const contentRowsHeight = displayRows.length * layout.rowHeight;
 
         const xScale = createTimeScale(domainStart, domainEnd, 0, plotWidth);
         const yScale = createBandScale(
             rowIds,
             0,
-            displayRows.length * layout.rowHeight,
+            contentRowsHeight,
             0.28
         );
+
+        const weekendFill = contrast.isHighContrast
+            ? contrast.foreground
+            : "rgba(15, 23, 42, 0.06)";
 
         renderLabelRows(
             this.labelLayer,
@@ -425,6 +443,16 @@ export class Visual implements IVisual {
             (groupKey) => this.toggleGroup(groupKey)
         );
 
+        renderWeekendShading(
+            this.weekendLayer,
+            xScale,
+            domainStart,
+            domainEnd,
+            contentRowsHeight,
+            weekendShading,
+            weekendFill
+        );
+
         renderGroupBands(this.bandLayer, displayRows, yScale, plotWidth, bandFill);
 
         renderTodayLine(
@@ -432,7 +460,7 @@ export class Visual implements IVisual {
             xScale,
             domainStart,
             domainEnd,
-            displayRows.length * layout.rowHeight,
+            contentRowsHeight,
             showToday,
             todayColor
         );
@@ -451,7 +479,7 @@ export class Visual implements IVisual {
             onMouseOut: (event, task) => this.onBarMouseOut(event, task)
         });
 
-        renderBottomAxis(this.axisLayer, xScale, viewModel.granularity, textColor, plotWidth);
+        renderBottomAxis(this.axisLayer, xScale, granularity, textColor, plotWidth);
     }
 
     private showMessage(text: string): void {

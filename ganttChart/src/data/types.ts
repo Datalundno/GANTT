@@ -47,6 +47,7 @@ export interface DisplayRow {
 }
 
 export type AxisGranularity = "day" | "week" | "month" | "quarter";
+export type AxisGranularityOption = "auto" | AxisGranularity;
 
 export interface ViewModel {
     tasks: TaskRow[];

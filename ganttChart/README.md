@@ -82,16 +82,22 @@ pbiviz start
 
 Then enable developer mode in Power BI service settings and drop the developer visual onto a report. This path is optional for Desktop-only workflows.
 
-## Current status (Phase 4)
+## Current status (Phase 5 — complete)
 
-Working:
+Working end-to-end:
 
 - Role-based table mapping; readable time scale + scroll; milestones; progress; today line
 - Collapsible groups; color-by-resource
-- **Selection / cross-filter** — click a bar; Ctrl/Cmd-click for multi-select; click empty canvas to clear; unselected bars dim
-- **Host tooltips** — hover a bar for task, dates, duration, progress, group, resource, and Tooltips-role fields
+- Selection / cross-filter; host tooltips
+- Format pane: bar height/radius/colors, label font/width, color-by-resource, today line, **axis granularity override**, **weekend shading**
+- High-contrast palette support
 
-Still planned: weekend shading / axis granularity override (Phase 5 polish).
+### Format pane map
+| Card | Properties |
+| --- | --- |
+| Bars | Height, corner radius, fill, progress fill |
+| Task labels | Font size, font family, pane width |
+| General | Color by resource, today line + color, axis granularity, weekend shading |
 
 ## Notes
 

@@ -89,3 +89,55 @@ export function renderBottomAxis(
         .attr("stroke", color)
         .attr("stroke-opacity", 0.55);
 }
+
+interface WeekendBand {
+    start: Date;
+    end: Date;
+}
+
+/**
+ * Light vertical bands for Saturday and Sunday.
+ */
+export function renderWeekendShading(
+    container: d3.Selection<SVGGElement, unknown, null, undefined>,
+    xScale: d3.ScaleTime<number, number>,
+    domainStart: Date,
+    domainEnd: Date,
+    height: number,
+    visible: boolean,
+    fill: string
+): void {
+    const bands: WeekendBand[] = [];
+
+    if (visible) {
+        let day = d3.timeDay.floor(domainStart);
+        const end = d3.timeDay.offset(d3.timeDay.floor(domainEnd), 1);
+        while (day < end) {
+            const weekday = day.getDay(); // 0 = Sun, 6 = Sat
+            if (weekday === 0 || weekday === 6) {
+                bands.push({
+                    start: day,
+                    end: d3.timeDay.offset(day, 1)
+                });
+            }
+            day = d3.timeDay.offset(day, 1);
+        }
+    }
+
+    const join = container
+        .selectAll<SVGRectElement, WeekendBand>("rect.weekend-band")
+        .data(bands, (d) => `${d.start.getTime()}`);
+
+    join.exit().remove();
+
+    join.enter()
+        .append("rect")
+        .attr("class", "weekend-band")
+        .merge(join)
+        .attr("x", (d) => xScale(d.start))
+        .attr("y", 0)
+        .attr("width", (d) => Math.max(1, xScale(d.end) - xScale(d.start)))
+        .attr("height", height)
+        .attr("fill", fill)
+        .attr("pointer-events", "none");
+}
