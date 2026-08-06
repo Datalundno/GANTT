@@ -7,16 +7,6 @@ Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.n
 | [`ganttChart/`](ganttChart/) | Power BI visual + AppSource package |
 | [`ganttChart/docs/APPSOURCE.md`](ganttChart/docs/APPSOURCE.md) | AppSource upload checklist |
 
-## Website
-
-Marketing and AppSource support pages live in a separate repo:
-
-**https://github.com/Datalundno/Website** → [datalund.no](https://datalund.no)
-
-- https://datalund.no/visuals/gantt/ (Help)
-- https://datalund.no/support/
-- https://datalund.no/privacy/
-
 ## Visual package
 
 ```bash
