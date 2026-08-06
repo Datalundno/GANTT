@@ -15,4 +15,4 @@ npm install
 npm run dev
 ```
 
-Domain purchase steps: [`website/DOMAIN.md`](website/DOMAIN.md).
+Deployed with GitHub Pages. DNS + domain notes: [`website/DOMAIN.md`](website/DOMAIN.md).

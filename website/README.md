@@ -16,10 +16,8 @@ npm run build
 npm run preview
 ```
 
-## Domain
-
-See [DOMAIN.md](./DOMAIN.md) for how to buy and connect `datalund.no`.
-
 ## Deploy
 
-`vercel.json` is configured for a Vite static build from this folder. Import the `/website` directory (or monorepo root with Root Directory = `website`) in Vercel/Netlify, then attach the domain after purchase.
+Hosted on **GitHub Pages** via `.github/workflows/deploy-pages.yml` (builds on push to `main`).
+
+Domain + DNS: [DOMAIN.md](./DOMAIN.md).
