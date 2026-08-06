@@ -182,15 +182,14 @@ export function renderBars(
 
     const bandwidth = Math.max(4, yScale.bandwidth());
     // Keep bars visually centered on the same midline as labels/status dots.
-    const barHeight = Math.max(4, Math.min(bandwidth * 0.58, bandwidth - 8));
     const midY = bandwidth / 2;
-    const actualHeight = barHeight;
+    const actualHeight = Math.max(4, Math.min(bandwidth * 0.52, bandwidth - 10));
     const actualY = midY - actualHeight / 2;
-    // Planned = thinner bar on the same centerline (drawn behind actual).
-    const baselineHeight = Math.max(3, actualHeight * 0.42);
+    // Planned = slightly taller outline envelope behind actual (always readable).
+    const baselineHeight = Math.max(actualHeight + 6, actualHeight * 1.35);
     const baselineY = midY - baselineHeight / 2;
-    const milestoneSize = Math.max(10, Math.min(bandwidth * 0.62, 18));
-    const baselineMilestoneSize = Math.max(8, milestoneSize - 4);
+    const milestoneSize = Math.max(10, Math.min(bandwidth * 0.58, 16));
+    const baselineMilestoneSize = Math.max(9, milestoneSize + 2);
 
     const join = container
         .selectAll<SVGGElement, TaskRow>("g.task-row")
@@ -243,9 +242,9 @@ export function renderBars(
         .attr("ry", Math.max(1, Math.min(cornerRadius, 3)))
         .attr("height", baselineHeight)
         .attr("width", (d) => Math.max(1, xScale(d.baselineEnd!) - xScale(d.baselineStart!)))
-        .attr("fill", baselineFill)
-        .attr("stroke", withAlpha("#0F172A", 0.2))
-        .attr("stroke-width", 1)
+        .attr("fill", withAlpha("#94A3B8", 0.22))
+        .attr("stroke", withAlpha("#64748B", 0.85))
+        .attr("stroke-width", 1.25)
         .attr("pointer-events", "none");
 
     merged.select<SVGRectElement>("rect.task-track")
@@ -357,7 +356,7 @@ export function renderBars(
         .attr("fill", "url(#gantt-late-hatch)")
         .attr("pointer-events", "none");
 
-    // Planned milestone: outline only, same midline; hide if same day as actual.
+    // Planned milestone: larger outline behind actual when dates differ.
     merged.select<SVGPolygonElement>("polygon.task-baseline-milestone")
         .attr("display", (d) => {
             if (!d.isMilestone || !hasBaseline(d)) {
@@ -367,7 +366,7 @@ export function renderBars(
             return sameDay ? "none" : null;
         })
         .attr("points", (d) => diamondPoints(xScale(d.baselineStart!), midY, baselineMilestoneSize))
-        .attr("fill", "none")
+        .attr("fill", withAlpha("#94A3B8", 0.15))
         .attr("stroke", withAlpha("#64748B", 0.95))
         .attr("stroke-width", 1.5)
         .attr("pointer-events", "none");
