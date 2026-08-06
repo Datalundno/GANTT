@@ -4,15 +4,15 @@
     "displayName": "Gantt Chart",
     "guid": "ganttChartF8E34E29596A403E8E39808FA17C9CE9",
     "visualClassName": "Visual",
-    "version": "1.4.0.0",
-    "description": "Internal custom Gantt chart visual for Power BI Desktop.",
-    "supportUrl": "https://localhost",
-    "gitHubUrl": ""
+    "version": "1.5.0.0",
+    "description": "Gantt Chart by Chartvik — plan and track tasks on a timeline with progress bars, milestones, collapsible groups, resources, cross-filtering, and tooltips. Built for Microsoft Power BI.",
+    "supportUrl": "https://github.com/Chartvik/GANTT/issues",
+    "gitHubUrl": "https://github.com/Chartvik/GANTT"
   },
   "apiVersion": "5.11.1",
   "author": {
-    "name": "Internal",
-    "email": "dev@example.com"
+    "name": "Chartvik",
+    "email": "jonas.lundervold@gmail.com"
   },
   "assets": {
     "icon": "assets/icon.png"
@@ -21,6 +21,8 @@
   "style": "style/visual.less",
   "capabilities": "capabilities.json",
   "dependencies": null,
-  "stringResources": [],
-  "version": "1.4.0.0"
+  "stringResources": [
+    "stringResources/en-US/resources.resjson"
+  ],
+  "version": "1.5.0.0"
 }

@@ -2,9 +2,11 @@
     "dataRoles": [
         {
             "displayName": "Task",
+            "displayNameKey": "Role_Task",
             "name": "task",
             "kind": "Grouping",
             "description": "Task name (required).",
+            "descriptionKey": "Role_Task_Desc",
             "preferredTypes": [
                 {
                     "text": true
@@ -13,21 +15,27 @@
         },
         {
             "displayName": "Start Date",
+            "displayNameKey": "Role_StartDate",
             "name": "startDate",
             "kind": "GroupingOrMeasure",
-            "description": "Task start date (required)."
+            "description": "Task start date (required).",
+            "descriptionKey": "Role_StartDate_Desc"
         },
         {
             "displayName": "End Date",
+            "displayNameKey": "Role_EndDate",
             "name": "endDate",
             "kind": "GroupingOrMeasure",
-            "description": "Task end date. Optional when Duration is supplied."
+            "description": "Task end date. Optional when Duration is supplied.",
+            "descriptionKey": "Role_EndDate_Desc"
         },
         {
             "displayName": "Duration",
+            "displayNameKey": "Role_Duration",
             "name": "duration",
             "kind": "Measure",
             "description": "Duration in days. Used when End Date is absent.",
+            "descriptionKey": "Role_Duration_Desc",
             "requiredTypes": [
                 {
                     "numeric": true
@@ -39,9 +47,11 @@
         },
         {
             "displayName": "Progress",
+            "displayNameKey": "Role_Progress",
             "name": "progress",
             "kind": "Measure",
             "description": "Progress as 0–1 or 0–100.",
+            "descriptionKey": "Role_Progress_Desc",
             "requiredTypes": [
                 {
                     "numeric": true
@@ -53,9 +63,11 @@
         },
         {
             "displayName": "Group",
+            "displayNameKey": "Role_Group",
             "name": "group",
             "kind": "Grouping",
             "description": "Parent/phase for collapsible grouping.",
+            "descriptionKey": "Role_Group_Desc",
             "preferredTypes": [
                 {
                     "text": true
@@ -64,9 +76,11 @@
         },
         {
             "displayName": "Resource",
+            "displayNameKey": "Role_Resource",
             "name": "resource",
             "kind": "Grouping",
             "description": "Assignee; used for optional color-by.",
+            "descriptionKey": "Role_Resource_Desc",
             "preferredTypes": [
                 {
                     "text": true
@@ -75,29 +89,35 @@
         },
         {
             "displayName": "Tooltips",
+            "displayNameKey": "Role_Tooltips",
             "name": "tooltipFields",
             "kind": "Grouping",
-            "description": "Extra fields shown in tooltips."
+            "description": "Extra fields shown in tooltips.",
+            "descriptionKey": "Role_Tooltips_Desc"
         }
     ],
     "objects": {
         "bars": {
             "displayName": "Bars",
+            "displayNameKey": "Objects_Bars",
             "properties": {
                 "barHeight": {
                     "displayName": "Bar height",
+                    "displayNameKey": "Prop_BarHeight",
                     "type": {
                         "numeric": true
                     }
                 },
                 "cornerRadius": {
                     "displayName": "Corner radius",
+                    "displayNameKey": "Prop_CornerRadius",
                     "type": {
                         "numeric": true
                     }
                 },
                 "fill": {
                     "displayName": "Bar fill",
+                    "displayNameKey": "Prop_BarFill",
                     "type": {
                         "fill": {
                             "solid": {
@@ -108,6 +128,7 @@
                 },
                 "progressFill": {
                     "displayName": "Progress fill",
+                    "displayNameKey": "Prop_ProgressFill",
                     "type": {
                         "fill": {
                             "solid": {
@@ -120,9 +141,11 @@
         },
         "labels": {
             "displayName": "Task labels",
+            "displayNameKey": "Objects_Labels",
             "properties": {
                 "fontSize": {
                     "displayName": "Font size",
+                    "displayNameKey": "Prop_FontSize",
                     "type": {
                         "formatting": {
                             "fontSize": true
@@ -131,6 +154,7 @@
                 },
                 "fontFamily": {
                     "displayName": "Font family",
+                    "displayNameKey": "Prop_FontFamily",
                     "type": {
                         "formatting": {
                             "fontFamily": true
@@ -139,6 +163,7 @@
                 },
                 "width": {
                     "displayName": "Label pane width",
+                    "displayNameKey": "Prop_LabelWidth",
                     "type": {
                         "numeric": true
                     }
@@ -147,21 +172,25 @@
         },
         "general": {
             "displayName": "General",
+            "displayNameKey": "Objects_General",
             "properties": {
                 "colorByResource": {
                     "displayName": "Color by resource",
+                    "displayNameKey": "Prop_ColorByResource",
                     "type": {
                         "bool": true
                     }
                 },
                 "showTodayLine": {
                     "displayName": "Show today line",
+                    "displayNameKey": "Prop_ShowTodayLine",
                     "type": {
                         "bool": true
                     }
                 },
                 "todayLineColor": {
                     "displayName": "Today line color",
+                    "displayNameKey": "Prop_TodayLineColor",
                     "type": {
                         "fill": {
                             "solid": {
@@ -172,6 +201,7 @@
                 },
                 "axisGranularity": {
                     "displayName": "Axis granularity",
+                    "displayNameKey": "Prop_AxisGranularity",
                     "type": {
                         "enumeration": [
                             {
@@ -199,6 +229,7 @@
                 },
                 "axisLabelFormat": {
                     "displayName": "Axis labels",
+                    "displayNameKey": "Prop_AxisLabels",
                     "type": {
                         "enumeration": [
                             {
@@ -218,6 +249,7 @@
                 },
                 "weekendShading": {
                     "displayName": "Weekend shading",
+                    "displayNameKey": "Prop_WeekendShading",
                     "type": {
                         "bool": true
                     }
@@ -263,6 +295,9 @@
     "privileges": [],
     "supportsHighlight": true,
     "supportsMultiVisualSelection": true,
+    "supportsLandingPage": true,
+    "supportsEmptyDataView": true,
+    "supportsKeyboardFocus": true,
     "tooltips": {
         "supportedTypes": {
             "default": true,

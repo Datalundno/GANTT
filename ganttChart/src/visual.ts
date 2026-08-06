@@ -12,6 +12,7 @@ import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 import IVisualEventService = powerbi.extensibility.IVisualEventService;
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 import ITooltipService = powerbi.extensibility.ITooltipService;
+import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
 import VisualUpdateType = powerbi.VisualUpdateType;
 import ISelectionId = powerbi.visuals.ISelectionId;
 
@@ -36,11 +37,13 @@ export class Visual implements IVisual {
     private events: IVisualEventService;
     private selectionManager: ISelectionManager;
     private tooltipService: ITooltipService;
+    private localization: ILocalizationManager;
     private formattingSettings: VisualFormattingSettingsModel;
     private formattingSettingsService: FormattingSettingsService;
 
     private root: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private message: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private landing: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private chart: d3.Selection<HTMLDivElement, unknown, null, undefined>;
 
     private bodyRow: d3.Selection<HTMLDivElement, unknown, null, undefined>;
@@ -67,13 +70,15 @@ export class Visual implements IVisual {
     private selectedKeys: Set<string> = new Set();
     private syncingScroll = false;
     private lastViewport: { width: number; height: number } | null = null;
+    private isLandingPageOn = false;
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
         this.events = options.host.eventService;
         this.selectionManager = options.host.createSelectionManager();
         this.tooltipService = options.host.tooltipService;
-        this.formattingSettingsService = new FormattingSettingsService();
+        this.localization = options.host.createLocalizationManager();
+        this.formattingSettingsService = new FormattingSettingsService(this.localization);
 
         this.selectionManager.registerOnSelectCallback((ids: ISelectionId[]) => {
             this.selectedKeys = new Set((ids ?? []).map((id) => id.getKey()));
@@ -82,12 +87,20 @@ export class Visual implements IVisual {
 
         this.root = d3.select(options.element)
             .append("div")
-            .classed("gantt-root", true);
+            .classed("gantt-root", true)
+            .attr("tabindex", "0");
 
         this.message = this.root
             .append("div")
             .classed("gantt-message", true)
             .style("display", "none");
+
+        this.landing = this.root
+            .append("div")
+            .classed("gantt-landing", true)
+            .style("display", "none");
+
+        this.buildLandingPage();
 
         this.chart = this.root
             .append("div")
@@ -166,6 +179,11 @@ export class Visual implements IVisual {
         this.plotSvg.on("click", () => {
             this.clearSelection();
         });
+
+        // AppSource requires context menu on empty space and data points.
+        this.root.on("contextmenu", (event: MouseEvent) => {
+            this.showEmptyContextMenu(event);
+        });
     }
 
     public update(options: VisualUpdateOptions): void {
@@ -177,6 +195,20 @@ export class Visual implements IVisual {
                 VisualFormattingSettingsModel,
                 dataView
             );
+
+            const hasBoundFields = (dataView?.metadata?.columns?.length ?? 0) > 0;
+            if (!hasBoundFields) {
+                this.showLandingPage();
+                this.viewModel = null;
+                this.lastViewport = {
+                    width: options.viewport.width,
+                    height: options.viewport.height
+                };
+                this.events.renderingFinished(options);
+                return;
+            }
+
+            this.hideLandingPage();
 
             const isResizeOnly =
                 options.type === VisualUpdateType.Resize ||
@@ -194,11 +226,110 @@ export class Visual implements IVisual {
                 height: options.viewport.height
             };
             this.renderFromState();
+            this.updateWarningIcon();
 
             this.events.renderingFinished(options);
         } catch (error) {
-            this.showMessage(`Unable to render Gantt chart: ${String(error)}`);
+            const prefix = this.t("Msg_RenderError", "Unable to render Gantt chart");
+            this.showMessage(`${prefix}: ${String(error)}`);
             this.events.renderingFailed(options, String(error));
+        }
+    }
+
+    private t(key: string, fallback: string): string {
+        try {
+            const value = this.localization.getDisplayName(key);
+            return value || fallback;
+        } catch {
+            return fallback;
+        }
+    }
+
+    private buildLandingPage(): void {
+        const node = this.landing.node();
+        if (node) {
+            while (node.firstChild) {
+                node.removeChild(node.firstChild);
+            }
+        }
+
+        const card = this.landing.append("div").classed("gantt-landing-card", true);
+
+        card.append("div")
+            .classed("gantt-landing-mark", true)
+            .attr("aria-hidden", "true");
+
+        card.append("h2")
+            .classed("gantt-landing-title", true)
+            .text(this.t("Landing_Title", "Gantt Chart"));
+
+        card.append("p")
+            .classed("gantt-landing-subtitle", true)
+            .text(this.t("Landing_Subtitle", "Visualize project schedules on a clear timeline."));
+
+        const steps = card.append("ul").classed("gantt-landing-steps", true);
+        const stepKeys: Array<[string, string]> = [
+            ["Landing_Step1", "1. Drag Task into the Task field"],
+            ["Landing_Step2", "2. Drag a date into Start Date"],
+            ["Landing_Step3", "3. Add End Date or Duration"],
+            ["Landing_Step4", "Optional: Progress, Group, Resource, Tooltips"]
+        ];
+        for (const [key, fallback] of stepKeys) {
+            steps.append("li").text(this.t(key, fallback));
+        }
+    }
+
+    private showLandingPage(): void {
+        this.isLandingPageOn = true;
+        this.chart.style("display", "none");
+        this.message.style("display", "none").text("");
+        this.landing.style("display", "flex");
+    }
+
+    private hideLandingPage(): void {
+        if (!this.isLandingPageOn) {
+            this.landing.style("display", "none");
+            return;
+        }
+        this.isLandingPageOn = false;
+        this.landing.style("display", "none");
+    }
+
+    private showEmptyContextMenu(event: MouseEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!this.host.hostCapabilities?.allowInteractions) {
+            return;
+        }
+        this.selectionManager.showContextMenu({} as ISelectionId, {
+            x: event.clientX,
+            y: event.clientY
+        });
+    }
+
+    private onBarContextMenu(event: MouseEvent, task: TaskRow): void {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!this.host.hostCapabilities?.allowInteractions) {
+            return;
+        }
+        const selectionId = task.selectionId ?? ({} as ISelectionId);
+        this.selectionManager.showContextMenu(selectionId, {
+            x: event.clientX,
+            y: event.clientY
+        });
+    }
+
+    private updateWarningIcon(): void {
+        if (!this.viewModel || !this.host.displayWarningIcon) {
+            return;
+        }
+        const invalidCount = this.viewModel.tasks.filter((t) => t.flaggedInvalidRange).length;
+        if (invalidCount > 0) {
+            this.host.displayWarningIcon(
+                "Invalid date ranges",
+                `${invalidCount} task(s) have an end date before the start date. Those bars are outlined so you can fix the data.`
+            );
         }
     }
 
@@ -240,6 +371,9 @@ export class Visual implements IVisual {
     }
 
     private toggleGroup(groupKey: string): void {
+        if (!this.host.hostCapabilities?.allowInteractions) {
+            return;
+        }
         if (this.collapsedGroups.has(groupKey)) {
             this.collapsedGroups.delete(groupKey);
         } else {
@@ -256,6 +390,9 @@ export class Visual implements IVisual {
     }
 
     private onBarClick(event: MouseEvent, task: TaskRow): void {
+        if (!this.host.hostCapabilities?.allowInteractions) {
+            return;
+        }
         if (!task.selectionId) {
             return;
         }
@@ -267,6 +404,9 @@ export class Visual implements IVisual {
     }
 
     private clearSelection(): void {
+        if (!this.host.hostCapabilities?.allowInteractions) {
+            return;
+        }
         if (!this.selectionManager.hasSelection()) {
             return;
         }
@@ -293,7 +433,7 @@ export class Visual implements IVisual {
         });
     }
 
-    private onBarMouseOut(event: MouseEvent, _task: TaskRow): void {
+    private onBarMouseOut(_event: MouseEvent, _task: TaskRow): void {
         this.tooltipService.hide({
             isTouchEvent: false,
             immediately: true
@@ -330,12 +470,15 @@ export class Visual implements IVisual {
     ): void {
         const viewModel = this.viewModel;
         if (!viewModel || viewModel.errorMessage || viewModel.tasks.length === 0) {
-            this.showMessage(viewModel?.errorMessage ?? "Add Task and Start Date fields to render the Gantt chart.");
+            this.showMessage(
+                viewModel?.errorMessage
+                    ?? this.t("Msg_AddFields", "Add Task and Start Date fields to render the Gantt chart.")
+            );
             return;
         }
 
         if (!viewModel.domainStart || !viewModel.domainEnd) {
-            this.showMessage("Could not determine a valid date range.");
+            this.showMessage(this.t("Msg_InvalidRange", "Could not determine a valid date range."));
             return;
         }
 
@@ -494,6 +637,7 @@ export class Visual implements IVisual {
             hasSelection,
             isSelected: (task) => this.isTaskSelected(task),
             onClick: (event, task) => this.onBarClick(event, task),
+            onContextMenu: (event, task) => this.onBarContextMenu(event, task),
             onMouseMove: (event, task) => this.onBarMouseMove(event, task),
             onMouseOut: (event, task) => this.onBarMouseOut(event, task)
         });
@@ -502,6 +646,7 @@ export class Visual implements IVisual {
     }
 
     private showMessage(text: string): void {
+        this.hideLandingPage();
         this.chart.style("display", "none");
         this.message
             .style("display", "flex")

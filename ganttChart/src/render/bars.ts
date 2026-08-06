@@ -16,6 +16,7 @@ export interface BarRenderOptions {
     hasSelection: boolean;
     isSelected: (task: TaskRow) => boolean;
     onClick: (event: MouseEvent, task: TaskRow) => void;
+    onContextMenu: (event: MouseEvent, task: TaskRow) => void;
     onMouseMove: (event: MouseEvent, task: TaskRow) => void;
     onMouseOut: (event: MouseEvent, task: TaskRow) => void;
 }
@@ -62,6 +63,7 @@ export function renderBars(
         hasSelection,
         isSelected,
         onClick,
+        onContextMenu,
         onMouseMove,
         onMouseOut
     } = options;
@@ -166,6 +168,11 @@ export function renderBars(
             event.preventDefault();
             event.stopPropagation();
             onClick(event, d);
+        })
+        .on("contextmenu", (event: MouseEvent, d: TaskRow) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onContextMenu(event, d);
         })
         .on("mousemove", (event: MouseEvent, d: TaskRow) => {
             onMouseMove(event, d);

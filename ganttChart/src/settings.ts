@@ -28,29 +28,34 @@ class BarsCardSettings extends FormattingSettingsCard {
     barHeight = new formattingSettings.NumUpDown({
         name: "barHeight",
         displayName: "Bar height",
+        displayNameKey: "Prop_BarHeight",
         value: 28
     });
 
     cornerRadius = new formattingSettings.NumUpDown({
         name: "cornerRadius",
         displayName: "Corner radius",
+        displayNameKey: "Prop_CornerRadius",
         value: 4
     });
 
     fill = new formattingSettings.ColorPicker({
         name: "fill",
         displayName: "Bar fill",
+        displayNameKey: "Prop_BarFill",
         value: { value: "#0ea5e9" }
     });
 
     progressFill = new formattingSettings.ColorPicker({
         name: "progressFill",
         displayName: "Progress fill",
+        displayNameKey: "Prop_ProgressFill",
         value: { value: "#0284c7" }
     });
 
     name: string = "bars";
     displayName: string = "Bars";
+    displayNameKey: string = "Objects_Bars";
     slices: Array<FormattingSettingsSlice> = [
         this.barHeight,
         this.cornerRadius,
@@ -63,23 +68,27 @@ class LabelsCardSettings extends FormattingSettingsCard {
     fontSize = new formattingSettings.NumUpDown({
         name: "fontSize",
         displayName: "Font size",
+        displayNameKey: "Prop_FontSize",
         value: 12
     });
 
     fontFamily = new formattingSettings.FontPicker({
         name: "fontFamily",
         displayName: "Font family",
+        displayNameKey: "Prop_FontFamily",
         value: "Segoe UI, wf_segoe-ui_normal, helvetica, arial, sans-serif"
     });
 
     width = new formattingSettings.NumUpDown({
         name: "width",
         displayName: "Label pane width",
+        displayNameKey: "Prop_LabelWidth",
         value: 200
     });
 
     name: string = "labels";
     displayName: string = "Task labels";
+    displayNameKey: string = "Objects_Labels";
     slices: Array<FormattingSettingsSlice> = [
         this.fontSize,
         this.fontFamily,
@@ -91,24 +100,28 @@ class GeneralCardSettings extends FormattingSettingsCard {
     colorByResource = new formattingSettings.ToggleSwitch({
         name: "colorByResource",
         displayName: "Color by resource",
+        displayNameKey: "Prop_ColorByResource",
         value: false
     });
 
     showTodayLine = new formattingSettings.ToggleSwitch({
         name: "showTodayLine",
         displayName: "Show today line",
+        displayNameKey: "Prop_ShowTodayLine",
         value: true
     });
 
     todayLineColor = new formattingSettings.ColorPicker({
         name: "todayLineColor",
         displayName: "Today line color",
+        displayNameKey: "Prop_TodayLineColor",
         value: { value: "#e81123" }
     });
 
     axisGranularity = new formattingSettings.ItemDropdown({
         name: "axisGranularity",
         displayName: "Axis granularity",
+        displayNameKey: "Prop_AxisGranularity",
         items: axisGranularityItems,
         value: axisGranularityItems[0]
     });
@@ -116,6 +129,7 @@ class GeneralCardSettings extends FormattingSettingsCard {
     axisLabelFormat = new formattingSettings.ItemDropdown({
         name: "axisLabelFormat",
         displayName: "Axis labels",
+        displayNameKey: "Prop_AxisLabels",
         items: axisLabelFormatItems,
         value: axisLabelFormatItems[0]
     });
@@ -123,11 +137,13 @@ class GeneralCardSettings extends FormattingSettingsCard {
     weekendShading = new formattingSettings.ToggleSwitch({
         name: "weekendShading",
         displayName: "Weekend shading",
+        displayNameKey: "Prop_WeekendShading",
         value: false
     });
 
     name: string = "general";
     displayName: string = "General";
+    displayNameKey: string = "Objects_General";
     slices: Array<FormattingSettingsSlice> = [
         this.colorByResource,
         this.showTodayLine,

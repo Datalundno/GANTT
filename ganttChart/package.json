@@ -1,17 +1,17 @@
 {
   "name": "gantt-chart",
-  "description": "Internal custom Power BI Gantt chart visual",
-  "version": "1.4.0.0",
+  "description": "Gantt Chart custom visual for Microsoft Power BI by Chartvik",
+  "version": "1.5.0.0",
   "repository": {
     "type": "git",
-    "url": "https://localhost"
+    "url": "https://github.com/Chartvik/GANTT.git"
   },
   "license": "MIT",
   "scripts": {
     "pbiviz": "pbiviz",
     "start": "pbiviz start",
     "package": "pbiviz package",
-    "lint": "npx eslint ."
+    "lint": "npx eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "engines": {
     "node": ">=20.19.0"
