@@ -1,0 +1,19 @@
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -1,7 +1,7 @@
+ import './style.css'
+ 
+ const GANTT_PBIVIZ =
+-  'https://github.com/Datalundno/GANTT/raw/main/ganttChart/downloads/ganttChart.pbiviz'
++  'https://github.com/Datalundno/GANTT/raw/main/ganttChart/downloads/DataLundGantt.pbiviz'
+ const SAMPLE_XLSX =
+   'https://github.com/Datalundno/GANTT/raw/main/ganttChart/downloads/GanttSampleData.xlsx'
+ const REPO_URL = 'https://github.com/Datalundno/GANTT'
+@@ -168,7 +168,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
+           About 900×400 is a good starting size.
+         </p>
+         <div class="cta-row">
+-          <a class="btn btn-primary" href="${GANTT_PBIVIZ}" download>Download .pbiviz</a>
++          <a class="btn btn-primary" href="${GANTT_PBIVIZ}" download="DataLundGantt.pbiviz">Download DataLund Gantt</a>
+           <a class="btn btn-ghost" href="${SAMPLE_XLSX}" download>Sample Excel</a>
+         </div>
