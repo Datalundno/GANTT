@@ -14,7 +14,7 @@ Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.n
 
 | Artifact | Link |
 | --- | --- |
-| Visual (`.pbiviz`) | [ganttChart.pbiviz](https://github.com/Datalundno/GANTT/raw/main/ganttChart/downloads/ganttChart.pbiviz) |
+| Visual (`.pbiviz`) | [DataLundGantt.pbiviz](https://github.com/Datalundno/GANTT/raw/main/ganttChart/downloads/DataLundGantt.pbiviz) |
 | Sample Excel | [GanttSampleData.xlsx](https://github.com/Datalundno/GANTT/raw/main/ganttChart/downloads/GanttSampleData.xlsx) |
 | Store logo 300×300 | [`assets/store/logo-300.png`](assets/store/logo-300.png) |
 

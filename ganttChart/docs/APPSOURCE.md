@@ -16,7 +16,7 @@ Continuing while custom-domain TLS / DNS finishes propagating. Content is alread
 | Step | Status |
 | --- | --- |
 | **1** datalund.no pages live | Content OK at `/visuals/gantt/`, `/support/`, `/privacy/` — re-check **Enforce HTTPS** / cert after propagation ([Website Pages settings](https://github.com/Datalundno/Website/settings/pages)) |
-| **2** package build | Done — lint / package / certification-audit / `npm audit` 0; `downloads/ganttChart.pbiviz` refreshed |
+| **2** package build | Done — lint / package / certification-audit / `npm audit` 0; `downloads/DataLundGantt.pbiviz` refreshed |
 | **2** sample `.pbix` + screenshots | **Needs Power BI Desktop** — follow [`DESKTOP_SAMPLE.md`](./DESKTOP_SAMPLE.md) |
 | **3** policy self-check | Code/docs aligned; remaining items are listing honesty at submit time |
 | **4–7** Partner Center | **Needs publisher account** — use [`PARTNER_CENTER_LISTING.md`](./PARTNER_CENTER_LISTING.md) |
@@ -61,10 +61,10 @@ npm run lint
 pbiviz package
 pbiviz package --certification-audit   # expect: no external requests
 npm audit                              # expect: 0 high/moderate ideally
-cp dist/ganttChartF8E34E29596A403E8E39808FA17C9CE9.1.6.0.0.pbiviz downloads/ganttChart.pbiviz
+cp dist/ganttChartF8E34E29596A403E8E39808FA17C9CE9.1.6.0.0.pbiviz downloads/DataLundGantt.pbiviz
 ```
 
-- [x] Use packaged file: `dist/ganttChart…1.6.0.0.pbiviz` (also copied to `downloads/ganttChart.pbiviz`)
+- [x] Use packaged file: `dist/ganttChart…1.6.0.0.pbiviz` (also copied to `downloads/DataLundGantt.pbiviz`)
 - [x] Confirm `pbiviz.json` has real author name/email, supportUrl, description (no `localhost`)
 - [x] GUID unchanged (`ganttChartF8E34E29596A403E8E39808FA17C9CE9`)
 - [x] Store logo ready: `assets/store/logo-300.png` (exactly **300×300** PNG)
@@ -223,7 +223,7 @@ Run through [submission testing](https://learn.microsoft.com/en-us/power-bi/deve
 | Real support/privacy target URLs | Point to datalund.no (deployed; enable Enforce HTTPS) |
 | 300×300 logo | `ganttChart/assets/store/logo-300.png` |
 | Sample Excel | `ganttChart/downloads/GanttSampleData.xlsx` |
-| Packaged `.pbiviz` 1.6.0.0 | `ganttChart/downloads/ganttChart.pbiviz` |
+| Packaged `.pbiviz` 1.6.0.0 | `ganttChart/downloads/DataLundGantt.pbiviz` |
 | Partner Center listing copy | `ganttChart/docs/PARTNER_CENTER_LISTING.md` |
 | Sample `.pbix` | **You create in Desktop** |
 | Live HTTPS (valid custom-domain cert) | **Enable Enforce HTTPS** on [Datalundno/Website](https://github.com/Datalundno/Website/settings/pages) |

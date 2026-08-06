@@ -27,4 +27,4 @@ npm install
 pbiviz package
 ```
 
-Download: [`ganttChart/downloads/ganttChart.pbiviz`](ganttChart/downloads/ganttChart.pbiviz)
+Download: [`ganttChart/downloads/DataLundGantt.pbiviz`](ganttChart/downloads/DataLundGantt.pbiviz)

@@ -1,12 +1,12 @@
 # Power BI Desktop — sample `.pbix` + screenshots
 
-You need **Power BI Desktop** for these AppSource assets. Use visual package **1.6.0.0** from this repo (`downloads/ganttChart.pbiviz`). Do not mix versions between the `.pbix` and the uploaded `.pbiviz`.
+You need **Power BI Desktop** for these AppSource assets. Use visual package **1.6.0.0** from this repo (`downloads/DataLundGantt.pbiviz`). Do not mix versions between the `.pbix` and the uploaded `.pbiviz`.
 
 Files you’ll need locally:
 
 | File | Path |
 | --- | --- |
-| Visual | `ganttChart/downloads/ganttChart.pbiviz` |
+| Visual | `ganttChart/downloads/DataLundGantt.pbiviz` |
 | Sample data | `ganttChart/downloads/GanttSampleData.xlsx` |
 | Store logo (already done) | `ganttChart/assets/store/logo-300.png` |
 
@@ -24,7 +24,7 @@ When finished, drop outputs here (or keep them private until upload):
 3. Confirm columns: `Task`, `Start`, `End`, `Duration`, `Progress`, `Group`, `Resource`.
 4. Mark `Start` / `End` as **Date** (not Date/Time) if Power BI guessed wrong.
 5. Mark `Progress` as decimal; `Duration` as whole number.
-6. Visualizations pane → **…** → **Import a visual from a file** → choose `ganttChart.pbiviz`.
+6. Visualizations pane → **…** → **Import a visual from a file** → choose `DataLundGantt.pbiviz`.
 7. Add **DataLund Gantt** to the canvas.
 
 ### Field bindings
