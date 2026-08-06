@@ -6,10 +6,13 @@ import { DisplayRow, TaskRow } from "../data/types";
 export interface BarRenderOptions {
     xScale: d3.ScaleTime<number, number>;
     yScale: d3.ScaleBand<string>;
-    getBarFill: (task: TaskRow) => string;
-    getProgressFill: (task: TaskRow) => string;
+    /** Color for track, milestones, and unprogressed solid bars. */
+    getBarColor: (task: TaskRow) => string;
+    /** Solid progress fill (left overlay). */
+    getProgressColor: (task: TaskRow) => string;
     cornerRadius: number;
     flaggedStroke: string;
+    trackStroke: string;
     hasSelection: boolean;
     isSelected: (task: TaskRow) => boolean;
     onClick: (event: MouseEvent, task: TaskRow) => void;
@@ -30,8 +33,18 @@ export function darkenColor(hex: string, k: number = 0.55): string {
     return c.darker(k).formatHex();
 }
 
+export function withAlpha(hex: string, alpha: number): string {
+    const c = d3.color(hex);
+    if (!c) {
+        return hex;
+    }
+    c.opacity = alpha;
+    return c.formatRgb();
+}
+
 /**
  * D3 data join for task bars, progress overlays, and milestone diamonds.
+ * Track = muted full span; progress = solid fill from the left.
  */
 export function renderBars(
     container: d3.Selection<SVGGElement, unknown, null, undefined>,
@@ -41,17 +54,20 @@ export function renderBars(
     const {
         xScale,
         yScale,
-        getBarFill,
-        getProgressFill,
+        getBarColor,
+        getProgressColor,
         cornerRadius,
         flaggedStroke,
+        trackStroke,
         hasSelection,
         isSelected,
         onClick,
         onMouseMove,
         onMouseOut
     } = options;
-    const bandwidth = yScale.bandwidth();
+    const bandwidth = Math.max(4, yScale.bandwidth());
+    const barHeight = Math.max(4, bandwidth * 0.72);
+    const barY = (bandwidth - barHeight) / 2;
 
     const join = container
         .selectAll<SVGGElement, TaskRow>("g.task-row")
@@ -63,7 +79,7 @@ export function renderBars(
         .append("g")
         .attr("class", "task-row");
 
-    enter.append("rect").attr("class", "task-bar");
+    enter.append("rect").attr("class", "task-track");
     enter.append("rect").attr("class", "task-progress");
     enter.append("polygon").attr("class", "task-milestone");
 
@@ -82,17 +98,36 @@ export function renderBars(
             return isSelected(d) ? "1" : "0.28";
         });
 
-    merged.select<SVGRectElement>("rect.task-bar")
+    merged.select<SVGRectElement>("rect.task-track")
         .attr("display", (d) => d.isMilestone ? "none" : null)
         .attr("x", (d) => xScale(d.start))
-        .attr("y", 0)
+        .attr("y", barY)
         .attr("rx", cornerRadius)
         .attr("ry", cornerRadius)
-        .attr("height", bandwidth)
+        .attr("height", barHeight)
         .attr("width", (d) => Math.max(1, xScale(d.end) - xScale(d.start)))
-        .attr("fill", (d) => getBarFill(d))
-        .attr("stroke", (d) => d.flaggedInvalidRange ? flaggedStroke : "none")
-        .attr("stroke-width", (d) => d.flaggedInvalidRange ? 1.5 : 0);
+        .attr("fill", (d) => {
+            // No progress field → solid scheduled bar; otherwise muted track.
+            if (d.progress == null) {
+                return getBarColor(d);
+            }
+            return withAlpha(getBarColor(d), 0.22);
+        })
+        .attr("stroke", (d) => {
+            if (d.flaggedInvalidRange) {
+                return flaggedStroke;
+            }
+            if (d.progress == null) {
+                return "none";
+            }
+            return withAlpha(getBarColor(d), 0.55);
+        })
+        .attr("stroke-width", (d) => {
+            if (d.flaggedInvalidRange) {
+                return 1.5;
+            }
+            return d.progress == null ? 0 : 1;
+        });
 
     merged.select<SVGRectElement>("rect.task-progress")
         .attr("display", (d) => {
@@ -102,16 +137,16 @@ export function renderBars(
             return null;
         })
         .attr("x", (d) => xScale(d.start))
-        .attr("y", 0)
+        .attr("y", barY)
         .attr("rx", Math.max(0, cornerRadius - 1))
         .attr("ry", Math.max(0, cornerRadius - 1))
-        .attr("height", bandwidth)
+        .attr("height", barHeight)
         .attr("width", (d) => {
             const barWidth = Math.max(1, xScale(d.end) - xScale(d.start));
             const p = Math.max(0, Math.min(1, d.progress ?? 0));
             return Math.min(barWidth, barWidth * p);
         })
-        .attr("fill", (d) => getProgressFill(d))
+        .attr("fill", (d) => getProgressColor(d))
         .attr("pointer-events", "none");
 
     merged.select<SVGPolygonElement>("polygon.task-milestone")
@@ -119,12 +154,12 @@ export function renderBars(
         .attr("points", (d) => {
             const cx = xScale(d.start);
             const cy = bandwidth / 2;
-            const size = Math.max(8, bandwidth * 0.7);
+            const size = Math.max(11, bandwidth * 0.88);
             return diamondPoints(cx, cy, size);
         })
-        .attr("fill", (d) => getBarFill(d))
-        .attr("stroke", (d) => d.flaggedInvalidRange ? flaggedStroke : "none")
-        .attr("stroke-width", (d) => d.flaggedInvalidRange ? 1.5 : 0);
+        .attr("fill", (d) => getBarColor(d))
+        .attr("stroke", (d) => d.flaggedInvalidRange ? flaggedStroke : trackStroke)
+        .attr("stroke-width", 1.25);
 
     merged
         .on("click", (event: MouseEvent, d: TaskRow) => {
@@ -169,8 +204,8 @@ export function renderTodayLine(
         .attr("y1", 0)
         .attr("y2", contentHeight)
         .attr("stroke", color)
-        .attr("stroke-width", 1.5)
-        .attr("stroke-dasharray", "4,3")
+        .attr("stroke-width", 2)
+        .attr("stroke-dasharray", "5,4")
         .attr("pointer-events", "none");
 }
 
@@ -202,6 +237,37 @@ export function renderGroupBands(
         .attr("pointer-events", "none");
 }
 
+/**
+ * Subtle zebra striping on task rows for cross-timeline tracking.
+ */
+export function renderRowBands(
+    container: d3.Selection<SVGGElement, unknown, null, undefined>,
+    displayRows: DisplayRow[],
+    yScale: d3.ScaleBand<string>,
+    plotWidth: number,
+    bandFill: string
+): void {
+    const bandwidth = yScale.bandwidth();
+    const striped = displayRows.filter((row, index) => row.kind === "task" && index % 2 === 1);
+
+    const join = container
+        .selectAll<SVGRectElement, DisplayRow>("rect.row-band")
+        .data(striped, (d) => d.id);
+
+    join.exit().remove();
+
+    join.enter()
+        .append("rect")
+        .attr("class", "row-band")
+        .merge(join)
+        .attr("x", 0)
+        .attr("y", (d) => yScale(d.id) ?? 0)
+        .attr("width", plotWidth)
+        .attr("height", bandwidth)
+        .attr("fill", bandFill)
+        .attr("pointer-events", "none");
+}
+
 export function renderLabelRows(
     container: d3.Selection<SVGGElement, unknown, null, undefined>,
     displayRows: DisplayRow[],
@@ -210,9 +276,12 @@ export function renderLabelRows(
     fontSize: number,
     fontFamily: string,
     textColor: string,
+    zebraFill: string,
+    groupBandFill: string,
     onToggleGroup: (groupKey: string) => void
 ): void {
     const bandwidth = yScale.bandwidth();
+    const rowIndex = new Map(displayRows.map((row, index) => [row.id, index]));
 
     const join = container
         .selectAll<SVGGElement, DisplayRow>("g.label-row")
@@ -224,6 +293,7 @@ export function renderLabelRows(
         .append("g")
         .attr("class", "label-row");
 
+    enter.append("rect").attr("class", "label-bg");
     enter.append("rect").attr("class", "label-hit");
     enter.append("text").attr("class", "label-chevron");
     enter.append("text").attr("class", "label-text");
@@ -235,6 +305,19 @@ export function renderLabelRows(
         .classed("is-group", (d) => d.kind === "group")
         .classed("is-task", (d) => d.kind === "task")
         .style("cursor", (d) => d.kind === "group" ? "pointer" : "default");
+
+    merged.select<SVGRectElement>("rect.label-bg")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", labelWidth)
+        .attr("height", bandwidth)
+        .attr("fill", (d) => {
+            if (d.kind === "group") {
+                return groupBandFill;
+            }
+            const index = rowIndex.get(d.id) ?? 0;
+            return index % 2 === 1 ? zebraFill : "transparent";
+        });
 
     merged.select<SVGRectElement>("rect.label-hit")
         .attr("x", 0)

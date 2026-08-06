@@ -22,10 +22,10 @@ import { AxisGranularity, AxisGranularityOption, AxisLabelFormat, TaskRow, ViewM
 import { computeLayout, ChartLayout, RIGHT_PADDING } from "./render/layout";
 import { createBandScale, createTimeScale, renderBottomAxis, renderWeekendShading } from "./render/axis";
 import {
-    darkenColor,
     renderBars,
     renderGroupBands,
     renderLabelRows,
+    renderRowBands,
     renderTodayLine
 } from "./render/bars";
 import { getContrastColors } from "./utils/contrast";
@@ -56,6 +56,7 @@ export class Visual implements IVisual {
 
     private labelLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private weekendLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
+    private rowBandLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private bandLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private barsLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private todayLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -115,6 +116,7 @@ export class Visual implements IVisual {
             .classed("gantt-plot-svg", true);
 
         this.weekendLayer = this.plotSvg.append("g").classed("weekends", true);
+        this.rowBandLayer = this.plotSvg.append("g").classed("row-bands", true);
         this.bandLayer = this.plotSvg.append("g").classed("bands", true);
         this.todayLayer = this.plotSvg.append("g").classed("today", true);
         this.barsLayer = this.plotSvg.append("g").classed("bars", true);
@@ -342,10 +344,10 @@ export class Visual implements IVisual {
         const contrast = getContrastColors(this.host.colorPalette);
         const defaultBarFill = contrast.isHighContrast
             ? contrast.foreground
-            : (this.formattingSettings?.barsCard?.fill?.value?.value || "#118dff");
+            : (this.formattingSettings?.barsCard?.fill?.value?.value || "#0ea5e9");
         const defaultProgressFill = contrast.isHighContrast
             ? contrast.foregroundSelected
-            : (this.formattingSettings?.barsCard?.progressFill?.value?.value || "#0b5cab");
+            : (this.formattingSettings?.barsCard?.progressFill?.value?.value || "#0284c7");
         const colorByResource = this.formattingSettings?.generalCard?.colorByResource?.value ?? false;
         const todayColor = contrast.isHighContrast
             ? contrast.foreground
@@ -361,10 +363,13 @@ export class Visual implements IVisual {
             ?? "Segoe UI, wf_segoe-ui_normal, helvetica, arial, sans-serif";
         const bandFill = contrast.isHighContrast
             ? contrast.background
-            : "rgba(0, 0, 0, 0.04)";
+            : "rgba(15, 23, 42, 0.06)";
+        const zebraFill = contrast.isHighContrast
+            ? contrast.background
+            : "rgba(15, 23, 42, 0.035)";
         const hasSelection = this.selectedKeys.size > 0;
 
-        const getBarFill = (task: TaskRow): string => {
+        const getBarColor = (task: TaskRow): string => {
             if (contrast.isHighContrast) {
                 return contrast.foreground;
             }
@@ -374,12 +379,12 @@ export class Visual implements IVisual {
             return defaultBarFill;
         };
 
-        const getProgressFill = (task: TaskRow): string => {
+        const getProgressColor = (task: TaskRow): string => {
             if (contrast.isHighContrast) {
                 return contrast.foregroundSelected;
             }
             if (colorByResource && task.resource) {
-                return darkenColor(this.host.colorPalette.getColor(task.resource).value);
+                return this.host.colorPalette.getColor(task.resource).value;
             }
             return defaultProgressFill;
         };
@@ -418,6 +423,7 @@ export class Visual implements IVisual {
 
         this.labelLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.weekendLayer.attr("transform", `translate(0,${layout.plotTop})`);
+        this.rowBandLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.bandLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.todayLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.barsLayer.attr("transform", `translate(0,${layout.plotTop})`);
@@ -449,6 +455,8 @@ export class Visual implements IVisual {
             fontSize,
             fontFamily,
             textColor,
+            zebraFill,
+            bandFill,
             (groupKey) => this.toggleGroup(groupKey)
         );
 
@@ -462,6 +470,7 @@ export class Visual implements IVisual {
             weekendFill
         );
 
+        renderRowBands(this.rowBandLayer, displayRows, yScale, plotWidth, zebraFill);
         renderGroupBands(this.bandLayer, displayRows, yScale, plotWidth, bandFill);
 
         renderTodayLine(
@@ -477,10 +486,11 @@ export class Visual implements IVisual {
         renderBars(this.barsLayer, tasks, {
             xScale,
             yScale,
-            getBarFill,
-            getProgressFill,
+            getBarColor,
+            getProgressColor,
             cornerRadius,
             flaggedStroke: contrast.isHighContrast ? contrast.foreground : "#a80000",
+            trackStroke: contrast.background,
             hasSelection,
             isSelected: (task) => this.isTaskSelected(task),
             onClick: (event, task) => this.onBarClick(event, task),

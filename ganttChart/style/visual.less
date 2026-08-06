@@ -102,14 +102,18 @@
     shape-rendering: crispEdges;
 }
 
-.gantt-plot-svg .task-bar,
+.gantt-plot-svg .row-band {
+    shape-rendering: crispEdges;
+}
+
+.gantt-plot-svg .task-track,
 .gantt-plot-svg .task-progress,
 .gantt-plot-svg .task-milestone {
     shape-rendering: geometricPrecision;
 }
 
-.gantt-plot-svg .task-progress {
-    opacity: 0.95;
+.gantt-plot-svg .task-track {
+    vector-effect: non-scaling-stroke;
 }
 
 .gantt-plot-svg .today-line {

@@ -40,13 +40,13 @@ class BarsCardSettings extends FormattingSettingsCard {
     fill = new formattingSettings.ColorPicker({
         name: "fill",
         displayName: "Bar fill",
-        value: { value: "#118dff" }
+        value: { value: "#0ea5e9" }
     });
 
     progressFill = new formattingSettings.ColorPicker({
         name: "progressFill",
         displayName: "Progress fill",
-        value: { value: "#0b5cab" }
+        value: { value: "#0284c7" }
     });
 
     name: string = "bars";
