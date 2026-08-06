@@ -536,8 +536,34 @@ code {
     display: none;
   }
 
+  .hero {
+    align-items: stretch;
+  }
+
+  .hero-atmosphere {
+    clip-path: inset(0 0 42% 0);
+  }
+
+  .hero-wash {
+    background:
+      linear-gradient(180deg, rgba(232, 242, 238, 0.35) 0%, rgba(232, 242, 238, 0.82) 72%, var(--mist) 100%),
+      radial-gradient(ellipse 80% 50% at 70% 30%, rgba(45, 212, 191, 0.2), transparent 60%);
+  }
+
+  .hero-viz {
+    top: -4%;
+    height: 62%;
+    opacity: 0.9;
+  }
+
   .hero-viz .canopy {
-    opacity: 0.12;
+    opacity: 0.1;
+  }
+
+  .hero-copy {
+    margin-top: auto;
+    padding-top: 1.5rem;
+    background: linear-gradient(180deg, transparent, var(--mist) 18%, var(--mist) 100%);
   }
 }
 
