@@ -27,7 +27,7 @@ Offer ID example (immutable): `datalund-gantt` (lowercase, hyphens OK).
 Do this **first**. AppSource rejects broken privacy/support links.
 
 - [ ] Point DNS for `datalund.no` at GitHub Pages (see [Datalundno/Website](https://github.com/Datalundno/Website) `DOMAIN.md`)
-- [ ] Deploy the `/website` folder so these resolve over **HTTPS**:
+- [ ] Deploy [Datalundno/Website](https://github.com/Datalundno/Website) so these resolve over **HTTPS**:
   - [ ] `https://datalund.no/visuals/gantt/` ← Help / learn more
   - [ ] `https://datalund.no/support/` ← Support (must be **different** from Help)
   - [ ] `https://datalund.no/privacy/` ← Privacy policy
