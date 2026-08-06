@@ -67,8 +67,8 @@ project
 | --- | --- |
 | Visual package | `ganttChart/dist/ganttChartF8E34E29596A403E8E39808FA17C9CE9.1.6.0.0.pbiviz` (or `downloads/ganttChart.pbiviz`) |
 | Store logo | `ganttChart/assets/store/logo-300.png` (300×300) |
-| Sample workbook | Create in Power BI Desktop from `downloads/GanttSampleData.xlsx` + this `.pbiviz` |
-| Screenshots | 1–5 PNG at 1366×768, ≤1024 KB each (replace placeholder) |
+| Sample workbook | Create in Power BI Desktop — see [`DESKTOP_SAMPLE.md`](./DESKTOP_SAMPLE.md) |
+| Screenshots | 1–5 PNG at 1366×768, ≤1024 KB each — captions in `DESKTOP_SAMPLE.md` §C |
 
 ## Notes for reviewers
 

@@ -11,13 +11,15 @@ Paste-ready Partner Center fields: [`PARTNER_CENTER_LISTING.md`](./PARTNER_CENTE
 
 ### Progress (2026-08-06)
 
+Continuing while custom-domain TLS / DNS finishes propagating. Content is already served; AppSource submit still needs a clean private-window HTTPS check later.
+
 | Step | Status |
 | --- | --- |
-| **1** datalund.no pages live | Content OK at `/visuals/gantt/`, `/support/`, `/privacy/` — **blocker:** enable **Enforce HTTPS** on [Website → Settings → Pages](https://github.com/Datalundno/Website/settings/pages) so browsers get a `datalund.no` cert (today the edge still presents `*.github.io`) |
-| **2** package build | Done — `npm run lint`, `pbiviz package`, `--certification-audit` (no external requests), `npm audit` = 0 vulns; `downloads/ganttChart.pbiviz` refreshed |
-| **2** sample `.pbix` + screenshots | **Needs Power BI Desktop** (human) |
+| **1** datalund.no pages live | Content OK at `/visuals/gantt/`, `/support/`, `/privacy/` — re-check **Enforce HTTPS** / cert after propagation ([Website Pages settings](https://github.com/Datalundno/Website/settings/pages)) |
+| **2** package build | Done — lint / package / certification-audit / `npm audit` 0; `downloads/ganttChart.pbiviz` refreshed |
+| **2** sample `.pbix` + screenshots | **Needs Power BI Desktop** — follow [`DESKTOP_SAMPLE.md`](./DESKTOP_SAMPLE.md) |
 | **3** policy self-check | Code/docs aligned; remaining items are listing honesty at submit time |
-| **4–7** Partner Center | **Needs publisher account** (human) — use listing copy doc |
+| **4–7** Partner Center | **Needs publisher account** — use [`PARTNER_CENTER_LISTING.md`](./PARTNER_CENTER_LISTING.md) |
 
 ---
 
@@ -69,6 +71,8 @@ cp dist/ganttChartF8E34E29596A403E8E39808FA17C9CE9.1.6.0.0.pbiviz downloads/gant
 
 ### Sample `.pbix` (required)
 
+Step-by-step: [`DESKTOP_SAMPLE.md`](./DESKTOP_SAMPLE.md).
+
 - [ ] In Power BI Desktop, create a report using `downloads/GanttSampleData.xlsx`
 - [ ] Import **this same** `.pbiviz` version
 - [ ] Show progress, groups, milestones, today line, and format pane
@@ -77,6 +81,8 @@ cp dist/ganttChartF8E34E29596A403E8E39808FA17C9CE9.1.6.0.0.pbiviz downloads/gant
 - [ ] Version of visual inside `.pbix` **matches** the uploaded `.pbiviz`
 
 ### Screenshots (required)
+
+Captions + capture notes are in [`DESKTOP_SAMPLE.md`](./DESKTOP_SAMPLE.md) §C.
 
 - [ ] 1–5 PNG screenshots, exactly **1366×768**, each ≤ **1024 KB**
 - [ ] Capture real Power BI Desktop UI (replace the mock in `assets/store/screenshot-placeholder-1366x768.png`)
