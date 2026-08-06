@@ -204,7 +204,7 @@ Run through [submission testing](https://learn.microsoft.com/en-us/power-bi/deve
 | 300×300 logo | `ganttChart/assets/store/logo-300.png` |
 | Sample Excel | `ganttChart/downloads/GanttSampleData.xlsx` |
 | Sample `.pbix` | **You create in Desktop** |
-| Live HTTPS pages | **You deploy `/website`** |
+| Live HTTPS pages | **You deploy [Datalundno/Website](https://github.com/Datalundno/Website)** |
 
 ---
 
