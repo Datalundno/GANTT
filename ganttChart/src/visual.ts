@@ -10,7 +10,10 @@ import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
 import IVisual = powerbi.extensibility.visual.IVisual;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 import IVisualEventService = powerbi.extensibility.IVisualEventService;
+import ISelectionManager = powerbi.extensibility.ISelectionManager;
+import ITooltipService = powerbi.extensibility.ITooltipService;
 import VisualUpdateType = powerbi.VisualUpdateType;
+import ISelectionId = powerbi.visuals.ISelectionId;
 
 import { VisualFormattingSettingsModel } from "./settings";
 import { convertDataView } from "./data/converter";
@@ -26,10 +29,13 @@ import {
     renderTodayLine
 } from "./render/bars";
 import { getContrastColors } from "./utils/contrast";
+import { buildTooltipDataItems, pointerCoordinates } from "./utils/tooltips";
 
 export class Visual implements IVisual {
     private host: IVisualHost;
     private events: IVisualEventService;
+    private selectionManager: ISelectionManager;
+    private tooltipService: ITooltipService;
     private formattingSettings: VisualFormattingSettingsModel;
     private formattingSettingsService: FormattingSettingsService;
 
@@ -56,13 +62,21 @@ export class Visual implements IVisual {
 
     private viewModel: ViewModel | null = null;
     private collapsedGroups: Set<string> = new Set();
+    private selectedKeys: Set<string> = new Set();
     private syncingScroll = false;
     private lastViewport: { width: number; height: number } | null = null;
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
         this.events = options.host.eventService;
+        this.selectionManager = options.host.createSelectionManager();
+        this.tooltipService = options.host.tooltipService;
         this.formattingSettingsService = new FormattingSettingsService();
+
+        this.selectionManager.registerOnSelectCallback((ids: ISelectionId[]) => {
+            this.selectedKeys = new Set((ids ?? []).map((id) => id.getKey()));
+            this.renderFromState();
+        });
 
         this.root = d3.select(options.element)
             .append("div")
@@ -143,6 +157,11 @@ export class Visual implements IVisual {
             plotNode.scrollTop = labelsNode.scrollTop;
             this.syncingScroll = false;
         });
+
+        // Clear selection when clicking empty plot canvas.
+        this.plotSvg.on("click", () => {
+            this.clearSelection();
+        });
     }
 
     public update(options: VisualUpdateOptions): void {
@@ -161,8 +180,9 @@ export class Visual implements IVisual {
                 (options.type & VisualUpdateType.Resize) === VisualUpdateType.Resize;
 
             if (!isResizeOnly || !this.viewModel) {
-                this.viewModel = convertDataView(dataView);
+                this.viewModel = convertDataView(dataView, this.host);
                 this.pruneCollapsedGroups();
+                this.syncSelectionFromManager();
             }
 
             this.lastViewport = {
@@ -178,6 +198,11 @@ export class Visual implements IVisual {
         }
     }
 
+    private syncSelectionFromManager(): void {
+        const ids = this.selectionManager.getSelectionIds() as ISelectionId[];
+        this.selectedKeys = new Set((ids ?? []).map((id) => id.getKey()));
+    }
+
     private pruneCollapsedGroups(): void {
         if (!this.viewModel) {
             return;
@@ -187,7 +212,6 @@ export class Visual implements IVisual {
                 .map((t) => t.group)
                 .filter((g): g is string => g != null && g !== "")
         );
-        // Keep ungated keys only if still relevant
         [...this.collapsedGroups].forEach((key) => {
             if (key !== "__ungrouped__" && !valid.has(key)) {
                 this.collapsedGroups.delete(key);
@@ -202,6 +226,58 @@ export class Visual implements IVisual {
             this.collapsedGroups.add(groupKey);
         }
         this.renderFromState();
+    }
+
+    private isTaskSelected(task: TaskRow): boolean {
+        if (!task.selectionId) {
+            return false;
+        }
+        return this.selectedKeys.has(task.selectionId.getKey());
+    }
+
+    private onBarClick(event: MouseEvent, task: TaskRow): void {
+        if (!task.selectionId) {
+            return;
+        }
+        const multi = event.ctrlKey || event.metaKey;
+        this.selectionManager.select(task.selectionId, multi).then((ids: ISelectionId[]) => {
+            this.selectedKeys = new Set((ids ?? []).map((id) => id.getKey()));
+            this.renderFromState();
+        });
+    }
+
+    private clearSelection(): void {
+        if (!this.selectionManager.hasSelection()) {
+            return;
+        }
+        this.selectionManager.clear().then(() => {
+            this.selectedKeys.clear();
+            this.renderFromState();
+        });
+    }
+
+    private onBarMouseMove(event: MouseEvent, task: TaskRow): void {
+        if (!this.tooltipService.enabled()) {
+            return;
+        }
+        const rootNode = this.root.node();
+        if (!rootNode) {
+            return;
+        }
+        const identities = task.selectionId ? [task.selectionId] : [];
+        this.tooltipService.show({
+            coordinates: pointerCoordinates(event, rootNode),
+            isTouchEvent: false,
+            dataItems: buildTooltipDataItems(task),
+            identities
+        });
+    }
+
+    private onBarMouseOut(event: MouseEvent, _task: TaskRow): void {
+        this.tooltipService.hide({
+            isTouchEvent: false,
+            immediately: true
+        });
     }
 
     private renderFromState(): void {
@@ -265,6 +341,7 @@ export class Visual implements IVisual {
         const bandFill = contrast.isHighContrast
             ? contrast.background
             : "rgba(0, 0, 0, 0.04)";
+        const hasSelection = this.selectedKeys.size > 0;
 
         const getBarFill = (task: TaskRow): string => {
             if (contrast.isHighContrast) {
@@ -366,7 +443,12 @@ export class Visual implements IVisual {
             getBarFill,
             getProgressFill,
             cornerRadius,
-            flaggedStroke: contrast.isHighContrast ? contrast.foreground : "#a80000"
+            flaggedStroke: contrast.isHighContrast ? contrast.foreground : "#a80000",
+            hasSelection,
+            isSelected: (task) => this.isTaskSelected(task),
+            onClick: (event, task) => this.onBarClick(event, task),
+            onMouseMove: (event, task) => this.onBarMouseMove(event, task),
+            onMouseOut: (event, task) => this.onBarMouseOut(event, task)
         });
 
         renderBottomAxis(this.axisLayer, xScale, viewModel.granularity, textColor, plotWidth);
@@ -392,5 +474,6 @@ export class Visual implements IVisual {
         this.root.remove();
         this.viewModel = null;
         this.collapsedGroups.clear();
+        this.selectedKeys.clear();
     }
 }

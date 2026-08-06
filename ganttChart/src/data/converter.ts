@@ -3,6 +3,7 @@
 import powerbi from "powerbi-visuals-api";
 import DataView = powerbi.DataView;
 import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
+import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 
 import {
     ROLE_DURATION,
@@ -135,7 +136,10 @@ function buildTooltipFields(
     });
 }
 
-export function convertDataView(dataView: DataView | undefined): ViewModel {
+export function convertDataView(
+    dataView: DataView | undefined,
+    host?: IVisualHost
+): ViewModel {
     if (!dataView || !dataView.table || !dataView.metadata) {
         return emptyViewModel("Add Task and Start Date fields to render the Gantt chart.");
     }
@@ -151,7 +155,8 @@ export function convertDataView(dataView: DataView | undefined): ViewModel {
         return emptyViewModel("Provide End Date or Duration so task bars can be sized.");
     }
 
-    const rows = dataView.table.rows ?? [];
+    const table = dataView.table;
+    const rows = table.rows ?? [];
     if (rows.length === 0) {
         return emptyViewModel("No rows to display.");
     }
@@ -188,6 +193,12 @@ export function convertDataView(dataView: DataView | undefined): ViewModel {
         const isMilestone = durationDays === 0;
         const progress = normalizeProgress(cellValue(row, roles.progress));
 
+        const selectionId = host
+            ? host.createSelectionIdBuilder()
+                .withTable(table, rowIndex)
+                .createSelectionId()
+            : null;
+
         const task: TaskRow = {
             id: `${taskName}::${rowIndex}`,
             task: taskName,
@@ -199,7 +210,8 @@ export function convertDataView(dataView: DataView | undefined): ViewModel {
             resource: asText(cellValue(row, roles.resource)),
             isMilestone,
             flaggedInvalidRange,
-            tooltipFields: buildTooltipFields(row, columns, roles.tooltips)
+            tooltipFields: buildTooltipFields(row, columns, roles.tooltips),
+            selectionId: selectionId as powerbi.visuals.ISelectionId | null
         };
 
         tasks.push(task);
@@ -216,7 +228,6 @@ export function convertDataView(dataView: DataView | undefined): ViewModel {
         return emptyViewModel("No valid tasks with parseable dates were found.");
     }
 
-    // Pad domain a few days so bars are not flush against edges
     const padDays = 3;
     domainStart = addDays(domainStart!, -padDays);
     domainEnd = addDays(domainEnd!, padDays);

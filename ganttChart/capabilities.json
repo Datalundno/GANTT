@@ -243,6 +243,7 @@
     ],
     "privileges": [],
     "supportsHighlight": true,
+    "supportsMultiVisualSelection": true,
     "tooltips": {
         "supportedTypes": {
             "default": true,

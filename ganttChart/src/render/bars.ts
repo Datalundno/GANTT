@@ -10,6 +10,11 @@ export interface BarRenderOptions {
     getProgressFill: (task: TaskRow) => string;
     cornerRadius: number;
     flaggedStroke: string;
+    hasSelection: boolean;
+    isSelected: (task: TaskRow) => boolean;
+    onClick: (event: MouseEvent, task: TaskRow) => void;
+    onMouseMove: (event: MouseEvent, task: TaskRow) => void;
+    onMouseOut: (event: MouseEvent, task: TaskRow) => void;
 }
 
 function diamondPoints(cx: number, cy: number, size: number): string {
@@ -33,7 +38,19 @@ export function renderBars(
     tasks: TaskRow[],
     options: BarRenderOptions
 ): d3.Selection<SVGGElement, TaskRow, SVGGElement, unknown> {
-    const { xScale, yScale, getBarFill, getProgressFill, cornerRadius, flaggedStroke } = options;
+    const {
+        xScale,
+        yScale,
+        getBarFill,
+        getProgressFill,
+        cornerRadius,
+        flaggedStroke,
+        hasSelection,
+        isSelected,
+        onClick,
+        onMouseMove,
+        onMouseOut
+    } = options;
     const bandwidth = yScale.bandwidth();
 
     const join = container
@@ -52,10 +69,18 @@ export function renderBars(
 
     const merged = enter.merge(join);
 
-    merged.attr("transform", (d) => {
-        const y = yScale(d.id) ?? 0;
-        return `translate(0,${y})`;
-    });
+    merged
+        .attr("transform", (d) => {
+            const y = yScale(d.id) ?? 0;
+            return `translate(0,${y})`;
+        })
+        .style("cursor", "pointer")
+        .style("opacity", (d) => {
+            if (!hasSelection) {
+                return "1";
+            }
+            return isSelected(d) ? "1" : "0.28";
+        });
 
     merged.select<SVGRectElement>("rect.task-bar")
         .attr("display", (d) => d.isMilestone ? "none" : null)
@@ -100,6 +125,19 @@ export function renderBars(
         .attr("fill", (d) => getBarFill(d))
         .attr("stroke", (d) => d.flaggedInvalidRange ? flaggedStroke : "none")
         .attr("stroke-width", (d) => d.flaggedInvalidRange ? 1.5 : 0);
+
+    merged
+        .on("click", (event: MouseEvent, d: TaskRow) => {
+            event.preventDefault();
+            event.stopPropagation();
+            onClick(event, d);
+        })
+        .on("mousemove", (event: MouseEvent, d: TaskRow) => {
+            onMouseMove(event, d);
+        })
+        .on("mouseout", (event: MouseEvent, d: TaskRow) => {
+            onMouseOut(event, d);
+        });
 
     return merged;
 }

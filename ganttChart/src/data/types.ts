@@ -1,5 +1,8 @@
 "use strict";
 
+import powerbi from "powerbi-visuals-api";
+import ISelectionId = powerbi.visuals.ISelectionId;
+
 export const ROLE_TASK = "task";
 export const ROLE_START = "startDate";
 export const ROLE_END = "endDate";
@@ -28,6 +31,7 @@ export interface TaskRow {
     isMilestone: boolean;
     flaggedInvalidRange: boolean;
     tooltipFields: TooltipField[];
+    selectionId: ISelectionId | null;
 }
 
 export type DisplayRowKind = "group" | "task";
