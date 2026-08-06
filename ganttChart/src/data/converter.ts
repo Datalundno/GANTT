@@ -6,9 +6,13 @@ import DataViewMetadataColumn = powerbi.DataViewMetadataColumn;
 import IVisualHost = powerbi.extensibility.visual.IVisualHost;
 
 import {
+    DependencyLink,
+    ROLE_BASELINE_END,
+    ROLE_BASELINE_START,
     ROLE_DURATION,
     ROLE_END,
     ROLE_GROUP,
+    ROLE_PREDECESSOR,
     ROLE_PROGRESS,
     ROLE_RESOURCE,
     ROLE_START,
@@ -16,6 +20,7 @@ import {
     ROLE_TOOLTIPS,
     RoleColumnIndex,
     TaskRow,
+    TaskStatus,
     TooltipField,
     ViewModel
 } from "./types";
@@ -30,7 +35,9 @@ import {
 function emptyViewModel(errorMessage: string | null): ViewModel {
     return {
         tasks: [],
+        dependencies: [],
         hasGroups: false,
+        hasBaselines: false,
         domainStart: null,
         domainEnd: null,
         granularity: "month",
@@ -38,9 +45,6 @@ function emptyViewModel(errorMessage: string | null): ViewModel {
     };
 }
 
-/**
- * Map column indexes by inspecting metadata column roles — never by field-well order.
- */
 export function resolveRoleIndexes(columns: DataViewMetadataColumn[] | undefined): RoleColumnIndex {
     const indexes: RoleColumnIndex = {
         task: null,
@@ -50,6 +54,9 @@ export function resolveRoleIndexes(columns: DataViewMetadataColumn[] | undefined
         progress: null,
         group: null,
         resource: null,
+        predecessor: null,
+        baselineStart: null,
+        baselineEnd: null,
         tooltips: []
     };
 
@@ -83,6 +90,15 @@ export function resolveRoleIndexes(columns: DataViewMetadataColumn[] | undefined
         if (roles[ROLE_RESOURCE]) {
             indexes.resource = index;
         }
+        if (roles[ROLE_PREDECESSOR]) {
+            indexes.predecessor = index;
+        }
+        if (roles[ROLE_BASELINE_START]) {
+            indexes.baselineStart = index;
+        }
+        if (roles[ROLE_BASELINE_END]) {
+            indexes.baselineEnd = index;
+        }
         if (roles[ROLE_TOOLTIPS]) {
             indexes.tooltips.push(index);
         }
@@ -113,6 +129,19 @@ function asNumber(value: unknown): number | null {
     return isFinite(n) ? n : null;
 }
 
+function expandDomain(current: Date | null, candidate: Date | null, mode: "min" | "max"): Date | null {
+    if (!candidate) {
+        return current;
+    }
+    if (!current) {
+        return candidate;
+    }
+    if (mode === "min") {
+        return candidate < current ? candidate : current;
+    }
+    return candidate > current ? candidate : current;
+}
+
 function buildTooltipFields(
     row: powerbi.DataViewTableRow,
     columns: DataViewMetadataColumn[],
@@ -136,12 +165,77 @@ function buildTooltipFields(
     });
 }
 
+export function computeTaskStatus(
+    start: Date,
+    end: Date,
+    progress: number | null,
+    today: Date = new Date(),
+    useProgress: boolean = true
+): TaskStatus {
+    if (!useProgress || progress == null) {
+        if (today < start) {
+            return "future";
+        }
+        if (today > end) {
+            return "late";
+        }
+        return "ontrack";
+    }
+
+    const p = Math.max(0, Math.min(1, progress));
+    if (p >= 0.999) {
+        return "done";
+    }
+    if (today < start) {
+        return "future";
+    }
+    if (today > end) {
+        return "late";
+    }
+    const span = Math.max(1, end.getTime() - start.getTime());
+    const expected = Math.max(0, Math.min(1, (today.getTime() - start.getTime()) / span));
+    if (p + 0.12 < expected) {
+        return "atrisk";
+    }
+    return "ontrack";
+}
+
+function buildDependencies(tasks: TaskRow[]): DependencyLink[] {
+    const byName = new Map<string, TaskRow>();
+    tasks.forEach((task) => {
+        if (!byName.has(task.task)) {
+            byName.set(task.task, task);
+        }
+    });
+
+    const links: DependencyLink[] = [];
+    tasks.forEach((task) => {
+        if (!task.predecessor) {
+            return;
+        }
+        const pred = byName.get(task.predecessor);
+        if (!pred || pred.id === task.id) {
+            return;
+        }
+        links.push({
+            id: `${pred.id}->${task.id}`,
+            fromTaskId: pred.id,
+            toTaskId: task.id
+        });
+    });
+    return links;
+}
+
+/**
+ * Core required: Task + Start Date + (End Date or Duration).
+ * Everything else is optional and only supplements the chart.
+ */
 export function convertDataView(
     dataView: DataView | undefined,
     host?: IVisualHost
 ): ViewModel {
     if (!dataView || !dataView.table || !dataView.metadata) {
-        return emptyViewModel("Add Task and Start Date fields to render the Gantt chart.");
+        return emptyViewModel("Add Task, Start Date, and End Date to render the Gantt chart.");
     }
 
     const columns = dataView.metadata.columns ?? [];
@@ -152,7 +246,7 @@ export function convertDataView(
     }
 
     if (roles.endDate == null && roles.duration == null) {
-        return emptyViewModel("Provide End Date or Duration so task bars can be sized.");
+        return emptyViewModel("Provide End Date (or Duration) so task bars can be sized.");
     }
 
     const table = dataView.table;
@@ -164,6 +258,7 @@ export function convertDataView(
     const tasks: TaskRow[] = [];
     let domainStart: Date | null = null;
     let domainEnd: Date | null = null;
+    const today = new Date();
 
     rows.forEach((row, rowIndex) => {
         const taskName = asText(cellValue(row, roles.task));
@@ -189,6 +284,17 @@ export function convertDataView(
             flaggedInvalidRange = true;
         }
 
+        let baselineStart = parseDate(cellValue(row, roles.baselineStart));
+        let baselineEnd = parseDate(cellValue(row, roles.baselineEnd));
+        if (baselineStart && baselineEnd && baselineEnd.getTime() < baselineStart.getTime()) {
+            baselineEnd = new Date(baselineStart.getTime());
+        }
+        // Need both ends to draw a planned bar; one-sided baselines are ignored for drawing.
+        if (!baselineStart || !baselineEnd) {
+            baselineStart = null;
+            baselineEnd = null;
+        }
+
         const durationDays = Math.max(0, dayDiff(start, end));
         const isMilestone = durationDays === 0;
         const progress = normalizeProgress(cellValue(row, roles.progress));
@@ -204,10 +310,14 @@ export function convertDataView(
             task: taskName,
             start,
             end,
+            baselineStart,
+            baselineEnd,
             durationDays,
             progress,
             group: asText(cellValue(row, roles.group)),
             resource: asText(cellValue(row, roles.resource)),
+            predecessor: asText(cellValue(row, roles.predecessor)),
+            status: computeTaskStatus(start, end, progress, today),
             isMilestone,
             flaggedInvalidRange,
             tooltipFields: buildTooltipFields(row, columns, roles.tooltips),
@@ -216,12 +326,10 @@ export function convertDataView(
 
         tasks.push(task);
 
-        if (!domainStart || start < domainStart) {
-            domainStart = start;
-        }
-        if (!domainEnd || end > domainEnd) {
-            domainEnd = end;
-        }
+        domainStart = expandDomain(domainStart, start, "min");
+        domainEnd = expandDomain(domainEnd, end, "max");
+        domainStart = expandDomain(domainStart, baselineStart, "min");
+        domainEnd = expandDomain(domainEnd, baselineEnd, "max");
     });
 
     if (tasks.length === 0) {
@@ -234,7 +342,9 @@ export function convertDataView(
 
     return {
         tasks,
+        dependencies: buildDependencies(tasks),
         hasGroups: tasks.some((t) => t.group != null && t.group !== ""),
+        hasBaselines: tasks.some((t) => t.baselineStart != null && t.baselineEnd != null),
         domainStart,
         domainEnd,
         granularity: chooseGranularity(domainStart, domainEnd),

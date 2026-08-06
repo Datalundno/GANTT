@@ -5,7 +5,12 @@ import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import { TaskRow } from "../data/types";
 import { toDisplayString } from "../utils/dates";
 
-export function buildTooltipDataItems(task: TaskRow): VisualTooltipDataItem[] {
+export function buildTooltipDataItems(
+    task: TaskRow,
+    options: { showProgress?: boolean; showBaseline?: boolean } = {}
+): VisualTooltipDataItem[] {
+    const showProgress = options.showProgress ?? false;
+    const showBaseline = options.showBaseline ?? true;
     const items: VisualTooltipDataItem[] = [
         { displayName: "Task", value: task.task },
         { displayName: "Start", value: toDisplayString(task.start) },
@@ -16,12 +21,24 @@ export function buildTooltipDataItems(task: TaskRow): VisualTooltipDataItem[] {
         }
     ];
 
-    if (task.progress != null) {
+    if (showBaseline && task.baselineStart && task.baselineEnd) {
+        items.push(
+            { displayName: "Planned start", value: toDisplayString(task.baselineStart) },
+            { displayName: "Planned end", value: toDisplayString(task.baselineEnd) }
+        );
+    }
+
+    if (showProgress && task.progress != null) {
         items.push({
             displayName: "Progress",
             value: `${Math.round(task.progress * 100)}%`
         });
     }
+
+    items.push({
+        displayName: "Status",
+        value: task.status
+    });
 
     if (task.group) {
         items.push({ displayName: "Group", value: task.group });
@@ -29,6 +46,10 @@ export function buildTooltipDataItems(task: TaskRow): VisualTooltipDataItem[] {
 
     if (task.resource) {
         items.push({ displayName: "Resource", value: task.resource });
+    }
+
+    if (task.predecessor) {
+        items.push({ displayName: "Predecessor", value: task.predecessor });
     }
 
     task.tooltipFields.forEach((field) => {

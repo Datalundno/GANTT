@@ -1,11 +1,11 @@
 {
   "visual": {
-    "name": "ganttChart",
-    "displayName": "DataLund Gantt",
-    "guid": "ganttChartF8E34E29596A403E8E39808FA17C9CE9",
+    "name": "ganttChartLab",
+    "displayName": "DataLund Gantt Lab",
+    "guid": "ganttChartLab9F2E4A1B7C8D4056AE12F34B56C78D90",
     "visualClassName": "Visual",
-    "version": "1.6.0.0",
-    "description": "DataLund Gantt — plan and track tasks on a Power BI timeline with progress, milestones, groups, resources, cross-filtering, and tooltips. Free visual by DataLund (datalund.no).",
+    "version": "0.1.0.0",
+    "description": "EXPERIMENTAL — DataLund Gantt Lab. Time-window toolbar, dependency arrows, status colors, and richer graphics. Not for AppSource. Free playground by DataLund (datalund.no).",
     "supportUrl": "https://datalund.no/support/",
     "gitHubUrl": "https://github.com/Datalundno/GANTT"
   },
@@ -24,5 +24,5 @@
   "stringResources": [
     "stringResources/en-US/resources.resjson"
   ],
-  "version": "1.6.0.0"
+  "version": "0.1.0.0"
 }

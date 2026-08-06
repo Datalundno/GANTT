@@ -1,60 +1,22 @@
-# DataLund Gantt (Power BI visual)
+# DataLund Gantt Lab (experimental branch)
 
-Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.no](https://datalund.no/)).
+> **Not for AppSource or the public website download.** Stable store visual lives on `main`.
 
-- Product page: https://datalund.no/visuals/gantt/
-- Support: https://datalund.no/support/
-- Privacy: https://datalund.no/privacy/
-- **AppSource step-by-step (TOS-safe):** [`docs/APPSOURCE.md`](docs/APPSOURCE.md)
-- Site: [Datalundno/Website](https://github.com/Datalundno/Website)
+See [`docs/EXPERIMENTAL.md`](docs/EXPERIMENTAL.md) — including why Lab should **not** replace the simpler website package yet.
 
-## Download (latest package)
-
-| Artifact | Link |
+| | Value |
 | --- | --- |
-| Visual (`.pbiviz`) | [ganttChart.pbiviz](https://github.com/Datalundno/GANTT/raw/main/ganttChart/downloads/ganttChart.pbiviz) |
-| Sample Excel | [GanttSampleData.xlsx](https://github.com/Datalundno/GANTT/raw/main/ganttChart/downloads/GanttSampleData.xlsx) |
-| Store logo 300×300 | [`assets/store/logo-300.png`](assets/store/logo-300.png) |
-
-## Name & identity
-
-| Field | Value |
-| --- | --- |
-| Display name | **DataLund Gantt** |
-| Publisher | DataLund |
-| GUID | `ganttChartF8E34E29596A403E8E39808FA17C9CE9` (immutable after AppSource publish) |
-
-## Toolchain
-
-| Requirement | Version |
-| --- | --- |
-| Node.js | **>= 20.19.0** |
-| `powerbi-visuals-tools` | **7.2.1** |
-| `powerbi-visuals-api` | **5.11.1** |
-| `d3` | **7.9.0** |
+| Display name | **DataLund Gantt Lab** |
+| GUID | `ganttChartLab9F2E4A1B7C8D4056AE12F34B56C78D90` |
+| Package | [`downloads/DataLundGanttLab.pbiviz`](downloads/DataLundGanttLab.pbiviz) |
+| Sample | [`downloads/GanttSampleData.xlsx`](downloads/GanttSampleData.xlsx) |
 
 ```bash
 cd ganttChart
 npm install
 npm run lint
 pbiviz package
-pbiviz package --certification-audit
+cp dist/ganttChartLab9F2E4A1B7C8D4056AE12F34B56C78D90.*.pbiviz downloads/DataLundGanttLab.pbiviz
 ```
 
-## Features
-
-- Timeline with auto or fixed axis granularity; date / ISO week / both labels
-- Progress track + fill; milestones; today line; weekend shading
-- Collapsible groups; color-by-resource
-- Selection / cross-filter; host tooltips; context menu; landing page
-- High-contrast; English localization; no outbound network
-
-## Format pane
-
-| Card | Properties |
-| --- | --- |
-| Bars | Height, corner radius, fill, progress fill |
-| Task labels | Font size, font family, pane width |
-| General | Color by resource, today line, axis granularity/labels, weekend shading |
-
-Not affiliated with Microsoft Corporation. Power BI is a trademark of Microsoft.
+Import Lab alongside the stable visual — different GUID, so both can coexist in Desktop.

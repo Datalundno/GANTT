@@ -18,7 +18,7 @@
             "displayNameKey": "Role_StartDate",
             "name": "startDate",
             "kind": "GroupingOrMeasure",
-            "description": "Task start date (required).",
+            "description": "Actual / current start date (required).",
             "descriptionKey": "Role_StartDate_Desc"
         },
         {
@@ -26,7 +26,7 @@
             "displayNameKey": "Role_EndDate",
             "name": "endDate",
             "kind": "GroupingOrMeasure",
-            "description": "Task end date. Optional when Duration is supplied.",
+            "description": "Actual / current end date. Required unless Duration is supplied.",
             "descriptionKey": "Role_EndDate_Desc"
         },
         {
@@ -34,7 +34,7 @@
             "displayNameKey": "Role_Duration",
             "name": "duration",
             "kind": "Measure",
-            "description": "Duration in days. Used when End Date is absent.",
+            "description": "Optional alternative to End Date (duration in days).",
             "descriptionKey": "Role_Duration_Desc",
             "requiredTypes": [
                 {
@@ -46,11 +46,27 @@
             ]
         },
         {
+            "displayName": "Planned Start",
+            "displayNameKey": "Role_BaselineStart",
+            "name": "baselineStart",
+            "kind": "GroupingOrMeasure",
+            "description": "Optional planned/baseline start for planned-vs-actual bars.",
+            "descriptionKey": "Role_BaselineStart_Desc"
+        },
+        {
+            "displayName": "Planned End",
+            "displayNameKey": "Role_BaselineEnd",
+            "name": "baselineEnd",
+            "kind": "GroupingOrMeasure",
+            "description": "Optional planned/baseline end for planned-vs-actual bars.",
+            "descriptionKey": "Role_BaselineEnd_Desc"
+        },
+        {
             "displayName": "Progress",
             "displayNameKey": "Role_Progress",
             "name": "progress",
             "kind": "Measure",
-            "description": "Progress as 0–1 or 0–100.",
+            "description": "Optional progress as 0–1 or 0–100.",
             "descriptionKey": "Role_Progress_Desc",
             "requiredTypes": [
                 {
@@ -66,7 +82,7 @@
             "displayNameKey": "Role_Group",
             "name": "group",
             "kind": "Grouping",
-            "description": "Parent/phase for collapsible grouping.",
+            "description": "Optional parent/phase for collapsible grouping.",
             "descriptionKey": "Role_Group_Desc",
             "preferredTypes": [
                 {
@@ -79,8 +95,21 @@
             "displayNameKey": "Role_Resource",
             "name": "resource",
             "kind": "Grouping",
-            "description": "Assignee; used for optional color-by.",
+            "description": "Optional assignee; used for color-by-resource.",
             "descriptionKey": "Role_Resource_Desc",
+            "preferredTypes": [
+                {
+                    "text": true
+                }
+            ]
+        },
+        {
+            "displayName": "Predecessor",
+            "displayNameKey": "Role_Predecessor",
+            "name": "predecessor",
+            "kind": "Grouping",
+            "description": "Optional upstream task name for finish-to-start arrows (Lab).",
+            "descriptionKey": "Role_Predecessor_Desc",
             "preferredTypes": [
                 {
                     "text": true
@@ -92,7 +121,7 @@
             "displayNameKey": "Role_Tooltips",
             "name": "tooltipFields",
             "kind": "Grouping",
-            "description": "Extra fields shown in tooltips.",
+            "description": "Optional extra fields shown in tooltips.",
             "descriptionKey": "Role_Tooltips_Desc"
         }
     ],
@@ -255,6 +284,75 @@
                     }
                 }
             }
+        },
+        "lab": {
+            "displayName": "Lab",
+            "displayNameKey": "Objects_Lab",
+            "properties": {
+                "showToolbar": {
+                    "displayName": "Show toolbar",
+                    "displayNameKey": "Prop_ShowToolbar",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showStatusLegend": {
+                    "displayName": "Show status legend",
+                    "displayNameKey": "Prop_ShowStatusLegend",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "colorByStatus": {
+                    "displayName": "Color by status",
+                    "displayNameKey": "Prop_ColorByStatus",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showProgress": {
+                    "displayName": "Show progress",
+                    "displayNameKey": "Prop_ShowProgress",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showBaseline": {
+                    "displayName": "Show planned bars",
+                    "displayNameKey": "Prop_ShowBaseline",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showDependencies": {
+                    "displayName": "Show dependencies",
+                    "displayNameKey": "Prop_ShowDependencies",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "fancyGraphics": {
+                    "displayName": "Rounded bars",
+                    "displayNameKey": "Prop_FancyGraphics",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "animateBars": {
+                    "displayName": "Animate bars",
+                    "displayNameKey": "Prop_AnimateBars",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showMonthGrid": {
+                    "displayName": "Month grid",
+                    "displayNameKey": "Prop_ShowMonthGrid",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
         }
     },
     "dataViewMappings": [
@@ -265,9 +363,12 @@
                     "startDate": { "min": 0, "max": 1 },
                     "endDate": { "min": 0, "max": 1 },
                     "duration": { "min": 0, "max": 1 },
+                    "baselineStart": { "max": 1 },
+                    "baselineEnd": { "max": 1 },
                     "progress": { "max": 1 },
                     "group": { "max": 1 },
                     "resource": { "max": 1 },
+                    "predecessor": { "max": 1 },
                     "tooltipFields": { "max": 8 }
                 }
             ],
@@ -278,9 +379,12 @@
                         { "for": { "in": "startDate" } },
                         { "for": { "in": "endDate" } },
                         { "bind": { "to": "duration" } },
+                        { "for": { "in": "baselineStart" } },
+                        { "for": { "in": "baselineEnd" } },
                         { "bind": { "to": "progress" } },
                         { "for": { "in": "group" } },
                         { "for": { "in": "resource" } },
+                        { "for": { "in": "predecessor" } },
                         { "for": { "in": "tooltipFields" } }
                     ],
                     "dataReductionAlgorithm": {
