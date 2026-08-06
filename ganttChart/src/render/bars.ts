@@ -1,13 +1,13 @@
 "use strict";
 
 import * as d3 from "d3";
-import { TaskRow } from "../data/types";
+import { DisplayRow, TaskRow } from "../data/types";
 
 export interface BarRenderOptions {
     xScale: d3.ScaleTime<number, number>;
     yScale: d3.ScaleBand<string>;
-    barFill: string;
-    progressFill: string;
+    getBarFill: (task: TaskRow) => string;
+    getProgressFill: (task: TaskRow) => string;
     cornerRadius: number;
     flaggedStroke: string;
 }
@@ -15,6 +15,14 @@ export interface BarRenderOptions {
 function diamondPoints(cx: number, cy: number, size: number): string {
     const half = size / 2;
     return `${cx},${cy - half} ${cx + half},${cy} ${cx},${cy + half} ${cx - half},${cy}`;
+}
+
+export function darkenColor(hex: string, k: number = 0.55): string {
+    const c = d3.color(hex);
+    if (!c) {
+        return hex;
+    }
+    return c.darker(k).formatHex();
 }
 
 /**
@@ -25,7 +33,7 @@ export function renderBars(
     tasks: TaskRow[],
     options: BarRenderOptions
 ): d3.Selection<SVGGElement, TaskRow, SVGGElement, unknown> {
-    const { xScale, yScale, barFill, progressFill, cornerRadius, flaggedStroke } = options;
+    const { xScale, yScale, getBarFill, getProgressFill, cornerRadius, flaggedStroke } = options;
     const bandwidth = yScale.bandwidth();
 
     const join = container
@@ -57,7 +65,7 @@ export function renderBars(
         .attr("ry", cornerRadius)
         .attr("height", bandwidth)
         .attr("width", (d) => Math.max(1, xScale(d.end) - xScale(d.start)))
-        .attr("fill", barFill)
+        .attr("fill", (d) => getBarFill(d))
         .attr("stroke", (d) => d.flaggedInvalidRange ? flaggedStroke : "none")
         .attr("stroke-width", (d) => d.flaggedInvalidRange ? 1.5 : 0);
 
@@ -78,7 +86,7 @@ export function renderBars(
             const p = Math.max(0, Math.min(1, d.progress ?? 0));
             return Math.min(barWidth, barWidth * p);
         })
-        .attr("fill", progressFill)
+        .attr("fill", (d) => getProgressFill(d))
         .attr("pointer-events", "none");
 
     merged.select<SVGPolygonElement>("polygon.task-milestone")
@@ -89,7 +97,7 @@ export function renderBars(
             const size = Math.max(8, bandwidth * 0.7);
             return diamondPoints(cx, cy, size);
         })
-        .attr("fill", barFill)
+        .attr("fill", (d) => getBarFill(d))
         .attr("stroke", (d) => d.flaggedInvalidRange ? flaggedStroke : "none")
         .attr("stroke-width", (d) => d.flaggedInvalidRange ? 1.5 : 0);
 
@@ -128,33 +136,107 @@ export function renderTodayLine(
         .attr("pointer-events", "none");
 }
 
-export function renderTaskLabels(
+export function renderGroupBands(
     container: d3.Selection<SVGGElement, unknown, null, undefined>,
-    tasks: TaskRow[],
+    displayRows: DisplayRow[],
     yScale: d3.ScaleBand<string>,
-    labelWidth: number,
-    fontSize: number,
-    fontFamily: string,
-    color: string
+    plotWidth: number,
+    bandFill: string
 ): void {
+    const groups = displayRows.filter((r) => r.kind === "group");
     const bandwidth = yScale.bandwidth();
 
     const join = container
-        .selectAll<SVGTextElement, TaskRow>("text.task-label")
-        .data(tasks, (d) => d.id);
+        .selectAll<SVGRectElement, DisplayRow>("rect.group-band")
+        .data(groups, (d) => d.id);
 
     join.exit().remove();
 
     join.enter()
-        .append("text")
-        .attr("class", "task-label")
+        .append("rect")
+        .attr("class", "group-band")
         .merge(join)
-        .attr("x", labelWidth - 8)
-        .attr("y", (d) => (yScale(d.id) ?? 0) + bandwidth / 2)
+        .attr("x", 0)
+        .attr("y", (d) => yScale(d.id) ?? 0)
+        .attr("width", plotWidth)
+        .attr("height", bandwidth)
+        .attr("fill", bandFill)
+        .attr("pointer-events", "none");
+}
+
+export function renderLabelRows(
+    container: d3.Selection<SVGGElement, unknown, null, undefined>,
+    displayRows: DisplayRow[],
+    yScale: d3.ScaleBand<string>,
+    labelWidth: number,
+    fontSize: number,
+    fontFamily: string,
+    textColor: string,
+    onToggleGroup: (groupKey: string) => void
+): void {
+    const bandwidth = yScale.bandwidth();
+
+    const join = container
+        .selectAll<SVGGElement, DisplayRow>("g.label-row")
+        .data(displayRows, (d) => d.id);
+
+    join.exit().remove();
+
+    const enter = join.enter()
+        .append("g")
+        .attr("class", "label-row");
+
+    enter.append("rect").attr("class", "label-hit");
+    enter.append("text").attr("class", "label-chevron");
+    enter.append("text").attr("class", "label-text");
+
+    const merged = enter.merge(join);
+
+    merged
+        .attr("transform", (d) => `translate(0,${yScale(d.id) ?? 0})`)
+        .classed("is-group", (d) => d.kind === "group")
+        .classed("is-task", (d) => d.kind === "task")
+        .style("cursor", (d) => d.kind === "group" ? "pointer" : "default");
+
+    merged.select<SVGRectElement>("rect.label-hit")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", labelWidth)
+        .attr("height", bandwidth)
+        .attr("fill", "transparent");
+
+    merged.select<SVGTextElement>("text.label-chevron")
+        .attr("display", (d) => d.kind === "group" ? null : "none")
+        .attr("x", 10)
+        .attr("y", bandwidth / 2)
         .attr("dy", "0.35em")
-        .attr("text-anchor", "end")
-        .attr("fill", color)
+        .attr("fill", textColor)
+        .style("font-size", `${Math.max(10, fontSize - 1)}px`)
+        .style("font-family", fontFamily)
+        .text((d) => d.collapsed ? "▸" : "▾");
+
+    merged.select<SVGTextElement>("text.label-text")
+        .attr("x", (d) => d.kind === "group" ? 24 : labelWidth - 10)
+        .attr("y", bandwidth / 2)
+        .attr("dy", "0.35em")
+        .attr("text-anchor", (d) => d.kind === "group" ? "start" : "end")
+        .attr("fill", textColor)
         .style("font-size", `${fontSize}px`)
         .style("font-family", fontFamily)
-        .text((d) => d.task);
+        .style("font-weight", (d) => d.kind === "group" ? "600" : "400")
+        .text((d) => {
+            if (d.kind === "group") {
+                return `${d.label} (${d.taskCount ?? 0})`;
+            }
+            return d.label;
+        });
+
+    merged.on("click", (event: MouseEvent, d: DisplayRow) => {
+        if (d.kind !== "group") {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        onToggleGroup(d.groupKey);
+    });
 }

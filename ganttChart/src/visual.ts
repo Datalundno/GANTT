@@ -14,10 +14,17 @@ import VisualUpdateType = powerbi.VisualUpdateType;
 
 import { VisualFormattingSettingsModel } from "./settings";
 import { convertDataView } from "./data/converter";
-import { ViewModel } from "./data/types";
+import { buildDisplayRows, visibleTaskRows } from "./data/groups";
+import { TaskRow, ViewModel } from "./data/types";
 import { computeLayout, ChartLayout, RIGHT_PADDING } from "./render/layout";
 import { createBandScale, createTimeScale, renderBottomAxis } from "./render/axis";
-import { renderBars, renderTaskLabels, renderTodayLine } from "./render/bars";
+import {
+    darkenColor,
+    renderBars,
+    renderGroupBands,
+    renderLabelRows,
+    renderTodayLine
+} from "./render/bars";
 import { getContrastColors } from "./utils/contrast";
 
 export class Visual implements IVisual {
@@ -42,12 +49,15 @@ export class Visual implements IVisual {
     private axisSvg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
 
     private labelLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
+    private bandLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private barsLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private todayLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private axisLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
 
     private viewModel: ViewModel | null = null;
+    private collapsedGroups: Set<string> = new Set();
     private syncingScroll = false;
+    private lastViewport: { width: number; height: number } | null = null;
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
@@ -89,6 +99,7 @@ export class Visual implements IVisual {
             .append("svg")
             .classed("gantt-plot-svg", true);
 
+        this.bandLayer = this.plotSvg.append("g").classed("bands", true);
         this.todayLayer = this.plotSvg.append("g").classed("today", true);
         this.barsLayer = this.plotSvg.append("g").classed("bars", true);
 
@@ -151,25 +162,14 @@ export class Visual implements IVisual {
 
             if (!isResizeOnly || !this.viewModel) {
                 this.viewModel = convertDataView(dataView);
+                this.pruneCollapsedGroups();
             }
 
-            const labelWidth = this.formattingSettings?.labelsCard?.width?.value ?? 200;
-            const barHeight = this.formattingSettings?.barsCard?.barHeight?.value ?? 28;
-            const rowHeight = barHeight + 12;
-            const taskCount = this.viewModel?.tasks?.length ?? 0;
-            const domainStart = this.viewModel?.domainStart ?? new Date();
-            const domainEnd = this.viewModel?.domainEnd ?? new Date();
-
-            const layout = computeLayout(
-                options.viewport.width,
-                options.viewport.height,
-                taskCount,
-                domainStart,
-                domainEnd,
-                labelWidth,
-                rowHeight
-            );
-            this.render(layout);
+            this.lastViewport = {
+                width: options.viewport.width,
+                height: options.viewport.height
+            };
+            this.renderFromState();
 
             this.events.renderingFinished(options);
         } catch (error) {
@@ -178,7 +178,60 @@ export class Visual implements IVisual {
         }
     }
 
-    private render(layout: ChartLayout): void {
+    private pruneCollapsedGroups(): void {
+        if (!this.viewModel) {
+            return;
+        }
+        const valid = new Set(
+            this.viewModel.tasks
+                .map((t) => t.group)
+                .filter((g): g is string => g != null && g !== "")
+        );
+        // Keep ungated keys only if still relevant
+        [...this.collapsedGroups].forEach((key) => {
+            if (key !== "__ungrouped__" && !valid.has(key)) {
+                this.collapsedGroups.delete(key);
+            }
+        });
+    }
+
+    private toggleGroup(groupKey: string): void {
+        if (this.collapsedGroups.has(groupKey)) {
+            this.collapsedGroups.delete(groupKey);
+        } else {
+            this.collapsedGroups.add(groupKey);
+        }
+        this.renderFromState();
+    }
+
+    private renderFromState(): void {
+        if (!this.lastViewport || !this.viewModel) {
+            return;
+        }
+
+        const labelWidth = this.formattingSettings?.labelsCard?.width?.value ?? 200;
+        const barHeight = this.formattingSettings?.barsCard?.barHeight?.value ?? 28;
+        const rowHeight = barHeight + 12;
+        const displayRows = buildDisplayRows(this.viewModel.tasks, this.collapsedGroups);
+        const domainStart = this.viewModel.domainStart ?? new Date();
+        const domainEnd = this.viewModel.domainEnd ?? new Date();
+
+        const layout = computeLayout(
+            this.lastViewport.width,
+            this.lastViewport.height,
+            displayRows.length,
+            domainStart,
+            domainEnd,
+            labelWidth,
+            rowHeight
+        );
+        this.render(layout, displayRows);
+    }
+
+    private render(
+        layout: ChartLayout,
+        displayRows: ReturnType<typeof buildDisplayRows>
+    ): void {
         const viewModel = this.viewModel;
         if (!viewModel || viewModel.errorMessage || viewModel.tasks.length === 0) {
             this.showMessage(viewModel?.errorMessage ?? "Add Task and Start Date fields to render the Gantt chart.");
@@ -193,12 +246,13 @@ export class Visual implements IVisual {
         this.hideMessage();
 
         const contrast = getContrastColors(this.host.colorPalette);
-        const barFill = contrast.isHighContrast
+        const defaultBarFill = contrast.isHighContrast
             ? contrast.foreground
             : (this.formattingSettings?.barsCard?.fill?.value?.value || "#118dff");
-        const progressFill = contrast.isHighContrast
+        const defaultProgressFill = contrast.isHighContrast
             ? contrast.foregroundSelected
             : (this.formattingSettings?.barsCard?.progressFill?.value?.value || "#0b5cab");
+        const colorByResource = this.formattingSettings?.generalCard?.colorByResource?.value ?? false;
         const todayColor = contrast.isHighContrast
             ? contrast.foreground
             : (this.formattingSettings?.generalCard?.todayLineColor?.value?.value || "#e81123");
@@ -208,6 +262,29 @@ export class Visual implements IVisual {
         const fontSize = this.formattingSettings?.labelsCard?.fontSize?.value ?? 12;
         const fontFamily = this.formattingSettings?.labelsCard?.fontFamily?.value
             ?? "Segoe UI, wf_segoe-ui_normal, helvetica, arial, sans-serif";
+        const bandFill = contrast.isHighContrast
+            ? contrast.background
+            : "rgba(0, 0, 0, 0.04)";
+
+        const getBarFill = (task: TaskRow): string => {
+            if (contrast.isHighContrast) {
+                return contrast.foreground;
+            }
+            if (colorByResource && task.resource) {
+                return this.host.colorPalette.getColor(task.resource).value;
+            }
+            return defaultBarFill;
+        };
+
+        const getProgressFill = (task: TaskRow): string => {
+            if (contrast.isHighContrast) {
+                return contrast.foregroundSelected;
+            }
+            if (colorByResource && task.resource) {
+                return darkenColor(this.host.colorPalette.getColor(task.resource).value);
+            }
+            return defaultProgressFill;
+        };
 
         this.root.style("background", contrast.background);
 
@@ -242,48 +319,52 @@ export class Visual implements IVisual {
             .attr("height", layout.axisHeight);
 
         this.labelLayer.attr("transform", `translate(0,${layout.plotTop})`);
+        this.bandLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.todayLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.barsLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.axisLayer.attr("transform", "translate(0,0)");
 
         const domainStart = viewModel.domainStart;
         const domainEnd = viewModel.domainEnd;
-        const taskIds = viewModel.tasks.map((t) => t.id);
+        const rowIds = displayRows.map((r) => r.id);
+        const tasks = visibleTaskRows(displayRows);
 
         const xScale = createTimeScale(domainStart, domainEnd, 0, plotWidth);
         const yScale = createBandScale(
-            taskIds,
+            rowIds,
             0,
-            viewModel.tasks.length * layout.rowHeight,
+            displayRows.length * layout.rowHeight,
             0.28
         );
 
-        renderTaskLabels(
+        renderLabelRows(
             this.labelLayer,
-            viewModel.tasks,
+            displayRows,
             yScale,
             layout.labelWidth,
             fontSize,
             fontFamily,
-            textColor
+            textColor,
+            (groupKey) => this.toggleGroup(groupKey)
         );
 
-        // Today line only when "today" falls inside the task date range (no domain stretch).
+        renderGroupBands(this.bandLayer, displayRows, yScale, plotWidth, bandFill);
+
         renderTodayLine(
             this.todayLayer,
             xScale,
             domainStart,
             domainEnd,
-            viewModel.tasks.length * layout.rowHeight,
+            displayRows.length * layout.rowHeight,
             showToday,
             todayColor
         );
 
-        renderBars(this.barsLayer, viewModel.tasks, {
+        renderBars(this.barsLayer, tasks, {
             xScale,
             yScale,
-            barFill,
-            progressFill,
+            getBarFill,
+            getProgressFill,
             cornerRadius,
             flaggedStroke: contrast.isHighContrast ? contrast.foreground : "#a80000"
         });
@@ -310,5 +391,6 @@ export class Visual implements IVisual {
     public destroy(): void {
         this.root.remove();
         this.viewModel = null;
+        this.collapsedGroups.clear();
     }
 }

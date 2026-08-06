@@ -8,7 +8,6 @@ import FormattingSettingsModel = formattingSettings.Model;
 
 /**
  * Formatting cards aligned with capabilities.json.
- * Phase 2 wires bar/progress colors and today-line toggles into rendering.
  */
 class BarsCardSettings extends FormattingSettingsCard {
     barHeight = new formattingSettings.NumUpDown({

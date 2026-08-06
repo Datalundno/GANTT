@@ -9,6 +9,8 @@ export const ROLE_GROUP = "group";
 export const ROLE_RESOURCE = "resource";
 export const ROLE_TOOLTIPS = "tooltipFields";
 
+export const UNGROUPED_KEY = "__ungrouped__";
+
 export interface TooltipField {
     displayName: string;
     value: string | number | Date | null;
@@ -28,10 +30,23 @@ export interface TaskRow {
     tooltipFields: TooltipField[];
 }
 
+export type DisplayRowKind = "group" | "task";
+
+export interface DisplayRow {
+    id: string;
+    kind: DisplayRowKind;
+    label: string;
+    groupKey: string;
+    task?: TaskRow;
+    collapsed?: boolean;
+    taskCount?: number;
+}
+
 export type AxisGranularity = "day" | "week" | "month" | "quarter";
 
 export interface ViewModel {
     tasks: TaskRow[];
+    hasGroups: boolean;
     domainStart: Date | null;
     domainEnd: Date | null;
     granularity: AxisGranularity;

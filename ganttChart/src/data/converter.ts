@@ -29,6 +29,7 @@ import {
 function emptyViewModel(errorMessage: string | null): ViewModel {
     return {
         tasks: [],
+        hasGroups: false,
         domainStart: null,
         domainEnd: null,
         granularity: "month",
@@ -222,6 +223,7 @@ export function convertDataView(dataView: DataView | undefined): ViewModel {
 
     return {
         tasks,
+        hasGroups: tasks.some((t) => t.group != null && t.group !== ""),
         domainStart,
         domainEnd,
         granularity: chooseGranularity(domainStart, domainEnd),

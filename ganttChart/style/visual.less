@@ -84,6 +84,20 @@
     display: block;
 }
 
+.gantt-labels-svg .label-row.is-group .label-text {
+    letter-spacing: 0.01em;
+}
+
+.gantt-labels-svg .label-chevron,
+.gantt-labels-svg .label-text {
+    pointer-events: none;
+    user-select: none;
+}
+
+.gantt-plot-svg .group-band {
+    shape-rendering: crispEdges;
+}
+
 .gantt-plot-svg .task-bar,
 .gantt-plot-svg .task-progress,
 .gantt-plot-svg .task-milestone {
@@ -92,11 +106,6 @@
 
 .gantt-plot-svg .task-progress {
     opacity: 0.95;
-}
-
-.gantt-labels-svg .task-label {
-    pointer-events: none;
-    user-select: none;
 }
 
 .gantt-plot-svg .today-line {

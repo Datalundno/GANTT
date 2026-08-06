@@ -1,7 +1,7 @@
 {
   "name": "gantt-chart",
   "description": "Internal custom Power BI Gantt chart visual",
-  "version": "1.0.3.0",
+  "version": "1.1.0.0",
   "repository": {
     "type": "git",
     "url": "https://localhost"

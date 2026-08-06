@@ -4,7 +4,7 @@
     "displayName": "Gantt Chart",
     "guid": "ganttChartF8E34E29596A403E8E39808FA17C9CE9",
     "visualClassName": "Visual",
-    "version": "1.0.3.0",
+    "version": "1.1.0.0",
     "description": "Internal custom Gantt chart visual for Power BI Desktop.",
     "supportUrl": "https://localhost",
     "gitHubUrl": ""
@@ -22,5 +22,5 @@
   "capabilities": "capabilities.json",
   "dependencies": null,
   "stringResources": [],
-  "version": "1.0.3.0"
+  "version": "1.1.0.0"
 }
