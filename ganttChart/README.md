@@ -23,6 +23,7 @@ Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.n
 | Display name | **DataLund Gantt** |
 | Publisher | DataLund |
 | GUID | `ganttChartF8E34E29596A403E8E39808FA17C9CE9` (immutable after AppSource publish) |
+| Version | **1.7.0.0** — Expand/Collapse when Group is used; optional Format → General → Show time window |
 
 ## Toolchain
 
