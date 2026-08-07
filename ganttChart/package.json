@@ -1,12 +1,7 @@
 {
-  "name": "datalund-gantt",
-  "description": "DataLund Gantt — custom visual for Microsoft Power BI",
+  "name": "gantt-chart",
+  "description": "Gantt chart custom visual for Microsoft Power BI",
   "version": "1.7.0.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Datalundno/GANTT.git"
-  },
-  "homepage": "https://datalund.no/visuals/gantt/",
   "license": "MIT",
   "scripts": {
     "pbiviz": "pbiviz",

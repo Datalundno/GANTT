@@ -365,7 +365,7 @@ export class Visual implements IVisual {
 
         card.append("h2")
             .classed("gantt-landing-title", true)
-            .text(this.t("Landing_Title", "DataLund Gantt"));
+            .text(this.t("Landing_Title", "Gantt Chart"));
 
         card.append("p")
             .classed("gantt-landing-subtitle", true)

@@ -1,28 +1,14 @@
-# DataLund Gantt
+# Gantt Chart
 
-Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.no](https://datalund.no/)).
+Unbranded Power BI Gantt visual (white-label build).
 
 | Path | Purpose |
 | --- | --- |
-| [`ganttChart/`](ganttChart/) | Power BI visual + AppSource package |
-| [`ganttChart/docs/APPSOURCE.md`](ganttChart/docs/APPSOURCE.md) | AppSource upload checklist |
-
-## Website
-
-Marketing and AppSource support pages live in a separate repo:
-
-**https://github.com/Datalundno/Website** → [datalund.no](https://datalund.no)
-
-- https://datalund.no/visuals/gantt/ (Help)
-- https://datalund.no/support/
-- https://datalund.no/privacy/
-
-## Visual package
+| [`ganttChart/`](ganttChart/) | Visual source + package |
+| [`ganttChart/downloads/GanttChart.pbiviz`](ganttChart/downloads/GanttChart.pbiviz) | Download |
 
 ```bash
 cd ganttChart
 npm install
 pbiviz package
 ```
-
-Download: [`ganttChart/downloads/ganttChart.pbiviz`](ganttChart/downloads/ganttChart.pbiviz)

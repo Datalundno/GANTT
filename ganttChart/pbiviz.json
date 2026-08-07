@@ -1,18 +1,18 @@
 {
   "visual": {
     "name": "ganttChart",
-    "displayName": "DataLund Gantt",
-    "guid": "ganttChartF8E34E29596A403E8E39808FA17C9CE9",
+    "displayName": "Gantt Chart",
+    "guid": "ganttChartWL7E4A9C2F1B8D4056AE12F34B56C78D01",
     "visualClassName": "Visual",
     "version": "1.7.0.0",
-    "description": "DataLund Gantt — plan and track tasks on a Power BI timeline with progress, milestones, groups, expand/collapse, optional time window, resources, cross-filtering, and tooltips. Free visual by DataLund (datalund.no).",
-    "supportUrl": "https://datalund.no/support/",
-    "gitHubUrl": "https://github.com/Datalundno/GANTT"
+    "description": "Gantt chart for Power BI — tasks, progress, milestones, groups, expand/collapse, and optional time window on a timeline.",
+    "supportUrl": "https://example.com",
+    "gitHubUrl": ""
   },
   "apiVersion": "5.11.1",
   "author": {
-    "name": "DataLund",
-    "email": "jonas.lundervold@gmail.com"
+    "name": "Gantt Chart",
+    "email": "noreply@example.com"
   },
   "assets": {
     "icon": "assets/icon.png"

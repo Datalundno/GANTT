@@ -1,5 +1,5 @@
 {
-    "Visual_Name": "DataLund Gantt",
+    "Visual_Name": "Gantt Chart",
     "Visual_Description": "Plan and track tasks on a timeline with progress, milestones, groups, and resources.",
     "Role_Task": "Task",
     "Role_Task_Desc": "Task name (required).",
@@ -34,7 +34,7 @@
     "Prop_AxisLabels": "Axis labels",
     "Prop_WeekendShading": "Weekend shading",
     "Prop_ShowTimeWindow": "Show time window",
-    "Landing_Title": "DataLund Gantt",
+    "Landing_Title": "Gantt Chart",
     "Landing_Subtitle": "Visualize project schedules on a clear timeline.",
     "Landing_Step1": "1. Drag Task into the Task field",
     "Landing_Step2": "2. Drag a date into Start Date",
