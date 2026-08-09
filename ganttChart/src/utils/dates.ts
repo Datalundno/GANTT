@@ -49,6 +49,22 @@ export function addDays(date: Date, days: number): Date {
     return new Date(date.getTime() + days * MS_PER_DAY);
 }
 
+/** Calendar months forward/back from a date (clamps day-of-month). */
+export function addMonths(date: Date, months: number): Date {
+    const result = new Date(date.getTime());
+    const day = result.getDate();
+    result.setDate(1);
+    result.setMonth(result.getMonth() + months);
+    const lastDay = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate();
+    result.setDate(Math.min(day, lastDay));
+    return result;
+}
+
+/** Local calendar day at 00:00:00. */
+export function startOfDay(date: Date): Date {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
 export function dayDiff(start: Date, end: Date): number {
     return (end.getTime() - start.getTime()) / MS_PER_DAY;
 }

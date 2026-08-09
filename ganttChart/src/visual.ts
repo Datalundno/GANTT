@@ -40,7 +40,7 @@ import {
 } from "./render/bars";
 import { getContrastColors } from "./utils/contrast";
 import { buildTooltipDataItems, pointerCoordinates } from "./utils/tooltips";
-import { chooseGranularity } from "./utils/dates";
+import { addMonths, chooseGranularity, startOfDay } from "./utils/dates";
 
 export class Visual implements IVisual {
     private host: IVisualHost;
@@ -485,11 +485,9 @@ export class Visual implements IVisual {
                 granularity: chooseGranularity(fullStart, fullEnd)
             };
         }
-        const today = new Date();
-        const ms = this.timeWindowMonths * 30.4375 * 24 * 60 * 60 * 1000;
-        const half = ms / 2;
-        const start = new Date(today.getTime() - half);
-        const end = new Date(today.getTime() + half);
+        // From today forward N months (not centered).
+        const start = startOfDay(new Date());
+        const end = addMonths(start, this.timeWindowMonths);
         return {
             start,
             end,
