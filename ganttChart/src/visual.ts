@@ -38,6 +38,13 @@ import {
     renderRowBands,
     renderTodayLine
 } from "./render/bars";
+import {
+    COCKPIT_BOTTOM_HEIGHT,
+    COCKPIT_SIDE_WIDTH,
+    renderCockpitSummary,
+    renderResourcePanel,
+    renderTaskListPanel
+} from "./render/cockpit";
 import { getContrastColors } from "./utils/contrast";
 import { buildTooltipDataItems, pointerCoordinates } from "./utils/tooltips";
 import { addMonths, chooseGranularity, startOfDay } from "./utils/dates";
@@ -55,7 +62,14 @@ export class Visual implements IVisual {
     private toolbar: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private message: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private landing: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private workspace: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private workspaceTop: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private chart: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private cockpitSide: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private cockpitResource: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private cockpitSummary: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private cockpitBottom: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private cockpitTaskList: d3.Selection<HTMLDivElement, unknown, null, undefined>;
 
     private bodyRow: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private labelsCol: d3.Selection<HTMLDivElement, unknown, null, undefined>;
@@ -123,9 +137,39 @@ export class Visual implements IVisual {
 
         this.buildLandingPage();
 
-        this.chart = this.root
+        this.workspace = this.root
+            .append("div")
+            .classed("gantt-workspace", true);
+
+        this.workspaceTop = this.workspace
+            .append("div")
+            .classed("gantt-workspace-top", true);
+
+        this.chart = this.workspaceTop
             .append("div")
             .classed("gantt-chart", true);
+
+        this.cockpitSide = this.workspaceTop
+            .append("div")
+            .classed("gantt-cockpit-side", true)
+            .style("display", "none");
+
+        this.cockpitSummary = this.cockpitSide
+            .append("div")
+            .classed("gantt-cockpit-block", true);
+
+        this.cockpitResource = this.cockpitSide
+            .append("div")
+            .classed("gantt-cockpit-block gantt-cockpit-resources", true);
+
+        this.cockpitBottom = this.workspace
+            .append("div")
+            .classed("gantt-cockpit-bottom", true)
+            .style("display", "none");
+
+        this.cockpitTaskList = this.cockpitBottom
+            .append("div")
+            .classed("gantt-cockpit-block gantt-cockpit-tasks", true);
 
         this.bodyRow = this.chart
             .append("div")
@@ -376,7 +420,7 @@ export class Visual implements IVisual {
             ["Landing_Step1", "Task + Start Date + End Date"],
             ["Landing_Step2", "Optional: Planned Start / Planned End"],
             ["Landing_Step3", "Optional: Group, Resource, Predecessor"],
-            ["Landing_Step4", "Format → Lab for toolbar and extras"]
+            ["Landing_Step4", "Format → Lab for cockpit, toolbar, and extras"]
         ];
         for (const [key, fallback] of stepKeys) {
             steps.append("li").text(this.t(key, fallback));
@@ -385,7 +429,7 @@ export class Visual implements IVisual {
 
     private showLandingPage(): void {
         this.isLandingPageOn = true;
-        this.chart.style("display", "none");
+        this.workspace.style("display", "none");
         this.toolbar.style("display", "none");
         this.message.style("display", "none").text("");
         this.landing.style("display", "flex");
@@ -575,12 +619,17 @@ export class Visual implements IVisual {
 
         const showToolbar = this.formattingSettings?.labCard?.showToolbar?.value ?? true;
         const showStatusLegend = this.formattingSettings?.labCard?.showStatusLegend?.value ?? false;
+        const showCockpit = this.formattingSettings?.labCard?.showCockpit?.value ?? true;
         this.toolbar.style("display", showToolbar ? "flex" : "none");
         this.toolbar.select(".gantt-toolbar-legend")
             .style("display", showStatusLegend ? "inline-flex" : "none");
+        this.cockpitSide.style("display", showCockpit ? "flex" : "none");
+        this.cockpitBottom.style("display", showCockpit ? "flex" : "none");
         this.syncToolbarActive();
 
         const toolbarHeight = showToolbar ? 40 : 0;
+        const sideWidth = showCockpit ? COCKPIT_SIDE_WIDTH : 0;
+        const bottomHeight = showCockpit ? COCKPIT_BOTTOM_HEIGHT : 0;
         const labelWidth = this.formattingSettings?.labelsCard?.width?.value ?? 210;
         const barHeight = this.formattingSettings?.barsCard?.barHeight?.value ?? 22;
         const rowHeight = Math.max(28, barHeight + 12);
@@ -588,8 +637,8 @@ export class Visual implements IVisual {
         const domain = this.resolveDomain();
 
         const layout = computeLayout(
-            this.lastViewport.width,
-            Math.max(1, this.lastViewport.height - toolbarHeight),
+            Math.max(1, this.lastViewport.width - sideWidth),
+            Math.max(1, this.lastViewport.height - toolbarHeight - bottomHeight),
             displayRows.length,
             domain.start,
             domain.end,
@@ -831,11 +880,39 @@ export class Visual implements IVisual {
         }
 
         renderBottomAxis(this.axisLayer, xScale, granularity, labelFormat, textColor, plotWidth);
+
+        const showCockpit = this.formattingSettings?.labCard?.showCockpit?.value ?? true;
+        if (showCockpit) {
+            const cockpitOptions = {
+                tasks: viewModel.tasks,
+                domainStart,
+                domainEnd,
+                textColor,
+                barColor: defaultBarFill,
+                trackColor: contrast.isHighContrast
+                    ? contrast.background
+                    : "rgba(15, 61, 54, 0.08)",
+                selectedKeys: this.selectedKeys,
+                getResourceColor: (resource: string) => this.host.colorPalette.getColor(resource).value,
+                onSelectTask: (task: TaskRow, multi: boolean) => {
+                    if (!this.host.hostCapabilities?.allowInteractions || !task.selectionId) {
+                        return;
+                    }
+                    this.selectionManager.select(task.selectionId, multi).then((ids: ISelectionId[]) => {
+                        this.selectedKeys = new Set((ids ?? []).map((id) => id.getKey()));
+                        this.renderFromState();
+                    });
+                }
+            };
+            renderCockpitSummary(this.cockpitSummary, cockpitOptions);
+            renderResourcePanel(this.cockpitResource, cockpitOptions);
+            renderTaskListPanel(this.cockpitTaskList, cockpitOptions);
+        }
     }
 
     private showMessage(text: string): void {
         this.hideLandingPage();
-        this.chart.style("display", "none");
+        this.workspace.style("display", "none");
         this.toolbar.style("display", "none");
         this.message
             .style("display", "flex")
@@ -844,7 +921,7 @@ export class Visual implements IVisual {
 
     private hideMessage(): void {
         this.message.style("display", "none").text("");
-        this.chart.style("display", "flex");
+        this.workspace.style("display", "flex");
     }
 
     public getFormattingModel(): powerbi.visuals.FormattingModel {

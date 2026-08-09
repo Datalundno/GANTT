@@ -1,7 +1,7 @@
 {
   "name": "datalund-gantt-lab",
-  "description": "DataLund Gantt Lab \u2014 experimental Power BI visual (not for AppSource)",
-  "version": "0.1.0.0",
+  "description": "DataLund Gantt Lab \u2014 experimental cockpit (Gantt, resources, task list)",
+  "version": "0.2.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/Datalundno/GANTT.git"

@@ -140,12 +140,223 @@
     line-height: 1.4;
 }
 
-.gantt-chart {
-    width: 100%;
+.gantt-workspace {
     flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.gantt-workspace-top {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: row;
+}
+
+.gantt-chart {
+    flex: 1 1 auto;
+    min-width: 0;
     min-height: 0;
     display: flex;
     flex-direction: column;
+}
+
+.gantt-cockpit-side {
+    flex: 0 0 252px;
+    width: 252px;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 10px 8px;
+    box-sizing: border-box;
+    border-left: 1px solid rgba(15, 61, 54, 0.12);
+    background: #F7FAF9;
+    overflow: auto;
+}
+
+.gantt-cockpit-bottom {
+    flex: 0 0 168px;
+    height: 168px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid rgba(15, 61, 54, 0.12);
+    background: #F7FAF9;
+    overflow: hidden;
+}
+
+.gantt-cockpit-block {
+    min-height: 0;
+}
+
+.gantt-cockpit-resources {
+    flex: 1 1 auto;
+    overflow: auto;
+}
+
+.gantt-cockpit-tasks {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: 8px 12px 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.cockpit-panel-head {
+    margin-bottom: 8px;
+}
+
+.cockpit-panel-head h3 {
+    margin: 0 0 2px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #0F3D36;
+}
+
+.cockpit-panel-head p {
+    margin: 0;
+    font-size: 11px;
+    color: #3D5A54;
+    line-height: 1.35;
+}
+
+.cockpit-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+}
+
+.cockpit-summary-chip {
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(15, 61, 54, 0.08);
+}
+
+.cockpit-summary-value {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.cockpit-summary-label {
+    display: block;
+    margin-top: 2px;
+    font-size: 10px;
+    opacity: 0.75;
+}
+
+.cockpit-resource-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cockpit-resource-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 18px;
+    grid-template-rows: auto auto;
+    column-gap: 6px;
+    row-gap: 3px;
+    align-items: center;
+}
+
+.cockpit-resource-label {
+    grid-column: 1;
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cockpit-resource-count {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: right;
+}
+
+.cockpit-resource-track {
+    grid-column: 1;
+    height: 7px;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.cockpit-resource-fill {
+    height: 100%;
+    border-radius: 999px;
+    min-width: 7px;
+}
+
+.cockpit-task-table {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cockpit-task-row {
+    display: grid;
+    grid-template-columns: minmax(120px, 2fr) minmax(70px, 1fr) minmax(110px, 1.2fr) 64px;
+    gap: 8px;
+    align-items: center;
+    width: 100%;
+    margin: 0;
+    padding: 5px 8px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    text-align: left;
+    font: inherit;
+    font-size: 11.5px;
+    color: inherit;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.cockpit-task-row.is-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: #EEF5F2;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #3D5A54;
+    cursor: default;
+}
+
+.cockpit-task-row:not(.is-head):hover {
+    background: rgba(15, 61, 54, 0.06);
+}
+
+.cockpit-task-row.is-selected {
+    background: rgba(14, 116, 144, 0.14);
+}
+
+.cockpit-task-name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cockpit-task-row.is-milestone .cockpit-task-name::before {
+    content: "◆ ";
+    font-size: 9px;
+    opacity: 0.7;
 }
 
 .gantt-body-row {

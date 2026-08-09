@@ -1,6 +1,8 @@
 # DataLund Gantt Lab (experimental branch)
 
 > **Not for AppSource or the public website download.** Stable store visual lives on `main`.
+>
+> Lab **0.2** adds a cockpit: Gantt + people load + task list (toggle in Format → Lab).
 
 See [`docs/EXPERIMENTAL.md`](docs/EXPERIMENTAL.md) — including why Lab should **not** replace the simpler website package yet.
 

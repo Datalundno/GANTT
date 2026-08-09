@@ -10,37 +10,35 @@ Personal / experimental build. Separate visual identity from the AppSource packa
 
 ## Should Lab replace the website download?
 
-**No.** Keep **DataLund Gantt** (stable) as the public download on datalund.no and for AppSource.
+**No.** Keep **DataLund Gantt** (stable) as the public download. Lab is a playground for multi-panel “cockpit” ideas.
 
-## What should ship to stable (product direction)
+## Cockpit (0.2)
 
-| Feature | Decision |
+When **Format → Lab → Show cockpit panels** is on (default):
+
+| Panel | Purpose |
 |---|---|
-| Expand / Collapse all | **Ship** — easy win when Group is used |
-| Time window (3/6/9/12M + All) | **Ship** — Format toggle, **off by default** (not everyone uses month cycles) |
-| Planned Start / End | **Do not ship** — prefer a confirmed flag + the same date fields |
-| Dependencies / status colors / chrome | Stay in Lab |
+| Gantt | Timeline (main) |
+| Summary | Tasks / people / milestones / avg progress in the time window |
+| People on tasks | Resource workload bars (needs **Resource** field) |
+| Tasks & milestones | Scrollable list; click to select / cross-filter |
 
-Stable `1.7.0.0` (see PR for toolbar/expand) follows that list.
+In a real Power BI report you’d usually build these as **separate visuals**. Lab packs them into one visual so you can try the layout quickly. That is **not** the AppSource direction.
 
-## Required vs optional (Lab)
+## Time window
+
+3 / 6 / 9 / 12M = **from today forward** N months (not centered).
+
+## Required vs optional
 
 **Required:** Task, Start Date, and End Date (or Duration instead of End).
 
 **Optional:** Group, Resource, Progress, Planned Start/End, Predecessor, Tooltips.
-
-## What Lab still adds beyond stable
-
-- Planned baseline bars (Lab-only wells)
-- Soft FS dependency lines
-- Status colors, legend, progress toggle, rounded bars, animation, month grid
-
-**Quiet by default** for polish toggles. Baseline and dependencies stay on when those fields are mapped.
 
 ## Build
 
 ```bash
 cd ganttChart
 npm run package
-# → dist/ganttChartLab*.pbiviz → copy to downloads/DataLundGanttLab.pbiviz
+cp dist/ganttChartLab*.pbiviz downloads/DataLundGanttLab.pbiviz
 ```

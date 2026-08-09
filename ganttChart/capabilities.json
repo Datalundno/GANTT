@@ -296,6 +296,14 @@
                         "bool": true
                     }
                 },
+                "showCockpit": {
+                    "displayName": "Show cockpit panels",
+                    "displayNameKey": "Prop_ShowCockpit",
+                    "description": "Resource load and task list beside/below the Gantt.",
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "showStatusLegend": {
                     "displayName": "Show status legend",
                     "displayNameKey": "Prop_ShowStatusLegend",

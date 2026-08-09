@@ -159,6 +159,14 @@ class LabCardSettings extends FormattingSettingsCard {
         value: true
     });
 
+    showCockpit = new formattingSettings.ToggleSwitch({
+        name: "showCockpit",
+        displayName: "Show cockpit panels",
+        displayNameKey: "Prop_ShowCockpit",
+        description: "Resource load and task list beside/below the Gantt (Lab).",
+        value: true
+    });
+
     showBaseline = new formattingSettings.ToggleSwitch({
         name: "showBaseline",
         displayName: "Show planned bars",
@@ -220,6 +228,7 @@ class LabCardSettings extends FormattingSettingsCard {
     displayNameKey: string = "Objects_Lab";
     slices: Array<FormattingSettingsSlice> = [
         this.showToolbar,
+        this.showCockpit,
         this.showBaseline,
         this.showDependencies,
         this.colorByStatus,
