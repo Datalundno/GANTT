@@ -257,7 +257,7 @@
                 "showTimeWindow": {
                     "displayName": "Show time window",
                     "displayNameKey": "Prop_ShowTimeWindow",
-                    "description": "Toolbar buttons for 3 / 6 / 9 / 12 months and All.",
+                    "description": "Toolbar: 3 / 6 / 9 / 12 months from today, or All.",
                     "type": {
                         "bool": true
                     }

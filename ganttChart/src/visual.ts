@@ -30,7 +30,7 @@ import {
     renderTodayLine
 } from "./render/bars";
 import { getContrastColors } from "./utils/contrast";
-import { chooseGranularity } from "./utils/dates";
+import { addMonths, chooseGranularity, startOfDay } from "./utils/dates";
 import { buildTooltipDataItems, pointerCoordinates } from "./utils/tooltips";
 
 type TimeWindowMonths = 3 | 6 | 9 | 12 | null;
@@ -485,11 +485,10 @@ export class Visual implements IVisual {
                 granularity: chooseGranularity(fullStart, fullEnd)
             };
         }
-        const today = new Date();
-        const ms = this.timeWindowMonths * 30.4375 * 24 * 60 * 60 * 1000;
-        const half = ms / 2;
-        const start = new Date(today.getTime() - half);
-        const end = new Date(today.getTime() + half);
+        // From today forward N months (not centered). Matches planning use and keeps
+        // "now" at the left edge so bars aren't scrolled off-screen on 6/9/12M.
+        const start = startOfDay(new Date());
+        const end = addMonths(start, this.timeWindowMonths);
         return {
             start,
             end,
