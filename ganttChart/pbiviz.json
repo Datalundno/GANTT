@@ -4,7 +4,7 @@
     "displayName": "Gantt Chart",
     "guid": "ganttChartWL7E4A9C2F1B8D4056AE12F34B56C78D01",
     "visualClassName": "Visual",
-    "version": "1.7.0.0",
+    "version": "1.7.1.0",
     "description": "Gantt chart for Power BI — tasks, progress, milestones, groups, expand/collapse, and optional time window on a timeline.",
     "supportUrl": "https://example.com",
     "gitHubUrl": ""
@@ -24,5 +24,5 @@
   "stringResources": [
     "stringResources/en-US/resources.resjson"
   ],
-  "version": "1.7.0.0"
+  "version": "1.7.1.0"
 }

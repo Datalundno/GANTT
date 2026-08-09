@@ -1,7 +1,7 @@
 {
   "name": "gantt-chart",
   "description": "Gantt chart custom visual for Microsoft Power BI",
-  "version": "1.7.0.0",
+  "version": "1.7.1.0",
   "license": "MIT",
   "scripts": {
     "pbiviz": "pbiviz",

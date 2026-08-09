@@ -145,7 +145,7 @@ class GeneralCardSettings extends FormattingSettingsCard {
         name: "showTimeWindow",
         displayName: "Show time window",
         displayNameKey: "Prop_ShowTimeWindow",
-        description: "Toolbar buttons for 3 / 6 / 9 / 12 months and All. Off by default.",
+        description: "Toolbar: 3 / 6 / 9 / 12 months from today, or All. Off by default.",
         value: false
     });
 
