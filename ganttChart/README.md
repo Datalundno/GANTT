@@ -12,9 +12,12 @@ Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.n
 
 | Artifact | Link |
 | --- | --- |
-| Visual (`.pbiviz`) | [Release v1.7.0.0](https://github.com/Datalundno/GANTT/releases/tag/v1.7.0.0) / [ganttChart.pbiviz](downloads/ganttChart.pbiviz) |
-| Sample Excel | [GanttSampleData.xlsx](https://github.com/Datalundno/GANTT/raw/main/ganttChart/downloads/GanttSampleData.xlsx) |
+| **Branded** `.pbiviz` (website) | [v1.7.1.0 ganttChart.pbiviz](https://github.com/Datalundno/GANTT/releases/download/v1.7.1.0/ganttChart.pbiviz) |
+| Website mirror | https://datalund.no/downloads/ganttChart.pbiviz |
+| Sample Excel | [GanttSampleData.xlsx](downloads/GanttSampleData.xlsx) |
 | Store logo 300×300 | [`assets/store/logo-300.png`](assets/store/logo-300.png) |
+
+Personal unbranded build (not for the website): [whitelabel-1.7.1.0 GanttChart.pbiviz](https://github.com/Datalundno/GANTT/releases/download/whitelabel-1.7.1.0/GanttChart.pbiviz).
 
 ## Name & identity
 
@@ -23,7 +26,7 @@ Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.n
 | Display name | **DataLund Gantt** |
 | Publisher | DataLund |
 | GUID | `ganttChartF8E34E29596A403E8E39808FA17C9CE9` (immutable after AppSource publish) |
-| Version | **1.7.0.0** — Expand/Collapse when Group is used; optional Format → General → Show time window |
+| Version | **1.7.1.0** — time window from today; Expand/Collapse; optional Format time window |
 
 ## Toolchain
 
@@ -39,23 +42,5 @@ cd ganttChart
 npm install
 npm run lint
 pbiviz package
-pbiviz package --certification-audit
+cp dist/ganttChartF8E34E29596A403E8E39808FA17C9CE9.*.pbiviz downloads/ganttChart.pbiviz
 ```
-
-## Features
-
-- Timeline with auto or fixed axis granularity; date / ISO week / both labels
-- Progress track + fill; milestones; today line; weekend shading
-- Collapsible groups; color-by-resource
-- Selection / cross-filter; host tooltips; context menu; landing page
-- High-contrast; English localization; no outbound network
-
-## Format pane
-
-| Card | Properties |
-| --- | --- |
-| Bars | Height, corner radius, fill, progress fill |
-| Task labels | Font size, font family, pane width |
-| General | Color by resource, today line, axis granularity/labels, weekend shading |
-
-Not affiliated with Microsoft Corporation. Power BI is a trademark of Microsoft.
