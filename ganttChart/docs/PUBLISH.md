@@ -30,11 +30,24 @@ This is the **do-this-in-order** guide. Full policy checklist: [`APPSOURCE.md`](
 
 ## Phase 0 — Accounts (you, once)
 
-1. Sign in to [Partner Center](https://partner.microsoft.com/dashboard).
-2. Enroll the publisher in the **Microsoft Marketplace** (commercial marketplace) program if not already enrolled.
+### 0a. Email on `datalund.no` (do this first)
+
+Partner Center needs a **work account**, not Gmail/Outlook.com.  
+`datalund.no` currently has **no MX records**.
+
+Follow [`EMAIL.md`](./EMAIL.md):
+
+1. Prefer **Microsoft 365 Business Basic** (trial or paid) for `datalund.no`.
+2. Create a **person** mailbox such as `jonas@datalund.no` (not `admin@` / `support@`).
+3. Also ensure `support@datalund.no` receives mail (shared mailbox or alias).
+4. Verify with `dig MX datalund.no +short`.
+
+### 0b. Partner Center
+
+1. Sign in to [Partner Center](https://partner.microsoft.com/dashboard) with the person work account.
+2. Enroll the publisher in the **Microsoft Marketplace** program if not already enrolled.
 3. Complete publisher profile (legal business info). Tax/payout may still be required even for a free visual.
 4. Publisher display name: **DataLund** (or the legal entity that owns datalund.no).
-5. Prefer a work / verified email on the account.
 
 Verification can take days. Do Phase 1–2 in parallel while waiting.
 
