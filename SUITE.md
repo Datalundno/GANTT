@@ -37,7 +37,7 @@ Later we may add a **Suite design** control (e.g. DataLund default, High contras
 ## Visual roadmap (priority)
 
 1. **Gantt** (shipping) — timeline  
-2. **Resource load** — people on tasks  
+2. **Resource load** — people on tasks → agent brief: [`RESOURCE_LOAD.md`](RESOURCE_LOAD.md) (implement in a **separate** repo)  
 3. **Task list** — browse + select  
 
 Lab cockpit prototypes multi-panel ideas; AppSource stays one job per visual.
