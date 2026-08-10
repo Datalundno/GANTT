@@ -28,6 +28,13 @@ const densityItems: powerbi.IEnumMember[] = [
     { value: "custom", displayName: "Custom" }
 ];
 
+const colorByItems: powerbi.IEnumMember[] = [
+    { value: "default", displayName: "Default" },
+    { value: "resource", displayName: "Resource" },
+    { value: "group", displayName: "Group" },
+    { value: "task", displayName: "Task" }
+];
+
 /**
  * Formatting cards aligned with capabilities.json.
  */
@@ -113,11 +120,13 @@ class GeneralCardSettings extends FormattingSettingsCard {
         value: densityItems[1]
     });
 
-    colorByResource = new formattingSettings.ToggleSwitch({
-        name: "colorByResource",
-        displayName: "Color by resource",
-        displayNameKey: "Prop_ColorByResource",
-        value: false
+    colorBy = new formattingSettings.ItemDropdown({
+        name: "colorBy",
+        displayName: "Color by",
+        displayNameKey: "Prop_ColorBy",
+        description: "Bar colors from Resource, Group, or Task. Default uses Bars fill.",
+        items: colorByItems,
+        value: colorByItems[0]
     });
 
     showTodayLine = new formattingSettings.ToggleSwitch({
@@ -170,7 +179,7 @@ class GeneralCardSettings extends FormattingSettingsCard {
     displayNameKey: string = "Objects_General";
     slices: Array<FormattingSettingsSlice> = [
         this.density,
-        this.colorByResource,
+        this.colorBy,
         this.showTodayLine,
         this.todayLineColor,
         this.axisGranularity,
