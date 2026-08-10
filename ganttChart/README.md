@@ -12,7 +12,7 @@ Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.n
 
 | Artifact | Link |
 | --- | --- |
-| **Branded** `.pbiviz` (website) | [v1.8.0.0 ganttChart.pbiviz](https://github.com/Datalundno/GANTT/releases/download/v1.8.0.0/ganttChart.pbiviz) |
+| **Branded** `.pbiviz` (website) | [v1.9.0.0 ganttChart.pbiviz](https://github.com/Datalundno/GANTT/releases/download/v1.9.0.0/ganttChart.pbiviz) |
 | Website mirror | https://datalund.no/downloads/ganttChart.pbiviz |
 | Sample Excel | [GanttSampleData.xlsx](downloads/GanttSampleData.xlsx) |
 | Store logo 300×300 | [`assets/store/logo-300.png`](assets/store/logo-300.png) |
@@ -26,7 +26,7 @@ Personal unbranded build (not for the website): [whitelabel-1.8.0.0 GanttChart.p
 | Display name | **DataLund Gantt** |
 | Publisher | DataLund |
 | GUID | `ganttChartF8E34E29596A403E8E39808FA17C9CE9` (immutable after AppSource publish) |
-| Version | **1.8.0.0** — Density presets (Compact/Comfortable/Large); time window from today; Expand/Collapse |
+| Version | **1.9.0.0** — Format → Color by (`colorBy`); ecosystem field/docs alignment; Density Compact/Comfortable/Large/Custom |
 
 ## Toolchain
 

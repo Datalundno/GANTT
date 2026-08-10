@@ -12,7 +12,7 @@
 ## Before you open a ticket
 
 1. Confirm you are on the latest `.pbiviz` / AppSource version.
-2. Bind at least **Task** and **Start Date**, plus **End Date** or **Duration**.
+2. Bind at least **Task**, **Start Date**, and **End Date** (Duration is an optional alternative).
 3. Include Power BI version, visual version, field-well screenshot, and sanitized sample data if possible.
 
 ## Docs

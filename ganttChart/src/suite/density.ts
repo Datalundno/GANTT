@@ -2,7 +2,7 @@
 
 /**
  * Suite-wide density presets.
- * Keep in sync with /SUITE.md — same names/numbers for every DataLund visual.
+ * Keep in sync with ECOSYSTEM.md §3 (Website) — same names/numbers for every DataLund visual.
  */
 
 export type DensityPreset = "compact" | "comfortable" | "large" | "custom";

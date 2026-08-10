@@ -2,12 +2,14 @@
 
 Shared contracts so Gantt and future visuals look and behave like one family on a report page.
 
+> **Source of truth:** [`ECOSYSTEM.md`](./ECOSYSTEM.md) (copied from `Datalundno/Website`). When this file and ECOSYSTEM disagree on fields, density, Color by, or starters, **ECOSYSTEM wins**.
+
 ## Density presets (ship now)
 
 Format → **General → Density**. Same names across all suite visuals.
 
 | Preset | Intent | barHeight | rowGap | fontSize | labelWidth | cornerRadius |
-| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
 | **Compact** | Many visuals on one page | 16 | 8 | 10 | 140 | 2 |
 | **Comfortable** | Default | 28 | 12 | 12 | 200 | 4 |
 | **Large** | Sparse pages / presenting | 36 | 16 | 14 | 240 | 6 |
@@ -17,9 +19,15 @@ Source of truth in code: `ganttChart/src/suite/density.ts` (move to `shared/dens
 
 **Rule:** Sub-agents must use these names and numbers. Do not invent “Small/Medium/Huge”.
 
-## Future: suite design / theme packs
+## Format → Color by (timeline / bar visuals)
 
-Later we may add a **Suite design** control (e.g. DataLund default, High contrast-friendly, Print-friendly) that sets colors/chrome together. Density stays independent of theme.
+Property **`name`**: `colorBy` · Display name: **Color by**.
+
+| Visual | Values |
+| --- | --- |
+| **Gantt** | `default` · `resource` · `group` · `task` |
+
+Migrate legacy `colorByResource` / `colorMode` so reports do not reset. See ECOSYSTEM.md §4.
 
 ## Shared field roles
 
@@ -27,18 +35,19 @@ Later we may add a **Suite design** control (e.g. DataLund default, High contras
 | --- | --- | --- |
 | Task | `task` | Required for Gantt / lists |
 | Start | `startDate` | Required |
-| End | `endDate` | Or Duration |
-| Duration | `duration` | Days; alternative to End |
+| End | `endDate` | Prefer End Date for PM models |
+| Duration | `duration` | Days; optional alternative to End |
 | Progress | `progress` | 0–1 or 0–100 |
 | Group | `group` | Phase / parent |
 | Resource | `resource` | Person / team |
-| Tooltips | `tooltipFields` | Extra detail (notes, etc.) |
+| Tooltips | `tooltipFields` | Extra detail (optional later) |
+| Status / RAG | `status` | Optional; reuse when status is part of the job |
 
 ## Visual roadmap (priority)
 
-1. **Gantt** (shipping) — timeline  
-2. **Resource load** — people on tasks  
-3. **Task list** — browse + select  
+1. **Gantt** (shipping) — timeline (*When*)
+2. **Resource load** — people on tasks (*Who is busy*)
+3. **Task list** — browse + select (*What’s in the portfolio*)
 
 Lab cockpit prototypes multi-panel ideas; AppSource stays one job per visual.
 
@@ -52,4 +61,4 @@ Lab cockpit prototypes multi-panel ideas; AppSource stays one job per visual.
 
 ## Sub-agent kickoff
 
-> Follow `SUITE.md`. Use Density Compact/Comfortable/Large/Custom with the table values. Do not change suite field role names. Open a focused PR for this visual only.
+Paste the prompt from ECOSYSTEM.md §8 (existing visuals) or §9 (new visuals).
