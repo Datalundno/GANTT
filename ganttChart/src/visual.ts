@@ -33,6 +33,7 @@ import { getContrastColors } from "./utils/contrast";
 import { addMonths, chooseGranularity, startOfDay } from "./utils/dates";
 import { buildTooltipDataItems, pointerCoordinates } from "./utils/tooltips";
 import { parseDensityPreset, resolveDensitySizes } from "./suite/density";
+import { colorByCategory, parseColorByMode } from "./suite/colorBy";
 
 type TimeWindowMonths = 3 | 6 | 9 | 12 | null;
 
@@ -633,7 +634,9 @@ export class Visual implements IVisual {
         const defaultProgressFill = contrast.isHighContrast
             ? contrast.foregroundSelected
             : (this.formattingSettings?.barsCard?.progressFill?.value?.value || "#0284c7");
-        const colorByResource = this.formattingSettings?.generalCard?.colorByResource?.value ?? false;
+        const colorBy = parseColorByMode(
+            this.formattingSettings?.generalCard?.colorBy?.value?.value
+        );
         const todayColor = contrast.isHighContrast
             ? contrast.foreground
             : (this.formattingSettings?.generalCard?.todayLineColor?.value?.value || "#e81123");
@@ -658,8 +661,9 @@ export class Visual implements IVisual {
             if (contrast.isHighContrast) {
                 return contrast.foreground;
             }
-            if (colorByResource && task.resource) {
-                return this.host.colorPalette.getColor(task.resource).value;
+            const key = colorByCategory(colorBy, task);
+            if (key) {
+                return this.host.colorPalette.getColor(key).value;
             }
             return defaultBarFill;
         };
@@ -668,8 +672,9 @@ export class Visual implements IVisual {
             if (contrast.isHighContrast) {
                 return contrast.foregroundSelected;
             }
-            if (colorByResource && task.resource) {
-                return this.host.colorPalette.getColor(task.resource).value;
+            const key = colorByCategory(colorBy, task);
+            if (key) {
+                return this.host.colorPalette.getColor(key).value;
             }
             return defaultProgressFill;
         };

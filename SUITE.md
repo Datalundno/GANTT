@@ -17,9 +17,22 @@ Source of truth in code: `ganttChart/src/suite/density.ts` (move to `shared/dens
 
 **Rule:** Sub-agents must use these names and numbers. Do not invent “Small/Medium/Huge”.
 
+## Color by (ship now)
+
+Format → **General → Color by**. Same names across suite visuals that draw category-colored marks.
+
+| Mode | Uses |
+| --- | --- |
+| **Default** | Bars fill / progress fill |
+| **Resource** | Resource field |
+| **Group** | Group field |
+| **Task** | Task field |
+
+Source: `ganttChart/src/suite/colorBy.ts`. Missing category falls back to Default fill.
+
 ## Future: suite design / theme packs
 
-Later we may add a **Suite design** control (e.g. DataLund default, High contrast-friendly, Print-friendly) that sets colors/chrome together. Density stays independent of theme.
+Later we may add a **Suite design** control (e.g. DataLund default, High contrast-friendly, Print-friendly) that sets colors/chrome together. Density and Color by stay independent of theme.
 
 ## Shared field roles
 
