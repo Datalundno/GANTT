@@ -4,8 +4,8 @@
     "displayName": "DataLund Gantt Lab",
     "guid": "ganttChartLab9F2E4A1B7C8D4056AE12F34B56C78D90",
     "visualClassName": "Visual",
-    "version": "0.2.1.0",
-    "description": "EXPERIMENTAL \u2014 DataLund Gantt Lab cockpit: Gantt + people load + task list. Not for AppSource.",
+    "version": "0.2.2.0",
+    "description": "EXPERIMENTAL \u2014 DataLund Gantt Lab cockpit: Gantt + people load + task list. Color by Resource/Group/Task. Not for AppSource.",
     "supportUrl": "https://datalund.no/support/",
     "gitHubUrl": "https://github.com/Datalundno/GANTT"
   },

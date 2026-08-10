@@ -228,11 +228,29 @@
                         ]
                     }
                 },
-                "colorByResource": {
-                    "displayName": "Color by resource",
-                    "displayNameKey": "Prop_ColorByResource",
+                "colorBy": {
+                    "displayName": "Color by",
+                    "displayNameKey": "Prop_ColorBy",
+                    "description": "Bar colors from Resource, Group, or Task. Default uses Bars fill.",
                     "type": {
-                        "bool": true
+                        "enumeration": [
+                            {
+                                "displayName": "Default",
+                                "value": "default"
+                            },
+                            {
+                                "displayName": "Resource",
+                                "value": "resource"
+                            },
+                            {
+                                "displayName": "Group",
+                                "value": "group"
+                            },
+                            {
+                                "displayName": "Task",
+                                "value": "task"
+                            }
+                        ]
                     }
                 },
                 "showTodayLine": {

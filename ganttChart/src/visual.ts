@@ -49,6 +49,7 @@ import { getContrastColors } from "./utils/contrast";
 import { buildTooltipDataItems, pointerCoordinates } from "./utils/tooltips";
 import { addMonths, chooseGranularity, startOfDay } from "./utils/dates";
 import { parseDensityPreset, resolveDensitySizes } from "./suite/density";
+import { colorByCategory, parseColorByMode } from "./suite/colorBy";
 
 export class Visual implements IVisual {
     private host: IVisualHost;
@@ -693,7 +694,9 @@ export class Visual implements IVisual {
         const defaultProgressFill = contrast.isHighContrast
             ? contrast.foregroundSelected
             : (this.formattingSettings?.barsCard?.progressFill?.value?.value || "#22D3EE");
-        const colorByResource = this.formattingSettings?.generalCard?.colorByResource?.value ?? false;
+        const colorBy = parseColorByMode(
+            this.formattingSettings?.generalCard?.colorBy?.value?.value
+        );
         const todayColor = contrast.isHighContrast
             ? contrast.foreground
             : (this.formattingSettings?.generalCard?.todayLineColor?.value?.value || "#F59E0B");
@@ -722,8 +725,9 @@ export class Visual implements IVisual {
                 const status = computeTaskStatus(task.start, task.end, task.progress, new Date(), showProgress);
                 return STATUS_COLORS[status].bar;
             }
-            if (colorByResource && task.resource) {
-                return this.host.colorPalette.getColor(task.resource).value;
+            const key = colorByCategory(colorBy, task);
+            if (key) {
+                return this.host.colorPalette.getColor(key).value;
             }
             return defaultBarFill;
         };
@@ -736,8 +740,9 @@ export class Visual implements IVisual {
                 const status = computeTaskStatus(task.start, task.end, task.progress, new Date(), showProgress);
                 return STATUS_COLORS[status].progress;
             }
-            if (colorByResource && task.resource) {
-                return this.host.colorPalette.getColor(task.resource).value;
+            const key = colorByCategory(colorBy, task);
+            if (key) {
+                return this.host.colorPalette.getColor(key).value;
             }
             return defaultProgressFill;
         };
