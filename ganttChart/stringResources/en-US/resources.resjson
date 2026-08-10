@@ -28,7 +28,7 @@
     "Prop_FontFamily": "Font family",
     "Prop_LabelWidth": "Label pane width",
     "Prop_Density": "Density",
-    "Prop_ColorByResource": "Color by resource",
+    "Prop_ColorBy": "Color by",
     "Prop_ShowTodayLine": "Show today line",
     "Prop_TodayLineColor": "Today line color",
     "Prop_AxisGranularity": "Axis granularity",

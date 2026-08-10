@@ -4,8 +4,8 @@
     "displayName": "Gantt Chart",
     "guid": "ganttChartWL7E4A9C2F1B8D4056AE12F34B56C78D01",
     "visualClassName": "Visual",
-    "version": "1.8.0.0",
-    "description": "Gantt chart for Power BI — tasks, progress, milestones, groups, expand/collapse, density presets, and optional time window on a timeline.",
+    "version": "1.8.1.0",
+    "description": "Gantt chart for Power BI — tasks, progress, milestones, groups, expand/collapse, density presets, color by resource/group/task, and optional time window on a timeline.",
     "supportUrl": "https://example.com",
     "gitHubUrl": ""
   },
