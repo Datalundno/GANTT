@@ -7,6 +7,10 @@ GUID (never change after first publish): `ganttChartF8E34E29596A403E8E39808FA17C
 
 This checklist is written to stay within Microsoft Marketplace / Power BI visual policies (including [§1180](https://learn.microsoft.com/en-us/legal/marketplace/certification-policies#1180-power-bi-visuals)). It is practical guidance, not legal advice.
 
+**Start here for a sequential walkthrough:** [`PUBLISH.md`](./PUBLISH.md)  
+**Paste-ready listing copy:** [`PARTNER_CENTER_LISTING.md`](./PARTNER_CENTER_LISTING.md)  
+**Desktop `.pbix` + screenshots:** [`DESKTOP_SAMPLE.md`](./DESKTOP_SAMPLE.md)
+
 ---
 
 ## 0) Naming recommendation
@@ -26,13 +30,13 @@ Offer ID example (immutable): `datalund-gantt` (lowercase, hyphens OK).
 
 Do this **first**. AppSource rejects broken privacy/support links.
 
-- [ ] Point DNS for `datalund.no` at GitHub Pages (see [Datalundno/Website](https://github.com/Datalundno/Website) `DOMAIN.md`)
-- [ ] Deploy [Datalundno/Website](https://github.com/Datalundno/Website) so these resolve over **HTTPS**:
-  - [ ] `https://datalund.no/visuals/gantt/` ← Help / learn more
-  - [ ] `https://datalund.no/support/` ← Support (must be **different** from Help)
-  - [ ] `https://datalund.no/privacy/` ← Privacy policy
-- [ ] Open each URL in a private browser window (no login wall)
-- [ ] Confirm privacy policy accurately describes: no telemetry, no external calls, sandbox-only
+- [x] Point DNS for `datalund.no` at GitHub Pages (see [Datalundno/Website](https://github.com/Datalundno/Website) `DOMAIN.md`)
+- [x] Deploy [Datalundno/Website](https://github.com/Datalundno/Website) so these resolve over **HTTPS**:
+  - [x] `https://datalund.no/visuals/gantt/` ← Help / learn more
+  - [x] `https://datalund.no/support/` ← Support (must be **different** from Help)
+  - [x] `https://datalund.no/privacy/` ← Privacy policy
+- [ ] Open each URL in a private browser window (no login wall) — re-check before submit
+- [x] Confirm privacy policy accurately describes: no telemetry, no external calls, sandbox-only
 
 ---
 
@@ -43,15 +47,15 @@ From `ganttChart/`:
 ```bash
 npm install
 npm run lint
-pbiviz package
-pbiviz package --certification-audit   # expect: no external requests
-npm audit                              # expect: 0 high/moderate ideally
+npx --yes powerbi-visuals-tools@7.2.1 package
+npx --yes powerbi-visuals-tools@7.2.1 package --certification-audit   # expect: no external requests
+npm audit --omit=dev                   # expect: 0 vulnerabilities
 ```
 
-- [ ] Use packaged file: `dist/ganttChart…1.7.0.0.pbiviz` (also copied to `downloads/ganttChart.pbiviz`)
-- [ ] Confirm `pbiviz.json` has real author name/email, supportUrl, description (no `localhost`)
-- [ ] GUID unchanged
-- [ ] Store logo ready: `assets/store/logo-300.png` (exactly **300×300** PNG, sharp, not blurry)
+- [x] Use packaged file: `dist/ganttChart…1.7.1.0.pbiviz` (also copied to `downloads/ganttChart.pbiviz`)
+- [x] Confirm `pbiviz.json` has real author name/email, supportUrl, description (no `localhost`)
+- [x] GUID unchanged
+- [x] Store logo ready: `assets/store/logo-300.png` (exactly **300×300** PNG, sharp, not blurry)
 
 ### Sample `.pbix` (required)
 
@@ -185,7 +189,7 @@ Run through [submission testing](https://learn.microsoft.com/en-us/power-bi/deve
 - [ ] **Save draft** → **Review and publish** → submit
 - [ ] Watch Partner Center certification / validation email
 - [ ] AppSource listing link appears hours after approval; Desktop/Service catalog can take **~10–14 days** to update
-- [ ] Do **not** change GUID on updates; bump four-part version (`1.7.0.0` → `1.6.1.0` / `1.7.0.0`)
+- [ ] Do **not** change GUID on updates; bump four-part version (`1.7.1.0` → `1.7.2.0` / `1.8.0.0`)
 - [ ] Keep datalund.no privacy/support pages online for the life of the listing
 
 ---
@@ -200,11 +204,13 @@ Run through [submission testing](https://learn.microsoft.com/en-us/power-bi/deve
 | Certification audit (no fetch/XHR) | Done |
 | English string resources | Done |
 | allowInteractions | Done |
-| Real support/privacy target URLs | Point to datalund.no (deploy site) |
+| Real support/privacy target URLs | Live on datalund.no |
 | 300×300 logo | `ganttChart/assets/store/logo-300.png` |
 | Sample Excel | `ganttChart/downloads/GanttSampleData.xlsx` |
-| Sample `.pbix` | **You create in Desktop** |
-| Live HTTPS pages | **You deploy [Datalundno/Website](https://github.com/Datalundno/Website)** |
+| Packaged `.pbiviz` 1.7.1.0 | `ganttChart/downloads/ganttChart.pbiviz` |
+| Sample `.pbix` | **You create in Desktop** ([`DESKTOP_SAMPLE.md`](./DESKTOP_SAMPLE.md)) |
+| Screenshots 1366×768 | **You capture in Desktop** |
+| Partner Center submit | **You** ([`PUBLISH.md`](./PUBLISH.md)) |
 
 ---
 
