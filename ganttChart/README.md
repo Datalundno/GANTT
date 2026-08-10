@@ -28,6 +28,10 @@ Personal unbranded build (not for the website): [whitelabel-1.7.1.0 GanttChart.p
 | GUID | `ganttChartF8E34E29596A403E8E39808FA17C9CE9` (immutable after AppSource publish) |
 | Version | **1.7.1.0** — time window from today; Expand/Collapse; optional Format time window |
 
+## Export to PDF
+
+Power BI only embeds **certified** custom visuals in **Export → PDF / PowerPoint**. Until DataLund Gantt is Microsoft-certified, exports show *“This visual does not support exporting”* (*“Dette visualobjektet støtter ikke eksportering”*). Details and workarounds: [`docs/SUPPORT.md`](docs/SUPPORT.md).
+
 ## Toolchain
 
 | Requirement | Version |

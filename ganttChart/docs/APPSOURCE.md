@@ -105,11 +105,15 @@ npm audit                              # expect: 0 high/moderate ideally
 - [ ] No scraped third-party charts / stock you cannot license
 - [ ] MIT license in repo is fine for source; Partner Center still needs an **EULA** selection (standard Microsoft contract **or** [Power BI visuals default EULA PDF](https://visuals.azureedge.net/app-store/Power%20BI%20-%20Default%20Custom%20Visual%20EULA.pdf) **or** your own)
 
-### Certification (optional, later)
+### Certification (needed for Export to PDF / PowerPoint)
+
+Power BI’s **Export → PDF** and **Export → PowerPoint** only render **certified** custom visuals. Without certification, reports show *“This visual does not support exporting”* / *“Dette visualobjektet støtter ikke eksportering”* where the Gantt sits. That is a Microsoft host restriction, not a missing feature flag in `capabilities.json`.
 
 - [ ] Publish to AppSource first (recommended), then request certification
 - [ ] Certification needs a `certification` branch matching the package, source access for Microsoft, `npm audit` / eslint clean, no external calls
+- [ ] Confirm rendering events remain wired in `update()` (`renderingStarted` → success `renderingFinished` / failure `renderingFailed`) — already required for certification and for export listeners
 - [ ] Do **not** check certification until those are ready — false certification claims violate listing rules
+- [ ] After Microsoft grants the certified badge, re-test **Export → PDF** on a report that contains DataLund Gantt
 
 ---
 

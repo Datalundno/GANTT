@@ -28,4 +28,5 @@ git push origin main
 - https://datalund.no/downloads/ganttChart.pbiviz → DataLund Gantt **1.7.1.0**
 - Home + help `softwareVersion` = `1.7.1.0`
 - Copy: time window **from today**
+- Help page mentions PDF export / certification limitation
 - No white-label URL on the site
