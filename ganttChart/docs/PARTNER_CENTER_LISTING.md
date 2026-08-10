@@ -21,7 +21,7 @@ Paste-ready text for the AppSource offer. Keep in sync with `pbiviz.json` (versi
 | Support document URL | https://datalund.no/support/ |
 | Help / learn more | https://datalund.no/visuals/gantt/ |
 | EULA | Standard Contract **or** [Power BI default visual EULA](https://visuals.azureedge.net/app-store/Power%20BI%20-%20Default%20Custom%20Visual%20EULA.pdf) |
-| Categories | Project management / timelines (pick closest marketplace categories) |
+| Categories (max 2) | **Change over time**, **Other** |
 
 ## Listing
 
@@ -36,22 +36,32 @@ Free Power BI Gantt for tasks, progress, milestones, groups, and resources.
 ```
 DataLund Gantt is a free custom visual for Microsoft Power BI that shows project tasks on a clear timeline.
 
-Bind Task and Start Date (required), plus End Date and/or Duration. Optionally add Progress, Group, Resource, and tooltip fields.
+Who it is for
+Project managers, PMO teams, consultants, and analysts who need a readable schedule inside Power BI reports—without leaving the Microsoft ecosystem.
 
-Features:
+What you bind
+• Required: Task, Start Date, and End Date and/or Duration
+• Optional: Progress, Group, Resource, Tooltips
+
+Key features
 • Task bars with optional progress fill
-• Zero-duration milestones
+• Zero-duration milestones on the same axis
 • Collapsible groups with Expand / Collapse
 • Optional time window from today (3 / 6 / 9 / 12 months)
-• Color-by-resource, today line, weekend shading, and week/date axis labels
-• Selection / cross-filtering, host tooltips, and context menus
-• Runs fully offline in the Power BI visual sandbox — no external network calls, no telemetry
+• Color-by-resource, today line, weekend shading
+• Week / date axis labels
+• Selection and cross-filtering with other visuals
+• Host tooltips and context menus (empty canvas and data points)
+• Landing page when fields are not bound yet
 
-Help and field bindings: https://datalund.no/visuals/gantt/
+Privacy and security
+Runs entirely in the Power BI visual sandbox. No outbound network calls, no telemetry, and no declared WebAccess / storage privileges.
+
+Learn more: https://datalund.no/visuals/gantt/
 Support: https://datalund.no/support/
 Privacy: https://datalund.no/privacy/
 
-DataLund Gantt is published by DataLund (datalund.no). It is not affiliated with Microsoft. Power BI is a trademark of Microsoft Corporation.
+DataLund Gantt is published by DataLund (datalund.no). It is not affiliated with, endorsed by, or sponsored by Microsoft. Power BI is a trademark of Microsoft Corporation.
 ```
 
 **Keywords** (up to 3):

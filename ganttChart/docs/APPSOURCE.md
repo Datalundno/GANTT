@@ -8,9 +8,11 @@ GUID (never change after first publish): `ganttChartF8E34E29596A403E8E39808FA17C
 This checklist is written to stay within Microsoft Marketplace / Power BI visual policies (including [§1180](https://learn.microsoft.com/en-us/legal/marketplace/certification-policies#1180-power-bi-visuals)). It is practical guidance, not legal advice.
 
 **Start here for a sequential walkthrough:** [`PUBLISH.md`](./PUBLISH.md)  
+**Paste-everything submission pack:** [`SUBMISSION_PACK.md`](./SUBMISSION_PACK.md)  
+**Windows Desktop capture (`.pbix` + screenshots):** [`WINDOWS_CAPTURE.md`](./WINDOWS_CAPTURE.md)  
 **Email / work account for Partner Center:** [`EMAIL.md`](./EMAIL.md)  
 **Paste-ready listing copy:** [`PARTNER_CENTER_LISTING.md`](./PARTNER_CENTER_LISTING.md)  
-**Desktop `.pbix` + screenshots:** [`DESKTOP_SAMPLE.md`](./DESKTOP_SAMPLE.md)
+**Desktop `.pbix` + screenshots (detailed):** [`DESKTOP_SAMPLE.md`](./DESKTOP_SAMPLE.md)
 
 ---
 

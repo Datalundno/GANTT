@@ -49,7 +49,7 @@ Follow [`EMAIL.md`](./EMAIL.md):
 3. Complete publisher profile (legal business info). Tax/payout may still be required even for a free visual.
 4. Publisher display name: **DataLund** (or the legal entity that owns datalund.no).
 
-Verification can take days. Do Phase 1–2 in parallel while waiting.
+Verification can take days (legal business verification). Do Phase 1–2 and [`WINDOWS_CAPTURE.md`](./WINDOWS_CAPTURE.md) in parallel while waiting. All paste-ready Partner Center text is in [`SUBMISSION_PACK.md`](./SUBMISSION_PACK.md).
 
 ---
 
