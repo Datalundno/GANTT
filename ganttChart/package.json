@@ -1,7 +1,7 @@
 {
   "name": "datalund-gantt",
   "description": "DataLund Gantt \u2014 custom visual for Microsoft Power BI",
-  "version": "1.7.1.0",
+  "version": "1.8.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/Datalundno/GANTT.git"
