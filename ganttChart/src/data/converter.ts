@@ -152,7 +152,7 @@ export function convertDataView(
     }
 
     if (roles.endDate == null && roles.duration == null) {
-        return emptyViewModel("Provide End Date or Duration so task bars can be sized.");
+        return emptyViewModel("Provide End Date so task bars can be sized (Duration is also supported).");
     }
 
     const table = dataView.table;

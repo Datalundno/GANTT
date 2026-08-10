@@ -33,6 +33,7 @@ import { getContrastColors } from "./utils/contrast";
 import { addMonths, chooseGranularity, startOfDay } from "./utils/dates";
 import { buildTooltipDataItems, pointerCoordinates } from "./utils/tooltips";
 import { parseDensityPreset, resolveDensitySizes } from "./suite/density";
+import { colorByKey, resolveColorBy, ColorBy } from "./suite/colorBy";
 
 type TimeWindowMonths = 3 | 6 | 9 | 12 | null;
 
@@ -77,6 +78,7 @@ export class Visual implements IVisual {
     private lastViewport: { width: number; height: number } | null = null;
     private isLandingPageOn = false;
     private timeWindowMonths: TimeWindowMonths = null;
+    private colorBy: ColorBy = "default";
 
     constructor(options: VisualConstructorOptions) {
         this.host = options.host;
@@ -300,6 +302,18 @@ export class Visual implements IVisual {
                 VisualFormattingSettingsModel,
                 dataView
             );
+            this.colorBy = resolveColorBy(
+                dataView,
+                this.formattingSettings?.generalCard?.colorBy?.value?.value
+            );
+            // Keep Format pane in sync when migrating legacy colorByResource → colorBy.
+            const colorBySlice = this.formattingSettings?.generalCard?.colorBy;
+            if (colorBySlice?.items) {
+                const match = colorBySlice.items.find((item) => item.value === this.colorBy);
+                if (match) {
+                    colorBySlice.value = match;
+                }
+            }
 
             const hasBoundFields = (dataView?.metadata?.columns?.length ?? 0) > 0;
             if (!hasBoundFields) {
@@ -376,8 +390,8 @@ export class Visual implements IVisual {
         const stepKeys: Array<[string, string]> = [
             ["Landing_Step1", "1. Drag Task into the Task field"],
             ["Landing_Step2", "2. Drag a date into Start Date"],
-            ["Landing_Step3", "3. Add End Date or Duration"],
-            ["Landing_Step4", "Optional: Progress, Group, Resource, Tooltips"]
+            ["Landing_Step3", "3. Add End Date"],
+            ["Landing_Step4", "Optional: Progress, Group, Resource (Duration and Tooltips also supported)"]
         ];
         for (const [key, fallback] of stepKeys) {
             steps.append("li").text(this.t(key, fallback));
@@ -633,7 +647,7 @@ export class Visual implements IVisual {
         const defaultProgressFill = contrast.isHighContrast
             ? contrast.foregroundSelected
             : (this.formattingSettings?.barsCard?.progressFill?.value?.value || "#0284c7");
-        const colorByResource = this.formattingSettings?.generalCard?.colorByResource?.value ?? false;
+        const colorBy = this.colorBy;
         const todayColor = contrast.isHighContrast
             ? contrast.foreground
             : (this.formattingSettings?.generalCard?.todayLineColor?.value?.value || "#e81123");
@@ -658,8 +672,9 @@ export class Visual implements IVisual {
             if (contrast.isHighContrast) {
                 return contrast.foreground;
             }
-            if (colorByResource && task.resource) {
-                return this.host.colorPalette.getColor(task.resource).value;
+            const key = colorByKey(colorBy, task);
+            if (key) {
+                return this.host.colorPalette.getColor(key).value;
             }
             return defaultBarFill;
         };
@@ -668,8 +683,9 @@ export class Visual implements IVisual {
             if (contrast.isHighContrast) {
                 return contrast.foregroundSelected;
             }
-            if (colorByResource && task.resource) {
-                return this.host.colorPalette.getColor(task.resource).value;
+            const key = colorByKey(colorBy, task);
+            if (key) {
+                return this.host.colorPalette.getColor(key).value;
             }
             return defaultProgressFill;
         };

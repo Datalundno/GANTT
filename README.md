@@ -4,7 +4,8 @@ Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.n
 
 | Path | Purpose |
 | --- | --- |
-| [`SUITE.md`](SUITE.md) | Shared suite contracts (density, field roles) |
+| [`ECOSYSTEM.md`](ECOSYSTEM.md) | Living ecosystem contract (from Website) |
+| [`SUITE.md`](SUITE.md) | Local suite seed — defer to ECOSYSTEM on conflict |
 | [`ganttChart/`](ganttChart/) | Power BI visual + AppSource package |
 | [`ganttChart/docs/APPSOURCE.md`](ganttChart/docs/APPSOURCE.md) | AppSource upload checklist |
 
@@ -12,7 +13,7 @@ Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.n
 
 | Build | Link |
 | --- | --- |
-| **Branded (website)** — DataLund Gantt 1.8.0.0 | [Release](https://github.com/Datalundno/GANTT/releases/download/v1.8.0.0/ganttChart.pbiviz) · [datalund.no/downloads](https://datalund.no/downloads/ganttChart.pbiviz) |
+| **Branded (website)** — DataLund Gantt 1.9.0.0 | [Release](https://github.com/Datalundno/GANTT/releases/download/v1.9.0.0/ganttChart.pbiviz) · [datalund.no/downloads](https://datalund.no/downloads/ganttChart.pbiviz) |
 | **Unbranded (personal)** — Gantt Chart 1.8.0.0 | [Release](https://github.com/Datalundno/GANTT/releases/download/whitelabel-1.8.0.0/GanttChart.pbiviz) |
 
 Website deploy pack: [`website-sync/APPLY.md`](website-sync/APPLY.md).

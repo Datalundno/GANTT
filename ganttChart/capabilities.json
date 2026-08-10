@@ -26,7 +26,7 @@
             "displayNameKey": "Role_EndDate",
             "name": "endDate",
             "kind": "GroupingOrMeasure",
-            "description": "Task end date. Optional when Duration is supplied.",
+            "description": "Task end date (preferred). Duration is an optional alternative.",
             "descriptionKey": "Role_EndDate_Desc"
         },
         {
@@ -34,7 +34,7 @@
             "displayNameKey": "Role_Duration",
             "name": "duration",
             "kind": "Measure",
-            "description": "Duration in days. Used when End Date is absent.",
+            "description": "Duration in days. Optional alternative when End Date is absent.",
             "descriptionKey": "Role_Duration_Desc",
             "requiredTypes": [
                 {
@@ -79,7 +79,7 @@
             "displayNameKey": "Role_Resource",
             "name": "resource",
             "kind": "Grouping",
-            "description": "Assignee; used for optional color-by.",
+            "description": "Assignee; used when Color by is Resource.",
             "descriptionKey": "Role_Resource_Desc",
             "preferredTypes": [
                 {
@@ -92,7 +92,7 @@
             "displayNameKey": "Role_Tooltips",
             "name": "tooltipFields",
             "kind": "Grouping",
-            "description": "Extra fields shown in tooltips.",
+            "description": "Extra fields shown in tooltips (optional later).",
             "descriptionKey": "Role_Tooltips_Desc"
         }
     ],
@@ -199,11 +199,29 @@
                         ]
                     }
                 },
-                "colorByResource": {
-                    "displayName": "Color by resource",
-                    "displayNameKey": "Prop_ColorByResource",
+                "colorBy": {
+                    "displayName": "Color by",
+                    "displayNameKey": "Prop_ColorBy",
+                    "description": "How bars pick their fill. Legacy Color by resource maps to Resource.",
                     "type": {
-                        "bool": true
+                        "enumeration": [
+                            {
+                                "displayName": "Default",
+                                "value": "default"
+                            },
+                            {
+                                "displayName": "Resource",
+                                "value": "resource"
+                            },
+                            {
+                                "displayName": "Group",
+                                "value": "group"
+                            },
+                            {
+                                "displayName": "Task",
+                                "value": "task"
+                            }
+                        ]
                     }
                 },
                 "showTodayLine": {
