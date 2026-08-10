@@ -5,6 +5,7 @@ Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.n
 | Path | Purpose |
 | --- | --- |
 | [`SUITE.md`](SUITE.md) | Shared suite contracts (density, field roles) |
+| [`TASK_LIST.md`](TASK_LIST.md) | Kickoff brief for Task List suite visual (new repo) |
 | [`ganttChart/`](ganttChart/) | Power BI visual + AppSource package |
 | [`ganttChart/docs/APPSOURCE.md`](ganttChart/docs/APPSOURCE.md) | AppSource upload checklist |
 
