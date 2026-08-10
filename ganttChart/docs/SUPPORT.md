@@ -17,5 +17,6 @@
 
 ## Docs
 
+- AppSource publish walkthrough: [`PUBLISH.md`](./PUBLISH.md)
 - AppSource checklist: [`APPSOURCE.md`](./APPSOURCE.md)
 - Sample Excel: `../downloads/GanttSampleData.xlsx`
