@@ -21,6 +21,13 @@ const axisLabelFormatItems: powerbi.IEnumMember[] = [
     { value: "both", displayName: "Week + date" }
 ];
 
+const densityItems: powerbi.IEnumMember[] = [
+    { value: "compact", displayName: "Compact" },
+    { value: "comfortable", displayName: "Comfortable" },
+    { value: "large", displayName: "Large" },
+    { value: "custom", displayName: "Custom" }
+];
+
 class BarsCardSettings extends FormattingSettingsCard {
     barHeight = new formattingSettings.NumUpDown({
         name: "barHeight",
@@ -94,6 +101,15 @@ class LabelsCardSettings extends FormattingSettingsCard {
 }
 
 class GeneralCardSettings extends FormattingSettingsCard {
+    density = new formattingSettings.ItemDropdown({
+        name: "density",
+        displayName: "Density",
+        displayNameKey: "Prop_Density",
+        description: "Suite size preset. Custom uses Bars and Task labels values.",
+        items: densityItems,
+        value: densityItems[1]
+    });
+
     colorByResource = new formattingSettings.ToggleSwitch({
         name: "colorByResource",
         displayName: "Color by resource",
@@ -142,6 +158,7 @@ class GeneralCardSettings extends FormattingSettingsCard {
     displayName: string = "General";
     displayNameKey: string = "Objects_General";
     slices: Array<FormattingSettingsSlice> = [
+        this.density,
         this.colorByResource,
         this.showTodayLine,
         this.todayLineColor,

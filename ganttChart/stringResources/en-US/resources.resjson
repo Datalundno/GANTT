@@ -14,7 +14,7 @@
     "Role_BaselineEnd": "Planned End",
     "Role_BaselineEnd_Desc": "Optional planned end for baseline comparison.",
     "Role_Progress": "Progress",
-    "Role_Progress_Desc": "Optional progress as 0–1 or 0–100.",
+    "Role_Progress_Desc": "Optional progress as 0\u20131 or 0\u2013100.",
     "Role_Group": "Group",
     "Role_Group_Desc": "Optional parent/phase for collapsible grouping.",
     "Role_Resource": "Resource",
@@ -55,8 +55,9 @@
     "Landing_Step1": "Task + Start Date + End Date",
     "Landing_Step2": "Optional: Resource (people load), Group, Predecessor",
     "Landing_Step3": "Optional: Planned Start / Planned End",
-    "Landing_Step4": "Format → Lab for cockpit, toolbar, and extras",
+    "Landing_Step4": "Format \u2192 Lab for cockpit, toolbar, and extras",
     "Msg_AddFields": "Add Task, Start Date, and End Date to render the Gantt chart.",
     "Msg_InvalidRange": "Could not determine a valid date range.",
-    "Msg_RenderError": "Unable to render Gantt chart"
+    "Msg_RenderError": "Unable to render Gantt chart",
+    "Prop_Density": "Density"
 }
