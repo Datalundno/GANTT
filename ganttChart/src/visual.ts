@@ -32,6 +32,7 @@ import {
 import { getContrastColors } from "./utils/contrast";
 import { addMonths, chooseGranularity, startOfDay } from "./utils/dates";
 import { buildTooltipDataItems, pointerCoordinates } from "./utils/tooltips";
+import { parseDensityPreset, resolveDensitySizes } from "./suite/density";
 
 type TimeWindowMonths = 3 | 6 | 9 | 12 | null;
 
@@ -571,11 +572,21 @@ export class Visual implements IVisual {
             return;
         }
 
-        const labelWidth = this.formattingSettings?.labelsCard?.width?.value ?? 200;
-        const barHeight = this.formattingSettings?.barsCard?.barHeight?.value ?? 28;
-        const rowHeight = barHeight + 12;
         const showToolbar = this.syncToolbarVisibility();
         const toolbarHeight = showToolbar ? 40 : 0;
+        const density = parseDensityPreset(
+            this.formattingSettings?.generalCard?.density?.value?.value
+        );
+        const sizes = resolveDensitySizes(density, {
+            barHeight: this.formattingSettings?.barsCard?.barHeight?.value ?? 28,
+            rowGap: 12,
+            fontSize: this.formattingSettings?.labelsCard?.fontSize?.value ?? 12,
+            labelWidth: this.formattingSettings?.labelsCard?.width?.value ?? 200,
+            cornerRadius: this.formattingSettings?.barsCard?.cornerRadius?.value ?? 4
+        });
+        const labelWidth = sizes.labelWidth;
+        const barHeight = sizes.barHeight;
+        const rowHeight = barHeight + sizes.rowGap;
         const displayRows = buildDisplayRows(this.viewModel.tasks, this.collapsedGroups);
         const domain = this.resolveDomain();
 
@@ -588,7 +599,7 @@ export class Visual implements IVisual {
             labelWidth,
             rowHeight
         );
-        this.render(layout, displayRows, domain.start, domain.end, domain.granularity);
+        this.render(layout, displayRows, domain.start, domain.end, domain.granularity, sizes);
     }
 
     private render(
@@ -596,7 +607,8 @@ export class Visual implements IVisual {
         displayRows: ReturnType<typeof buildDisplayRows>,
         domainStart: Date,
         domainEnd: Date,
-        autoGranularity: AxisGranularity
+        autoGranularity: AxisGranularity,
+        sizes: { barHeight: number; fontSize: number; cornerRadius: number; labelWidth: number; rowGap: number }
     ): void {
         const viewModel = this.viewModel;
         if (!viewModel || viewModel.errorMessage || viewModel.tasks.length === 0) {
@@ -630,8 +642,8 @@ export class Visual implements IVisual {
         const granularity = this.resolveGranularity(autoGranularity);
         const labelFormat = this.resolveLabelFormat();
         const textColor = contrast.foreground;
-        const cornerRadius = this.formattingSettings?.barsCard?.cornerRadius?.value ?? 4;
-        const fontSize = this.formattingSettings?.labelsCard?.fontSize?.value ?? 12;
+        const cornerRadius = sizes.cornerRadius;
+        const fontSize = sizes.fontSize;
         const fontFamily = this.formattingSettings?.labelsCard?.fontFamily?.value
             ?? "Segoe UI, wf_segoe-ui_normal, helvetica, arial, sans-serif";
         const bandFill = contrast.isHighContrast
