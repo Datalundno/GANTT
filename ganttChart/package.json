@@ -1,7 +1,7 @@
 {
   "name": "datalund-gantt",
   "description": "DataLund Gantt — custom visual for Microsoft Power BI",
-  "version": "1.9.0.0",
+  "version": "1.9.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/Datalundno/GANTT.git"
@@ -29,5 +29,8 @@
     "eslint-plugin-powerbi-visuals": "^1.0.0",
     "powerbi-visuals-tools": "^7.2.1",
     "typescript": "5.5.4"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
   }
 }

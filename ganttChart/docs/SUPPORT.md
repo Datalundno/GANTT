@@ -6,7 +6,7 @@
 
 - Website: https://datalund.no/support/
 - Product / help: https://datalund.no/visuals/gantt/
-- Email: jonas.lundervold@gmail.com
+- Email: support@datalund.no
 - GitHub Issues: https://github.com/Datalundno/GANTT/issues
 
 ## Before you open a ticket

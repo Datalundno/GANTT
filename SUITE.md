@@ -2,7 +2,7 @@
 
 Shared contracts so Gantt and future visuals look and behave like one family on a report page.
 
-> **Source of truth:** [`ECOSYSTEM.md`](./ECOSYSTEM.md) (copied from `Datalundno/Website`). When this file and ECOSYSTEM disagree on fields, density, Color by, or starters, **ECOSYSTEM wins**.
+> **Source of truth:** [Website `ECOSYSTEM.md`](https://github.com/Datalundno/Website/blob/main/ECOSYSTEM.md) (see also the local [`ECOSYSTEM.md`](./ECOSYSTEM.md) pointer). When this file and ECOSYSTEM disagree on fields, density, Color by, or starters, **ECOSYSTEM wins**.
 
 ## Density presets (ship now)
 
@@ -15,7 +15,7 @@ Format → **General → Density**. Same names across all suite visuals.
 | **Large** | Sparse pages / presenting | 36 | 16 | 14 | 240 | 6 |
 | **Custom** | Use each visual’s own size sliders | — | — | — | — | — |
 
-Source of truth in code: `ganttChart/src/suite/density.ts` (move to `shared/density.ts` when the monorepo grows).
+Source of truth in code: `ganttChart/src/suite/density.ts` (move to a shared npm package when the suite grows).
 
 **Rule:** Sub-agents must use these names and numbers. Do not invent “Small/Medium/Huge”.
 
@@ -61,4 +61,4 @@ Lab cockpit prototypes multi-panel ideas; AppSource stays one job per visual.
 
 ## Sub-agent kickoff
 
-Paste the prompt from ECOSYSTEM.md §8 (existing visuals) or §9 (new visuals).
+Paste the prompt from Website ECOSYSTEM.md §8 (existing visuals) or §9 (new visuals).
