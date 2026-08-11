@@ -6,18 +6,19 @@ Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.n
 - Support: https://datalund.no/support/
 - Privacy: https://datalund.no/privacy/
 - **AppSource step-by-step (TOS-safe):** [`docs/APPSOURCE.md`](docs/APPSOURCE.md)
+- **Certification readiness:** [`docs/CERTIFICATION.md`](docs/CERTIFICATION.md)
 - Site: [Datalundno/Website](https://github.com/Datalundno/Website)
 
 ## Download (latest package)
 
 | Artifact | Link |
 | --- | --- |
-| **Branded** `.pbiviz` (website) | [v1.9.0.0 ganttChart.pbiviz](https://github.com/Datalundno/GANTT/releases/download/v1.9.0.0/ganttChart.pbiviz) |
+| **Branded** `.pbiviz` (website / AppSource) | [Releases](https://github.com/Datalundno/GANTT/releases) |
 | Website mirror | https://datalund.no/downloads/ganttChart.pbiviz |
 | Sample Excel | [GanttSampleData.xlsx](downloads/GanttSampleData.xlsx) |
 | Store logo 300×300 | [`assets/store/logo-300.png`](assets/store/logo-300.png) |
 
-Personal unbranded build (not for the website): [whitelabel-1.8.0.0 GanttChart.pbiviz](https://github.com/Datalundno/GANTT/releases/download/whitelabel-1.8.0.0/GanttChart.pbiviz).
+This package is **one visual, one GUID**. Unbranded builds use a different GUID and must stay off the `certification` branch and off datalund.no.
 
 ## Name & identity
 
@@ -25,8 +26,9 @@ Personal unbranded build (not for the website): [whitelabel-1.8.0.0 GanttChart.p
 | --- | --- |
 | Display name | **DataLund Gantt** |
 | Publisher | DataLund |
+| Author email | `support@datalund.no` |
 | GUID | `ganttChartF8E34E29596A403E8E39808FA17C9CE9` (immutable after AppSource publish) |
-| Version | **1.9.0.0** — Format → Color by (`colorBy`); ecosystem field/docs alignment; Density Compact/Comfortable/Large/Custom |
+| Version | **1.9.1.0** — certification packaging hygiene (branded contact, nb-NO, no website-sync in-repo) |
 
 ## Toolchain
 
@@ -42,5 +44,6 @@ cd ganttChart
 npm install
 npm run lint
 pbiviz package
+npx pbiviz package --certification-audit
 cp dist/ganttChartF8E34E29596A403E8E39808FA17C9CE9.*.pbiviz downloads/ganttChart.pbiviz
 ```

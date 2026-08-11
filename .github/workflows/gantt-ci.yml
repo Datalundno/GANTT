@@ -1,0 +1,46 @@
+name: gantt-ci
+
+on:
+  push:
+    paths:
+      - "ganttChart/**"
+      - ".github/workflows/gantt-ci.yml"
+  pull_request:
+    paths:
+      - "ganttChart/**"
+      - ".github/workflows/gantt-ci.yml"
+
+defaults:
+  run:
+    working-directory: ganttChart
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: ganttChart/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm audit --audit-level=moderate
+      - run: npx pbiviz package
+      - run: npx pbiviz package --certification-audit
+      - name: ECOSYSTEM pointer (no full copy)
+        working-directory: ${{ github.workspace }}
+        run: |
+          if grep -q "Canonical source of truth" ECOSYSTEM.md; then
+            echo "ECOSYSTEM.md is a pointer — OK"
+          else
+            echo "ECOSYSTEM.md must remain a pointer to Website, not a full copy" >&2
+            exit 1
+          fi
+      - name: Single branded GUID in pbiviz
+        working-directory: ${{ github.workspace }}
+        run: |
+          guid=$(node -e "console.log(require('./ganttChart/pbiviz.json').visual.guid)")
+          test "$guid" = "ganttChartF8E34E29596A403E8E39808FA17C9CE9"
+          test ! -d website-sync

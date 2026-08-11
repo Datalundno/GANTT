@@ -4,7 +4,7 @@
     "displayName": "DataLund Gantt",
     "guid": "ganttChartF8E34E29596A403E8E39808FA17C9CE9",
     "visualClassName": "Visual",
-    "version": "1.9.0.0",
+    "version": "1.9.1.0",
     "description": "DataLund Gantt \u2014 plan and track tasks on a Power BI timeline with progress, milestones, groups, expand/collapse, density presets, Color by, optional time window, resources, cross-filtering, and tooltips. Free visual by DataLund (datalund.no).",
     "supportUrl": "https://datalund.no/support/",
     "gitHubUrl": "https://github.com/Datalundno/GANTT"
@@ -12,7 +12,7 @@
   "apiVersion": "5.11.1",
   "author": {
     "name": "DataLund",
-    "email": "jonas.lundervold@gmail.com"
+    "email": "support@datalund.no"
   },
   "assets": {
     "icon": "assets/icon.png"
@@ -22,7 +22,7 @@
   "capabilities": "capabilities.json",
   "dependencies": null,
   "stringResources": [
-    "stringResources/en-US/resources.resjson"
-  ],
-  "version": "1.9.0.0"
+    "stringResources/en-US/resources.resjson",
+    "stringResources/nb-NO/resources.resjson"
+  ]
 }
