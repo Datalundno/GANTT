@@ -1,49 +1,20 @@
-# DataLund Gantt (Power BI visual)
+# Gantt Chart (Power BI visual)
 
-Free custom **Gantt** visual for Microsoft Power BI by **DataLund** ([datalund.no](https://datalund.no/)).
+Unbranded Gantt custom visual for Microsoft Power BI.
 
-- Product page: https://datalund.no/visuals/gantt/
-- Support: https://datalund.no/support/
-- Privacy: https://datalund.no/privacy/
-- **AppSource step-by-step (TOS-safe):** [`docs/APPSOURCE.md`](docs/APPSOURCE.md)
-- **Certification readiness:** [`docs/CERTIFICATION.md`](docs/CERTIFICATION.md)
-- Site: [Datalundno/Website](https://github.com/Datalundno/Website)
-
-## Download (latest package)
-
-| Artifact | Link |
+| | Value |
 | --- | --- |
-| **Branded** `.pbiviz` (website / AppSource) | [Releases](https://github.com/Datalundno/GANTT/releases) |
-| Website mirror | https://datalund.no/downloads/ganttChart.pbiviz |
-| Sample Excel | [GanttSampleData.xlsx](downloads/GanttSampleData.xlsx) |
-| Store logo 300×300 | [`assets/store/logo-300.png`](assets/store/logo-300.png) |
+| Display name | **Gantt Chart** |
+| GUID | `ganttChartWL7E4A9C2F1B8D4056AE12F34B56C78D01` |
+| Version | 1.8.2.0 |
+| Package | [`downloads/GanttChart.pbiviz`](downloads/GanttChart.pbiviz) |
 
-This package is **one visual, one GUID**. Unbranded builds use a different GUID and must stay off the `certification` branch and off datalund.no.
-
-## Name & identity
-
-| Field | Value |
-| --- | --- |
-| Display name | **DataLund Gantt** |
-| Publisher | DataLund |
-| Author email | `support@datalund.no` |
-| GUID | `ganttChartF8E34E29596A403E8E39808FA17C9CE9` (immutable after AppSource publish) |
-| Version | **1.9.2.0** — phases share a Line; Past events filter (show all / last month / hide past) |
-
-## Toolchain
-
-| Requirement | Version |
-| --- | --- |
-| Node.js | **>= 20.19.0** |
-| `powerbi-visuals-tools` | **7.2.1** |
-| `powerbi-visuals-api` | **5.11.1** |
-| `d3` | **7.9.0** |
+Same feature set as branded 1.9.2.0: phases that share a Line draw on one row, and Past events can show all, keep the last calendar month, or hide past bars. Version stays on the white-label 1.8.x line.
 
 ```bash
 cd ganttChart
 npm install
 npm run lint
 pbiviz package
-npx pbiviz package --certification-audit
-cp dist/ganttChartF8E34E29596A403E8E39808FA17C9CE9.*.pbiviz downloads/ganttChart.pbiviz
+cp dist/ganttChartWL7E4A9C2F1B8D4056AE12F34B56C78D01.1.8.2.0.pbiviz downloads/GanttChart.pbiviz
 ```

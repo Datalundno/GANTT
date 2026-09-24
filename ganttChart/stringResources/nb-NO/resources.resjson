@@ -1,5 +1,5 @@
 {
-    "Visual_Name": "DataLund Gantt",
+    "Visual_Name": "Gantt Chart",
     "Visual_Description": "Planlegg og følg opp oppgaver på en tidslinje med fremdrift, milepæler, grupper og ressurser.",
     "Role_Task": "Oppgave",
     "Role_Task_Desc": "Oppgavenavn (påkrevd).",
@@ -42,7 +42,7 @@
     "PastEvents_All": "Vis alle",
     "PastEvents_LastMonth": "Siste måned",
     "PastEvents_None": "Skjul tidligere",
-    "Landing_Title": "DataLund Gantt",
+    "Landing_Title": "Gantt Chart",
     "Landing_Subtitle": "Visualiser prosjektplaner på en tydelig tidslinje.",
     "Landing_Step1": "1. Dra Oppgave inn i feltet Oppgave",
     "Landing_Step2": "2. Dra en dato inn i Startdato",

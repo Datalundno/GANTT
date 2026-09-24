@@ -38,9 +38,9 @@ jobs:
             echo "ECOSYSTEM.md must remain a pointer to Website, not a full copy" >&2
             exit 1
           fi
-      - name: Single branded GUID in pbiviz
+      - name: White-label GUID in pbiviz
         working-directory: ${{ github.workspace }}
         run: |
           guid=$(node -e "console.log(require('./ganttChart/pbiviz.json').visual.guid)")
-          test "$guid" = "ganttChartF8E34E29596A403E8E39808FA17C9CE9"
+          test "$guid" = "ganttChartWL7E4A9C2F1B8D4056AE12F34B56C78D01"
           test ! -d website-sync
