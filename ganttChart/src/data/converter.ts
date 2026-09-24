@@ -9,6 +9,7 @@ import {
     ROLE_DURATION,
     ROLE_END,
     ROLE_GROUP,
+    ROLE_LINE,
     ROLE_PROGRESS,
     ROLE_RESOURCE,
     ROLE_START,
@@ -49,6 +50,7 @@ export function resolveRoleIndexes(columns: DataViewMetadataColumn[] | undefined
         duration: null,
         progress: null,
         group: null,
+        line: null,
         resource: null,
         tooltips: []
     };
@@ -80,6 +82,9 @@ export function resolveRoleIndexes(columns: DataViewMetadataColumn[] | undefined
         if (roles[ROLE_GROUP]) {
             indexes.group = index;
         }
+        if (roles[ROLE_LINE]) {
+            indexes.line = index;
+        }
         if (roles[ROLE_RESOURCE]) {
             indexes.resource = index;
         }
@@ -103,6 +108,15 @@ function asText(value: unknown): string | null {
         return null;
     }
     return String(value);
+}
+
+function asLine(value: unknown): string | null {
+    const text = asText(value);
+    if (!text) {
+        return null;
+    }
+    const trimmed = text.trim();
+    return trimmed ? trimmed : null;
 }
 
 function asNumber(value: unknown): number | null {
@@ -162,8 +176,6 @@ export function convertDataView(
     }
 
     const tasks: TaskRow[] = [];
-    let domainStart: Date | null = null;
-    let domainEnd: Date | null = null;
 
     rows.forEach((row, rowIndex) => {
         const taskName = asText(cellValue(row, roles.task));
@@ -207,6 +219,8 @@ export function convertDataView(
             durationDays,
             progress,
             group: asText(cellValue(row, roles.group)),
+            line: asLine(cellValue(row, roles.line)),
+            lane: 0,
             resource: asText(cellValue(row, roles.resource)),
             isMilestone,
             flaggedInvalidRange,
@@ -215,29 +229,47 @@ export function convertDataView(
         };
 
         tasks.push(task);
-
-        if (!domainStart || start < domainStart) {
-            domainStart = start;
-        }
-        if (!domainEnd || end > domainEnd) {
-            domainEnd = end;
-        }
     });
 
     if (tasks.length === 0) {
         return emptyViewModel("No valid tasks with parseable dates were found.");
     }
 
-    const padDays = 3;
-    domainStart = addDays(domainStart!, -padDays);
-    domainEnd = addDays(domainEnd!, padDays);
+    const domain = domainFromTasks(tasks);
+    if (!domain) {
+        return emptyViewModel("No valid tasks with parseable dates were found.");
+    }
 
     return {
         tasks,
         hasGroups: tasks.some((t) => t.group != null && t.group !== ""),
-        domainStart,
-        domainEnd,
-        granularity: chooseGranularity(domainStart, domainEnd),
+        domainStart: domain.start,
+        domainEnd: domain.end,
+        granularity: chooseGranularity(domain.start, domain.end),
         errorMessage: null
+    };
+}
+
+const DOMAIN_PAD_DAYS = 3;
+
+/** Padded min start / max end for the tasks that should drive the axis. */
+export function domainFromTasks(tasks: TaskRow[]): { start: Date; end: Date } | null {
+    if (tasks.length === 0) {
+        return null;
+    }
+    let start = tasks[0].start;
+    let end = tasks[0].end;
+    for (let i = 1; i < tasks.length; i++) {
+        const task = tasks[i];
+        if (task.start < start) {
+            start = task.start;
+        }
+        if (task.end > end) {
+            end = task.end;
+        }
+    }
+    return {
+        start: addDays(start, -DOMAIN_PAD_DAYS),
+        end: addDays(end, DOMAIN_PAD_DAYS)
     };
 }

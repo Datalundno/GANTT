@@ -3,9 +3,34 @@
 import * as d3 from "d3";
 import { DisplayRow, TaskRow } from "../data/types";
 
+export interface RowBox {
+    y: number;
+    height: number;
+}
+
+/** Span of each display row across its lane slots. A single slot stays one band tall. */
+export function rowBoxes(
+    displayRows: DisplayRow[],
+    yScale: d3.ScaleBand<string>
+): Map<string, RowBox> {
+    const bandwidth = yScale.bandwidth();
+    const boxes = new Map<string, RowBox>();
+    displayRows.forEach((row) => {
+        const ids = row.slotIds.length > 0 ? row.slotIds : [row.id];
+        const y = yScale(ids[0]) ?? 0;
+        const yLast = yScale(ids[ids.length - 1]) ?? y;
+        boxes.set(row.id, {
+            y,
+            height: Math.max(bandwidth, yLast - y + bandwidth)
+        });
+    });
+    return boxes;
+}
+
 export interface BarRenderOptions {
     xScale: d3.ScaleTime<number, number>;
     yScale: d3.ScaleBand<string>;
+    yForTask: (task: TaskRow) => number;
     /** Color for track, milestones, and unprogressed solid bars. */
     getBarColor: (task: TaskRow) => string;
     /** Solid progress fill (left overlay). */
@@ -55,6 +80,7 @@ export function renderBars(
     const {
         xScale,
         yScale,
+        yForTask,
         getBarColor,
         getProgressColor,
         cornerRadius,
@@ -88,10 +114,7 @@ export function renderBars(
     const merged = enter.merge(join);
 
     merged
-        .attr("transform", (d) => {
-            const y = yScale(d.id) ?? 0;
-            return `translate(0,${y})`;
-        })
+        .attr("transform", (d) => `translate(0,${yForTask(d)})`)
         .style("cursor", "pointer")
         .style("opacity", (d) => {
             if (!hasSelection) {
@@ -219,12 +242,11 @@ export function renderTodayLine(
 export function renderGroupBands(
     container: d3.Selection<SVGGElement, unknown, null, undefined>,
     displayRows: DisplayRow[],
-    yScale: d3.ScaleBand<string>,
+    boxes: Map<string, RowBox>,
     plotWidth: number,
     bandFill: string
 ): void {
     const groups = displayRows.filter((r) => r.kind === "group");
-    const bandwidth = yScale.bandwidth();
 
     const join = container
         .selectAll<SVGRectElement, DisplayRow>("rect.group-band")
@@ -237,9 +259,9 @@ export function renderGroupBands(
         .attr("class", "group-band")
         .merge(join)
         .attr("x", 0)
-        .attr("y", (d) => yScale(d.id) ?? 0)
+        .attr("y", (d) => boxes.get(d.id)?.y ?? 0)
         .attr("width", plotWidth)
-        .attr("height", bandwidth)
+        .attr("height", (d) => boxes.get(d.id)?.height ?? 0)
         .attr("fill", bandFill)
         .attr("pointer-events", "none");
 }
@@ -250,11 +272,10 @@ export function renderGroupBands(
 export function renderRowBands(
     container: d3.Selection<SVGGElement, unknown, null, undefined>,
     displayRows: DisplayRow[],
-    yScale: d3.ScaleBand<string>,
+    boxes: Map<string, RowBox>,
     plotWidth: number,
     bandFill: string
 ): void {
-    const bandwidth = yScale.bandwidth();
     const striped = displayRows.filter((row, index) => row.kind === "task" && index % 2 === 1);
 
     const join = container
@@ -268,9 +289,9 @@ export function renderRowBands(
         .attr("class", "row-band")
         .merge(join)
         .attr("x", 0)
-        .attr("y", (d) => yScale(d.id) ?? 0)
+        .attr("y", (d) => boxes.get(d.id)?.y ?? 0)
         .attr("width", plotWidth)
-        .attr("height", bandwidth)
+        .attr("height", (d) => boxes.get(d.id)?.height ?? 0)
         .attr("fill", bandFill)
         .attr("pointer-events", "none");
 }
@@ -278,7 +299,7 @@ export function renderRowBands(
 export function renderLabelRows(
     container: d3.Selection<SVGGElement, unknown, null, undefined>,
     displayRows: DisplayRow[],
-    yScale: d3.ScaleBand<string>,
+    boxes: Map<string, RowBox>,
     labelWidth: number,
     fontSize: number,
     fontFamily: string,
@@ -287,8 +308,8 @@ export function renderLabelRows(
     groupBandFill: string,
     onToggleGroup: (groupKey: string) => void
 ): void {
-    const bandwidth = yScale.bandwidth();
     const rowIndex = new Map(displayRows.map((row, index) => [row.id, index]));
+    const boxOf = (row: DisplayRow): RowBox => boxes.get(row.id) ?? { y: 0, height: 0 };
 
     const join = container
         .selectAll<SVGGElement, DisplayRow>("g.label-row")
@@ -308,7 +329,7 @@ export function renderLabelRows(
     const merged = enter.merge(join);
 
     merged
-        .attr("transform", (d) => `translate(0,${yScale(d.id) ?? 0})`)
+        .attr("transform", (d) => `translate(0,${boxOf(d).y})`)
         .classed("is-group", (d) => d.kind === "group")
         .classed("is-task", (d) => d.kind === "task")
         .style("cursor", (d) => d.kind === "group" ? "pointer" : "default");
@@ -317,7 +338,7 @@ export function renderLabelRows(
         .attr("x", 0)
         .attr("y", 0)
         .attr("width", labelWidth)
-        .attr("height", bandwidth)
+        .attr("height", (d) => boxOf(d).height)
         .attr("fill", (d) => {
             if (d.kind === "group") {
                 return groupBandFill;
@@ -330,13 +351,13 @@ export function renderLabelRows(
         .attr("x", 0)
         .attr("y", 0)
         .attr("width", labelWidth)
-        .attr("height", bandwidth)
+        .attr("height", (d) => boxOf(d).height)
         .attr("fill", "transparent");
 
     merged.select<SVGTextElement>("text.label-chevron")
         .attr("display", (d) => d.kind === "group" ? null : "none")
         .attr("x", 10)
-        .attr("y", bandwidth / 2)
+        .attr("y", (d) => boxOf(d).height / 2)
         .attr("dy", "0.35em")
         .attr("fill", textColor)
         .style("font-size", `${Math.max(10, fontSize - 1)}px`)
@@ -345,7 +366,7 @@ export function renderLabelRows(
 
     merged.select<SVGTextElement>("text.label-text")
         .attr("x", (d) => d.kind === "group" ? 24 : labelWidth - 10)
-        .attr("y", bandwidth / 2)
+        .attr("y", (d) => boxOf(d).height / 2)
         .attr("dy", "0.35em")
         .attr("text-anchor", (d) => d.kind === "group" ? "start" : "end")
         .attr("fill", textColor)

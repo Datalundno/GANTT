@@ -35,6 +35,12 @@ const colorByItems: powerbi.IEnumMember[] = [
     { value: "task", displayName: "Task" }
 ];
 
+const pastEventsItems = [
+    { value: "all", displayName: "Show all", displayNameKey: "PastEvents_All" },
+    { value: "lastMonth", displayName: "Last month", displayNameKey: "PastEvents_LastMonth" },
+    { value: "none", displayName: "Hide past", displayNameKey: "PastEvents_None" }
+];
+
 /**
  * Formatting cards aligned with capabilities.json.
  */
@@ -174,6 +180,16 @@ class GeneralCardSettings extends FormattingSettingsCard {
         value: false
     });
 
+    pastEvents = new formattingSettings.ItemDropdown({
+        name: "pastEvents",
+        displayName: "Past events",
+        displayNameKey: "Prop_PastEvents",
+        description: "Show all bars, keep bars that ended in the last calendar month, or hide bars that ended before today.",
+        descriptionKey: "Prop_PastEvents_Desc",
+        items: pastEventsItems,
+        value: pastEventsItems[0]
+    });
+
     name: string = "general";
     displayName: string = "General";
     displayNameKey: string = "Objects_General";
@@ -185,7 +201,8 @@ class GeneralCardSettings extends FormattingSettingsCard {
         this.axisGranularity,
         this.axisLabelFormat,
         this.weekendShading,
-        this.showTimeWindow
+        this.showTimeWindow,
+        this.pastEvents
     ];
 }
 
