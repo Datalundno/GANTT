@@ -5,16 +5,30 @@ import VisualTooltipDataItem = powerbi.extensibility.VisualTooltipDataItem;
 import { TaskRow } from "../data/types";
 import { toDisplayString } from "../utils/dates";
 
-export function buildTooltipDataItems(task: TaskRow): VisualTooltipDataItem[] {
+export interface TooltipLabels {
+    line?: string;
+}
+
+export function buildTooltipDataItems(task: TaskRow, labels?: TooltipLabels): VisualTooltipDataItem[] {
     const items: VisualTooltipDataItem[] = [
-        { displayName: "Task", value: task.task },
+        { displayName: "Task", value: task.task }
+    ];
+
+    if (task.line) {
+        items.push({
+            displayName: labels?.line || "Line",
+            value: task.line
+        });
+    }
+
+    items.push(
         { displayName: "Start", value: toDisplayString(task.start) },
         { displayName: "End", value: toDisplayString(task.end) },
         {
             displayName: "Duration",
             value: `${Math.round(task.durationDays * 10) / 10} days`
         }
-    ];
+    );
 
     if (task.progress != null) {
         items.push({

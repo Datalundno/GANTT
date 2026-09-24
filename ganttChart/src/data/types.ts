@@ -9,6 +9,7 @@ export const ROLE_END = "endDate";
 export const ROLE_DURATION = "duration";
 export const ROLE_PROGRESS = "progress";
 export const ROLE_GROUP = "group";
+export const ROLE_LINE = "line";
 export const ROLE_RESOURCE = "resource";
 export const ROLE_TOOLTIPS = "tooltipFields";
 
@@ -27,6 +28,10 @@ export interface TaskRow {
     durationDays: number;
     progress: number | null;
     group: string | null;
+    /** Phases that share a Line value draw on one row. Null when the role is unbound or blank. */
+    line: string | null;
+    /** Sub-lane inside a line row. 0 when the bar does not share its row. */
+    lane: number;
     resource: string | null;
     isMilestone: boolean;
     flaggedInvalidRange: boolean;
@@ -41,7 +46,14 @@ export interface DisplayRow {
     kind: DisplayRowKind;
     label: string;
     groupKey: string;
+    /** Set for a one-bar row. Line rows use `tasks` instead. */
     task?: TaskRow;
+    /** Bars drawn on this row. One entry for a task row; one per phase on a line. */
+    tasks?: TaskRow[];
+    /** Sub-lanes used by overlapping bars. Group headers are 1. */
+    laneCount: number;
+    /** Band-scale slots. One per lane so a line row grows when bars stack. */
+    slotIds: string[];
     collapsed?: boolean;
     taskCount?: number;
 }
@@ -66,6 +78,7 @@ export interface RoleColumnIndex {
     duration: number | null;
     progress: number | null;
     group: number | null;
+    line: number | null;
     resource: number | null;
     tooltips: number[];
 }

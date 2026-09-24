@@ -75,6 +75,19 @@
             ]
         },
         {
+            "displayName": "Line",
+            "displayNameKey": "Role_Line",
+            "name": "line",
+            "kind": "Grouping",
+            "description": "Phases that share a Line value draw on one row.",
+            "descriptionKey": "Role_Line_Desc",
+            "preferredTypes": [
+                {
+                    "text": true
+                }
+            ]
+        },
+        {
             "displayName": "Resource",
             "displayNameKey": "Role_Resource",
             "name": "resource",
@@ -304,6 +317,31 @@
                     "type": {
                         "bool": true
                     }
+                },
+                "pastEvents": {
+                    "displayName": "Past events",
+                    "displayNameKey": "Prop_PastEvents",
+                    "description": "Show all bars, keep bars that ended in the last calendar month, or hide bars that ended before today.",
+                    "descriptionKey": "Prop_PastEvents_Desc",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Show all",
+                                "displayNameKey": "PastEvents_All",
+                                "value": "all"
+                            },
+                            {
+                                "displayName": "Last month",
+                                "displayNameKey": "PastEvents_LastMonth",
+                                "value": "lastMonth"
+                            },
+                            {
+                                "displayName": "Hide past",
+                                "displayNameKey": "PastEvents_None",
+                                "value": "none"
+                            }
+                        ]
+                    }
                 }
             }
         }
@@ -318,6 +356,7 @@
                     "duration": { "min": 0, "max": 1 },
                     "progress": { "max": 1 },
                     "group": { "max": 1 },
+                    "line": { "max": 1 },
                     "resource": { "max": 1 },
                     "tooltipFields": { "max": 8 }
                 }
@@ -331,6 +370,7 @@
                         { "bind": { "to": "duration" } },
                         { "bind": { "to": "progress" } },
                         { "for": { "in": "group" } },
+                        { "for": { "in": "line" } },
                         { "for": { "in": "resource" } },
                         { "for": { "in": "tooltipFields" } }
                     ],

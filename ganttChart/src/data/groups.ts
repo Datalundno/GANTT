@@ -1,24 +1,34 @@
 "use strict";
 
+import { collapseLineRows } from "./lines";
 import { DisplayRow, TaskRow, UNGROUPED_KEY } from "./types";
 
 export function hasGrouping(tasks: TaskRow[]): boolean {
     return tasks.some((t) => t.group != null && t.group !== "");
 }
 
+function groupHeader(key: string, taskCount: number, collapsed: boolean): DisplayRow {
+    const id = `group::${key}`;
+    return {
+        id,
+        kind: "group",
+        label: key === UNGROUPED_KEY ? "Ungrouped" : key,
+        groupKey: key,
+        collapsed,
+        taskCount,
+        laneCount: 1,
+        slotIds: [id]
+    };
+}
+
 /**
- * Build visible rows: optional group headers with collapsible task children.
- * Group order follows first appearance in the data.
+ * Visible rows: optional group headers, then one row per task — or one row per
+ * Line when that field is set. Group order follows first appearance.
+ * A line with no remaining bars is omitted, so an empty group is omitted too.
  */
 export function buildDisplayRows(tasks: TaskRow[], collapsedGroups: Set<string>): DisplayRow[] {
     if (!hasGrouping(tasks)) {
-        return tasks.map((task) => ({
-            id: task.id,
-            kind: "task" as const,
-            label: task.task,
-            groupKey: UNGROUPED_KEY,
-            task
-        }));
+        return collapseLineRows(tasks, UNGROUPED_KEY);
     }
 
     const order: string[] = [];
@@ -37,27 +47,9 @@ export function buildDisplayRows(tasks: TaskRow[], collapsedGroups: Set<string>)
     order.forEach((key) => {
         const groupTasks = byGroup.get(key) ?? [];
         const collapsed = collapsedGroups.has(key);
-        const label = key === UNGROUPED_KEY ? "Ungrouped" : key;
-
-        rows.push({
-            id: `group::${key}`,
-            kind: "group",
-            label,
-            groupKey: key,
-            collapsed,
-            taskCount: groupTasks.length
-        });
-
+        rows.push(groupHeader(key, groupTasks.length, collapsed));
         if (!collapsed) {
-            groupTasks.forEach((task) => {
-                rows.push({
-                    id: task.id,
-                    kind: "task",
-                    label: task.task,
-                    groupKey: key,
-                    task
-                });
-            });
+            rows.push(...collapseLineRows(groupTasks, key));
         }
     });
 
@@ -65,7 +57,43 @@ export function buildDisplayRows(tasks: TaskRow[], collapsedGroups: Set<string>)
 }
 
 export function visibleTaskRows(displayRows: DisplayRow[]): TaskRow[] {
-    return displayRows
-        .filter((r) => r.kind === "task" && r.task)
-        .map((r) => r.task!);
+    const tasks: TaskRow[] = [];
+    displayRows.forEach((row) => {
+        if (row.kind !== "task") {
+            return;
+        }
+        if (row.tasks && row.tasks.length > 0) {
+            tasks.push(...row.tasks);
+            return;
+        }
+        if (row.task) {
+            tasks.push(row.task);
+        }
+    });
+    return tasks;
+}
+
+export function displaySlotIds(displayRows: DisplayRow[]): string[] {
+    const ids: string[] = [];
+    displayRows.forEach((row) => {
+        if (row.slotIds.length > 0) {
+            ids.push(...row.slotIds);
+        } else {
+            ids.push(row.id);
+        }
+    });
+    return ids;
+}
+
+export function taskSlotMap(displayRows: DisplayRow[]): Map<string, string> {
+    const map = new Map<string, string>();
+    displayRows.forEach((row) => {
+        (row.tasks ?? []).forEach((task) => {
+            const slot = row.slotIds.length <= 1
+                ? (row.slotIds[0] ?? row.id)
+                : (row.slotIds[task.lane] ?? row.slotIds[0] ?? row.id);
+            map.set(task.id, slot);
+        });
+    });
+    return map;
 }

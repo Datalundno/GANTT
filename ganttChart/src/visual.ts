@@ -13,12 +13,12 @@ import IVisualEventService = powerbi.extensibility.IVisualEventService;
 import ISelectionManager = powerbi.extensibility.ISelectionManager;
 import ITooltipService = powerbi.extensibility.ITooltipService;
 import ILocalizationManager = powerbi.extensibility.ILocalizationManager;
-import VisualUpdateType = powerbi.VisualUpdateType;
 import ISelectionId = powerbi.visuals.ISelectionId;
 
 import { VisualFormattingSettingsModel } from "./settings";
-import { convertDataView } from "./data/converter";
-import { buildDisplayRows, hasGrouping, visibleTaskRows } from "./data/groups";
+import { convertDataView, domainFromTasks } from "./data/converter";
+import { buildDisplayRows, displaySlotIds, hasGrouping, taskSlotMap, visibleTaskRows } from "./data/groups";
+import { filterPastTasks, parsePastEvents, PastEventsMode } from "./data/pastEvents";
 import { AxisGranularity, AxisGranularityOption, AxisLabelFormat, TaskRow, ViewModel } from "./data/types";
 import { computeLayout, ChartLayout, RIGHT_PADDING } from "./render/layout";
 import { createBandScale, createTimeScale, renderBottomAxis, renderWeekendShading } from "./render/axis";
@@ -27,8 +27,10 @@ import {
     renderGroupBands,
     renderLabelRows,
     renderRowBands,
-    renderTodayLine
+    renderTodayLine,
+    rowBoxes
 } from "./render/bars";
+import { isPureResize } from "./updateType";
 import { getContrastColors } from "./utils/contrast";
 import { addMonths, chooseGranularity, startOfDay } from "./utils/dates";
 import { buildTooltipDataItems, pointerCoordinates } from "./utils/tooltips";
@@ -50,6 +52,7 @@ export class Visual implements IVisual {
     private message: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private landing: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private toolbar: d3.Selection<HTMLDivElement, unknown, null, undefined>;
+    private filterMessage: d3.Selection<HTMLDivElement, unknown, null, undefined>;
     private chart: d3.Selection<HTMLDivElement, unknown, null, undefined>;
 
     private bodyRow: d3.Selection<HTMLDivElement, unknown, null, undefined>;
@@ -119,6 +122,11 @@ export class Visual implements IVisual {
             .classed("gantt-toolbar", true)
             .style("display", "none");
         this.buildToolbar();
+
+        this.filterMessage = this.chart
+            .append("div")
+            .classed("gantt-filter-empty", true)
+            .style("display", "none");
 
         this.bodyRow = this.chart
             .append("div")
@@ -229,6 +237,40 @@ export class Visual implements IVisual {
                 });
         });
 
+        const past = this.toolbar.append("div")
+            .classed("gantt-toolbar-group", true)
+            .classed("gantt-toolbar-past", true);
+        past.append("span")
+            .classed("gantt-past-caption", true)
+            .text(this.t("Prop_PastEvents", "Past events"));
+        const pastSelect = past.append("select")
+            .classed("gantt-past-select", true)
+            .attr("aria-label", this.t("Prop_PastEvents", "Past events"))
+            .attr("title", this.t(
+                "Prop_PastEvents_Desc",
+                "Show all bars, keep bars that ended in the last calendar month, or hide bars that ended before today."
+            ));
+        const pastOptions: Array<{ label: string; value: PastEventsMode }> = [
+            { label: this.t("PastEvents_All", "Show all"), value: "all" },
+            { label: this.t("PastEvents_LastMonth", "Last month"), value: "lastMonth" },
+            { label: this.t("PastEvents_None", "Hide past"), value: "none" }
+        ];
+        pastOptions.forEach((option) => {
+            pastSelect.append("option")
+                .attr("value", option.value)
+                .text(option.label);
+        });
+        pastSelect.on("change", (event: Event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const select = event.target as HTMLSelectElement;
+            if (!this.host.hostCapabilities?.allowInteractions) {
+                select.value = this.pastEventsMode();
+                return;
+            }
+            this.applyPastEvents(parsePastEvents(select.value));
+        });
+
         const groups = this.toolbar.append("div")
             .classed("gantt-toolbar-group", true)
             .classed("gantt-toolbar-groups", true);
@@ -267,7 +309,35 @@ export class Visual implements IVisual {
         this.syncToolbarActive();
     }
 
+    private pastEventsMode(): PastEventsMode {
+        return parsePastEvents(this.formattingSettings?.generalCard?.pastEvents?.value?.value);
+    }
+
+    private applyPastEvents(mode: PastEventsMode): void {
+        const slice = this.formattingSettings?.generalCard?.pastEvents;
+        if (slice?.items) {
+            const match = slice.items.find((item) => item.value === mode);
+            if (match) {
+                slice.value = match;
+            }
+        }
+        this.host.persistProperties({
+            merge: [
+                {
+                    objectName: "general",
+                    selector: null,
+                    properties: {
+                        pastEvents: mode
+                    }
+                }
+            ]
+        });
+        this.syncToolbarActive();
+        this.renderFromState();
+    }
+
     private syncToolbarActive(): void {
+        const mode = this.pastEventsMode();
         this.toolbar.selectAll<HTMLButtonElement, unknown>("button.gantt-tool-btn[data-window]")
             .classed("is-active", (_d, _i, nodes) => {
                 const node = nodes[_i] as HTMLButtonElement;
@@ -277,16 +347,24 @@ export class Visual implements IVisual {
                 }
                 return value === String(this.timeWindowMonths);
             });
+        this.toolbar.select<HTMLSelectElement>("select.gantt-past-select")
+            .property("value", mode)
+            .classed("is-active", mode !== "all");
     }
 
     private syncToolbarVisibility(): boolean {
         const showTimeWindow = this.formattingSettings?.generalCard?.showTimeWindow?.value ?? false;
-        const showGroups = !!(this.viewModel && hasGrouping(this.viewModel.tasks));
-        const showToolbar = showTimeWindow || showGroups;
+        const visibleTasks = this.viewModel
+            ? filterPastTasks(this.viewModel.tasks, this.pastEventsMode(), new Date())
+            : [];
+        const showGroups = hasGrouping(visibleTasks);
+        const showToolbar = true;
 
         this.toolbar.style("display", showToolbar ? "flex" : "none");
         this.toolbar.select(".gantt-toolbar-windows")
             .style("display", showTimeWindow ? "inline-flex" : "none");
+        this.toolbar.select(".gantt-toolbar-past")
+            .style("display", "inline-flex");
         this.toolbar.select(".gantt-toolbar-groups")
             .style("display", showGroups ? "inline-flex" : "none");
 
@@ -329,12 +407,10 @@ export class Visual implements IVisual {
 
             this.hideLandingPage();
 
-            const isResizeOnly =
-                options.type === VisualUpdateType.Resize ||
-                options.type === VisualUpdateType.ResizeEnd ||
-                (options.type & VisualUpdateType.Resize) === VisualUpdateType.Resize;
+            // All includes Resize. Reconvert unless this update is only Resize / ResizeEnd.
+            const skipConvert = !!this.viewModel && isPureResize(options.type);
 
-            if (!isResizeOnly || !this.viewModel) {
+            if (!skipConvert) {
                 this.viewModel = convertDataView(dataView, this.host);
                 this.pruneCollapsedGroups();
                 this.syncSelectionFromManager();
@@ -391,7 +467,8 @@ export class Visual implements IVisual {
             ["Landing_Step1", "1. Drag Task into the Task field"],
             ["Landing_Step2", "2. Drag a date into Start Date"],
             ["Landing_Step3", "3. Add End Date"],
-            ["Landing_Step4", "Optional: Progress, Group, Resource (Duration and Tooltips also supported)"]
+            ["Landing_Step4", "Optional: Progress, Group, Resource (Duration and Tooltips also supported)"],
+            ["Landing_Step5", "Optional: Line — phases that share a Line value draw on one row."]
         ];
         for (const [key, fallback] of stepKeys) {
             steps.append("li").text(this.t(key, fallback));
@@ -489,9 +566,10 @@ export class Visual implements IVisual {
         return "date";
     }
 
-    private resolveDomain(): { start: Date; end: Date; granularity: AxisGranularity } {
-        const fullStart = this.viewModel?.domainStart ?? new Date();
-        const fullEnd = this.viewModel?.domainEnd ?? new Date();
+    private resolveDomain(tasks: TaskRow[]): { start: Date; end: Date; granularity: AxisGranularity } {
+        const padded = domainFromTasks(tasks);
+        const fullStart = padded?.start ?? this.viewModel?.domainStart ?? new Date();
+        const fullEnd = padded?.end ?? this.viewModel?.domainEnd ?? new Date();
         const showTimeWindow = this.formattingSettings?.generalCard?.showTimeWindow?.value ?? false;
         if (!showTimeWindow || this.timeWindowMonths == null) {
             return {
@@ -569,7 +647,9 @@ export class Visual implements IVisual {
         this.tooltipService.show({
             coordinates: pointerCoordinates(event, rootNode),
             isTouchEvent: false,
-            dataItems: buildTooltipDataItems(task),
+            dataItems: buildTooltipDataItems(task, {
+                line: this.t("Tooltip_Line", "Line")
+            }),
             identities
         });
     }
@@ -586,8 +666,18 @@ export class Visual implements IVisual {
             return;
         }
 
+        this.syncToolbarActive();
         const showToolbar = this.syncToolbarVisibility();
         const toolbarHeight = showToolbar ? 40 : 0;
+        const visibleTasks = filterPastTasks(this.viewModel.tasks, this.pastEventsMode(), new Date());
+        if (!this.viewModel.errorMessage && this.viewModel.tasks.length > 0 && visibleTasks.length === 0) {
+            this.showFilterEmpty(this.t(
+                "Msg_NoVisibleEvents",
+                "No events match this past-events filter."
+            ));
+            return;
+        }
+
         const density = parseDensityPreset(
             this.formattingSettings?.generalCard?.density?.value?.value
         );
@@ -601,19 +691,35 @@ export class Visual implements IVisual {
         const labelWidth = sizes.labelWidth;
         const barHeight = sizes.barHeight;
         const rowHeight = barHeight + sizes.rowGap;
-        const displayRows = buildDisplayRows(this.viewModel.tasks, this.collapsedGroups);
-        const domain = this.resolveDomain();
+        const displayRows = buildDisplayRows(visibleTasks, this.collapsedGroups);
+        const domain = this.resolveDomain(visibleTasks);
+        const slotCount = Math.max(1, displaySlotIds(displayRows).length);
 
         const layout = computeLayout(
             this.lastViewport.width,
             Math.max(1, this.lastViewport.height - toolbarHeight),
-            displayRows.length,
+            slotCount,
             domain.start,
             domain.end,
             labelWidth,
             rowHeight
         );
         this.render(layout, displayRows, domain.start, domain.end, domain.granularity, sizes);
+    }
+
+    private showFilterEmpty(text: string): void {
+        this.hideLandingPage();
+        this.message.style("display", "none").text("");
+        this.chart.style("display", "flex");
+        this.filterMessage.style("display", "flex").text(text);
+        this.bodyRow.style("display", "none");
+        this.axisRow.style("display", "none");
+    }
+
+    private hideFilterEmpty(): void {
+        this.filterMessage.style("display", "none").text("");
+        this.bodyRow.style("display", "");
+        this.axisRow.style("display", "");
     }
 
     private render(
@@ -626,6 +732,7 @@ export class Visual implements IVisual {
     ): void {
         const viewModel = this.viewModel;
         if (!viewModel || viewModel.errorMessage || viewModel.tasks.length === 0) {
+            this.hideFilterEmpty();
             this.showMessage(
                 viewModel?.errorMessage
                     ?? this.t("Msg_AddFields", "Add Task and Start Date fields to render the Gantt chart.")
@@ -634,10 +741,12 @@ export class Visual implements IVisual {
         }
 
         if (!viewModel.domainStart || !viewModel.domainEnd) {
+            this.hideFilterEmpty();
             this.showMessage(this.t("Msg_InvalidRange", "Could not determine a valid date range."));
             return;
         }
 
+        this.hideFilterEmpty();
         this.hideMessage();
 
         const contrast = getContrastColors(this.host.colorPalette);
@@ -730,17 +839,19 @@ export class Visual implements IVisual {
         this.barsLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.axisLayer.attr("transform", "translate(0,0)");
 
-        const rowIds = displayRows.map((r) => r.id);
+        const slotIds = displaySlotIds(displayRows);
         const tasks = visibleTaskRows(displayRows);
-        const contentRowsHeight = displayRows.length * layout.rowHeight;
+        const slotByTask = taskSlotMap(displayRows);
+        const contentRowsHeight = Math.max(1, slotIds.length) * layout.rowHeight;
 
         const xScale = createTimeScale(domainStart, domainEnd, 0, plotWidth);
         const yScale = createBandScale(
-            rowIds,
+            slotIds,
             0,
             contentRowsHeight,
             0.28
         );
+        const boxes = rowBoxes(displayRows, yScale);
 
         const weekendFill = contrast.isHighContrast
             ? contrast.foreground
@@ -749,7 +860,7 @@ export class Visual implements IVisual {
         renderLabelRows(
             this.labelLayer,
             displayRows,
-            yScale,
+            boxes,
             layout.labelWidth,
             fontSize,
             fontFamily,
@@ -769,8 +880,8 @@ export class Visual implements IVisual {
             weekendFill
         );
 
-        renderRowBands(this.rowBandLayer, displayRows, yScale, plotWidth, zebraFill);
-        renderGroupBands(this.bandLayer, displayRows, yScale, plotWidth, bandFill);
+        renderRowBands(this.rowBandLayer, displayRows, boxes, plotWidth, zebraFill);
+        renderGroupBands(this.bandLayer, displayRows, boxes, plotWidth, bandFill);
 
         renderTodayLine(
             this.todayLayer,
@@ -785,6 +896,7 @@ export class Visual implements IVisual {
         renderBars(this.barsLayer, tasks, {
             xScale,
             yScale,
+            yForTask: (task) => yScale(slotByTask.get(task.id) ?? task.id) ?? 0,
             getBarColor,
             getProgressColor,
             cornerRadius,
