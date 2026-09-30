@@ -41,6 +41,13 @@ const pastEventsItems = [
     { value: "none", displayName: "Hide past", displayNameKey: "PastEvents_None" }
 ];
 
+const zoomItems = [
+    { value: "detail", displayName: "Detail", displayNameKey: "Zoom_Detail" },
+    { value: "year", displayName: "1 year", displayNameKey: "Zoom_Year" },
+    { value: "threeYears", displayName: "3 years", displayNameKey: "Zoom_ThreeYears" },
+    { value: "fit", displayName: "Fit", displayNameKey: "Zoom_Fit" }
+];
+
 /**
  * Formatting cards aligned with capabilities.json.
  */
@@ -180,6 +187,16 @@ class GeneralCardSettings extends FormattingSettingsCard {
         value: false
     });
 
+    zoom = new formattingSettings.ItemDropdown({
+        name: "zoom",
+        displayName: "Zoom",
+        displayNameKey: "Prop_Zoom",
+        description: "Detail keeps the current day scale and scrolls when needed. 1 year and 3 years fit that span in the plot. Fit shows the full data range without horizontal scroll.",
+        descriptionKey: "Prop_Zoom_Desc",
+        items: zoomItems,
+        value: zoomItems[0]
+    });
+
     pastEvents = new formattingSettings.ItemDropdown({
         name: "pastEvents",
         displayName: "Past events",
@@ -202,6 +219,7 @@ class GeneralCardSettings extends FormattingSettingsCard {
         this.axisLabelFormat,
         this.weekendShading,
         this.showTimeWindow,
+        this.zoom,
         this.pastEvents
     ];
 }

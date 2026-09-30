@@ -21,8 +21,18 @@ import { convertDataView, domainFromTasks } from "./data/converter";
 import { buildDisplayRows, displaySlotIds, hasGrouping, taskSlotMap, visibleTaskRows } from "./data/groups";
 import { filterPastTasks, parsePastEvents, PastEventsMode } from "./data/pastEvents";
 import { AxisGranularity, AxisGranularityOption, AxisLabelFormat, TaskRow, ViewModel } from "./data/types";
-import { computeLayout, ChartLayout, RIGHT_PADDING } from "./render/layout";
-import { createBandScale, createTimeScale, renderBottomAxis, renderWeekendShading } from "./render/axis";
+import { computeLayout, ChartLayout, RIGHT_PADDING, AXIS_HEIGHT, MIN_PIXELS_PER_DAY, daySpan } from "./render/layout";
+import {
+    createBandScale,
+    createTimeScale,
+    quarterGridLines,
+    renderBottomAxis,
+    renderQuarterGrid,
+    renderWeekendShading,
+    renderYearQuarterAxis,
+    YEAR_QUARTER_AXIS_HEIGHT
+} from "./render/axis";
+import { granularityForVisibleSpan, parseZoom, visibleSpanDays, ZoomLevel } from "./render/zoom";
 import {
     renderBars,
     renderGroupBands,
@@ -69,6 +79,7 @@ export class Visual implements IVisual {
 
     private labelLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private weekendLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
+    private gridLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private rowBandLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private bandLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
     private barsLayer: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -154,6 +165,7 @@ export class Visual implements IVisual {
         this.weekendLayer = this.plotSvg.append("g").classed("weekends", true);
         this.rowBandLayer = this.plotSvg.append("g").classed("row-bands", true);
         this.bandLayer = this.plotSvg.append("g").classed("bands", true);
+        this.gridLayer = this.plotSvg.append("g").classed("time-grid", true);
         this.todayLayer = this.plotSvg.append("g").classed("today", true);
         this.barsLayer = this.plotSvg.append("g").classed("bars", true);
 
@@ -272,6 +284,41 @@ export class Visual implements IVisual {
             this.applyPastEvents(parsePastEvents(select.value));
         });
 
+        const zoom = this.toolbar.append("div")
+            .classed("gantt-toolbar-group", true)
+            .classed("gantt-toolbar-zoom", true);
+        zoom.append("span")
+            .classed("gantt-zoom-caption", true)
+            .text(this.t("Prop_Zoom", "Zoom"));
+        const zoomSelect = zoom.append("select")
+            .classed("gantt-zoom-select", true)
+            .attr("aria-label", this.t("Prop_Zoom", "Zoom"))
+            .attr("title", this.t(
+                "Prop_Zoom_Desc",
+                "Detail keeps the current day scale and scrolls when needed. 1 year and 3 years fit that span in the plot. Fit shows the full data range without horizontal scroll."
+            ));
+        const zoomOptions: Array<{ label: string; value: ZoomLevel }> = [
+            { label: this.t("Zoom_Detail", "Detail"), value: "detail" },
+            { label: this.t("Zoom_Year", "1 year"), value: "year" },
+            { label: this.t("Zoom_ThreeYears", "3 years"), value: "threeYears" },
+            { label: this.t("Zoom_Fit", "Fit"), value: "fit" }
+        ];
+        zoomOptions.forEach((option) => {
+            zoomSelect.append("option")
+                .attr("value", option.value)
+                .text(option.label);
+        });
+        zoomSelect.on("change", (event: Event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const select = event.target as HTMLSelectElement;
+            if (!this.host.hostCapabilities?.allowInteractions) {
+                select.value = this.zoomLevel();
+                return;
+            }
+            this.applyZoom(parseZoom(select.value));
+        });
+
         const groups = this.toolbar.append("div")
             .classed("gantt-toolbar-group", true)
             .classed("gantt-toolbar-groups", true);
@@ -314,6 +361,33 @@ export class Visual implements IVisual {
         return parsePastEvents(this.formattingSettings?.generalCard?.pastEvents?.value?.value);
     }
 
+    private zoomLevel(): ZoomLevel {
+        return parseZoom(this.formattingSettings?.generalCard?.zoom?.value?.value);
+    }
+
+    private applyZoom(level: ZoomLevel): void {
+        const slice = this.formattingSettings?.generalCard?.zoom;
+        if (slice?.items) {
+            const match = slice.items.find((item) => item.value === level);
+            if (match) {
+                slice.value = match;
+            }
+        }
+        this.host.persistProperties({
+            merge: [
+                {
+                    objectName: "general",
+                    selector: null,
+                    properties: {
+                        zoom: level
+                    }
+                }
+            ]
+        });
+        this.syncToolbarActive();
+        this.renderFromState();
+    }
+
     private applyPastEvents(mode: PastEventsMode): void {
         const slice = this.formattingSettings?.generalCard?.pastEvents;
         if (slice?.items) {
@@ -351,6 +425,10 @@ export class Visual implements IVisual {
         this.toolbar.select<HTMLSelectElement>("select.gantt-past-select")
             .property("value", mode)
             .classed("is-active", mode !== "all");
+        const zoom = this.zoomLevel();
+        this.toolbar.select<HTMLSelectElement>("select.gantt-zoom-select")
+            .property("value", zoom)
+            .classed("is-active", zoom !== "detail");
     }
 
     private syncToolbarVisibility(): boolean {
@@ -364,6 +442,8 @@ export class Visual implements IVisual {
         this.toolbar.style("display", showToolbar ? "flex" : "none");
         this.toolbar.select(".gantt-toolbar-windows")
             .style("display", showTimeWindow ? "inline-flex" : "none");
+        this.toolbar.select(".gantt-toolbar-zoom")
+            .style("display", "inline-flex");
         this.toolbar.select(".gantt-toolbar-past")
             .style("display", "inline-flex");
         this.toolbar.select(".gantt-toolbar-groups")
@@ -555,12 +635,9 @@ export class Visual implements IVisual {
         });
     }
 
-    private resolveGranularity(autoGranularity: AxisGranularity): AxisGranularity {
+    private resolveGranularity(visibleDays: number): AxisGranularity {
         const raw = this.formattingSettings?.generalCard?.axisGranularity?.value?.value as AxisGranularityOption | undefined;
-        if (!raw || raw === "auto") {
-            return autoGranularity;
-        }
-        return raw;
+        return granularityForVisibleSpan(visibleDays, raw);
     }
 
     private resolveLabelFormat(): AxisLabelFormat {
@@ -673,7 +750,7 @@ export class Visual implements IVisual {
 
         this.syncToolbarActive();
         const showToolbar = this.syncToolbarVisibility();
-        const toolbarHeight = showToolbar ? 40 : 0;
+        const toolbarHeight = showToolbar ? (this.toolbar.node()?.offsetHeight || 40) : 0;
         const visibleTasks = filterPastTasks(this.viewModel.tasks, this.pastEventsMode(), new Date());
         if (!this.viewModel.errorMessage && this.viewModel.tasks.length > 0 && visibleTasks.length === 0) {
             this.showFilterEmpty(this.t(
@@ -699,17 +776,43 @@ export class Visual implements IVisual {
         const displayRows = buildDisplayRows(visibleTasks, this.collapsedGroups);
         const domain = this.resolveDomain(visibleTasks);
         const slotCount = Math.max(1, displaySlotIds(displayRows).length);
+        const zoom = this.zoomLevel();
+        const viewportWidth = this.lastViewport.width;
+        const viewportHeight = Math.max(1, this.lastViewport.height - toolbarHeight);
 
-        const layout = computeLayout(
-            this.lastViewport.width,
-            Math.max(1, this.lastViewport.height - toolbarHeight),
+        let layout = computeLayout(
+            viewportWidth,
+            viewportHeight,
             slotCount,
             domain.start,
             domain.end,
             labelWidth,
-            rowHeight
+            rowHeight,
+            zoom,
+            AXIS_HEIGHT
         );
-        this.render(layout, displayRows, domain.start, domain.end, domain.granularity, sizes);
+        const visibleDays = visibleSpanDays(
+            daySpan(domain.start, domain.end),
+            layout.plotViewportWidth,
+            zoom,
+            MIN_PIXELS_PER_DAY
+        );
+        const granularity = this.resolveGranularity(visibleDays);
+        const yearQuarterAxis = granularity === "quarter";
+        if (yearQuarterAxis) {
+            layout = computeLayout(
+                viewportWidth,
+                viewportHeight,
+                slotCount,
+                domain.start,
+                domain.end,
+                labelWidth,
+                rowHeight,
+                zoom,
+                YEAR_QUARTER_AXIS_HEIGHT
+            );
+        }
+        this.render(layout, displayRows, domain.start, domain.end, granularity, sizes, yearQuarterAxis);
     }
 
     private showFilterEmpty(text: string): void {
@@ -732,8 +835,9 @@ export class Visual implements IVisual {
         displayRows: ReturnType<typeof buildDisplayRows>,
         domainStart: Date,
         domainEnd: Date,
-        autoGranularity: AxisGranularity,
-        sizes: { barHeight: number; fontSize: number; cornerRadius: number; labelWidth: number; rowGap: number }
+        granularity: AxisGranularity,
+        sizes: { barHeight: number; fontSize: number; cornerRadius: number; labelWidth: number; rowGap: number },
+        yearQuarterAxis: boolean
     ): void {
         const viewModel = this.viewModel;
         if (!viewModel || viewModel.errorMessage || viewModel.tasks.length === 0) {
@@ -767,7 +871,6 @@ export class Visual implements IVisual {
             : (this.formattingSettings?.generalCard?.todayLineColor?.value?.value || "#e81123");
         const showToday = this.formattingSettings?.generalCard?.showTodayLine?.value ?? true;
         const weekendShading = this.formattingSettings?.generalCard?.weekendShading?.value ?? false;
-        const granularity = this.resolveGranularity(autoGranularity);
         const labelFormat = this.resolveLabelFormat();
         const textColor = contrast.foreground;
         const cornerRadius = sizes.cornerRadius;
@@ -805,6 +908,7 @@ export class Visual implements IVisual {
         };
 
         this.root.style("background", contrast.background);
+        this.chart.classed("gantt-axis-on-top", yearQuarterAxis);
 
         this.labelsCol
             .style("width", `${layout.labelWidth}px`)
@@ -838,6 +942,7 @@ export class Visual implements IVisual {
 
         this.labelLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.weekendLayer.attr("transform", `translate(0,${layout.plotTop})`);
+        this.gridLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.rowBandLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.bandLayer.attr("transform", `translate(0,${layout.plotTop})`);
         this.todayLayer.attr("transform", `translate(0,${layout.plotTop})`);
@@ -875,14 +980,23 @@ export class Visual implements IVisual {
             (groupKey) => this.toggleGroup(groupKey)
         );
 
+        const pixelsPerDay = plotWidth / Math.max(1, daySpan(domainStart, domainEnd));
         renderWeekendShading(
             this.weekendLayer,
             xScale,
             domainStart,
             domainEnd,
             contentRowsHeight,
-            weekendShading,
+            weekendShading && pixelsPerDay >= 2,
             weekendFill
+        );
+
+        const gridColor = contrast.isHighContrast ? contrast.foreground : "#0f172a";
+        renderQuarterGrid(
+            this.gridLayer,
+            yearQuarterAxis ? quarterGridLines(xScale, domainStart, domainEnd) : [],
+            contentRowsHeight,
+            gridColor
         );
 
         renderRowBands(this.rowBandLayer, displayRows, boxes, plotWidth, zebraFill);
@@ -915,7 +1029,14 @@ export class Visual implements IVisual {
             onMouseOut: (event, task) => this.onBarMouseOut(event, task)
         });
 
-        renderBottomAxis(this.axisLayer, xScale, granularity, labelFormat, textColor, plotWidth);
+        if (yearQuarterAxis) {
+            this.axisLayer.selectAll(".tick").remove();
+            this.axisLayer.selectAll(".domain").remove();
+            renderYearQuarterAxis(this.axisLayer, xScale, domainStart, domainEnd, textColor, plotWidth);
+        } else {
+            this.axisLayer.selectAll("g.year-quarter").remove();
+            renderBottomAxis(this.axisLayer, xScale, granularity, labelFormat, textColor, plotWidth);
+        }
     }
 
     private showMessage(text: string): void {

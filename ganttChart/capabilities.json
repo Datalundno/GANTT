@@ -318,6 +318,36 @@
                         "bool": true
                     }
                 },
+                "zoom": {
+                    "displayName": "Zoom",
+                    "displayNameKey": "Prop_Zoom",
+                    "description": "Detail keeps the current day scale and scrolls when needed. 1 year and 3 years fit that span in the plot. Fit shows the full data range without horizontal scroll.",
+                    "descriptionKey": "Prop_Zoom_Desc",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Detail",
+                                "displayNameKey": "Zoom_Detail",
+                                "value": "detail"
+                            },
+                            {
+                                "displayName": "1 year",
+                                "displayNameKey": "Zoom_Year",
+                                "value": "year"
+                            },
+                            {
+                                "displayName": "3 years",
+                                "displayNameKey": "Zoom_ThreeYears",
+                                "value": "threeYears"
+                            },
+                            {
+                                "displayName": "Fit",
+                                "displayNameKey": "Zoom_Fit",
+                                "value": "fit"
+                            }
+                        ]
+                    }
+                },
                 "pastEvents": {
                     "displayName": "Past events",
                     "displayNameKey": "Prop_PastEvents",
