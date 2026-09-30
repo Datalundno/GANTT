@@ -1,5 +1,7 @@
 "use strict";
 
+import { contentWidthForZoom, ZoomLevel } from "./zoom";
+
 export interface ChartLayout {
     /** Full visual viewport width */
     viewportWidth: number;
@@ -43,24 +45,31 @@ export function computeLayout(
     domainStart: Date,
     domainEnd: Date,
     labelWidth: number = DEFAULT_LABEL_WIDTH,
-    rowHeight: number = DEFAULT_ROW_HEIGHT
+    rowHeight: number = DEFAULT_ROW_HEIGHT,
+    zoom: ZoomLevel = "detail",
+    axisHeight: number = AXIS_HEIGHT
 ): ChartLayout {
     const width = Math.max(1, viewportWidth);
     const height = Math.max(1, viewportHeight);
     const clampedLabel = Math.max(80, Math.min(labelWidth, Math.floor(width * 0.4)));
     const safeRowHeight = Math.max(22, rowHeight);
-    const axisHeight = AXIS_HEIGHT;
+    const safeAxisHeight = Math.max(1, axisHeight);
     const plotTop = TOP_PADDING;
 
     const plotViewportWidth = Math.max(1, width - clampedLabel);
-    const bodyViewportHeight = Math.max(1, height - axisHeight);
+    const bodyViewportHeight = Math.max(1, height - safeAxisHeight);
 
     const days = daySpan(domainStart, domainEnd);
-    const contentWidth = Math.max(
-        MIN_PLOT_WIDTH,
+    let contentWidth = contentWidthForZoom(
+        days,
         plotViewportWidth,
-        Math.ceil(days * MIN_PIXELS_PER_DAY) + RIGHT_PADDING
+        zoom,
+        MIN_PIXELS_PER_DAY,
+        RIGHT_PADDING
     );
+    if (zoom === "detail") {
+        contentWidth = Math.max(MIN_PLOT_WIDTH, contentWidth);
+    }
     const contentHeight = Math.max(
         bodyViewportHeight,
         plotTop + Math.max(1, taskCount) * safeRowHeight + 8
@@ -75,7 +84,7 @@ export function computeLayout(
         contentWidth,
         contentHeight,
         plotTop,
-        axisHeight,
+        axisHeight: safeAxisHeight,
         rowHeight: safeRowHeight,
         needsVerticalScroll: contentHeight > bodyViewportHeight + 1,
         needsHorizontalScroll: contentWidth > plotViewportWidth + 1

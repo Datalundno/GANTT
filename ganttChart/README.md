@@ -28,7 +28,7 @@ This package is **one visual, one GUID**. Unbranded builds use a different GUID 
 | Publisher | DataLund |
 | Author email | `support@datalund.no` |
 | GUID | `ganttChartF8E34E29596A403E8E39808FA17C9CE9` (immutable after AppSource publish) |
-| Version | **1.9.2.0** — phases share a Line; Past events filter (show all / last month / hide past) |
+| Version | **1.9.4.0** — zoom to 1 year, 3 years, or fit; landing page still shows the version |
 
 ## Toolchain
 

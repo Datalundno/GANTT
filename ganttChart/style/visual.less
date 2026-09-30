@@ -61,10 +61,17 @@
 }
 
 .gantt-landing-subtitle {
-    margin: 0 0 16px;
+    margin: 0 0 6px;
     font-size: 13px;
     line-height: 1.45;
     color: #475569;
+}
+
+.gantt-landing-version {
+    margin: 0 0 16px;
+    font-size: 12px;
+    line-height: 1.35;
+    color: #64748b;
 }
 
 .gantt-landing-steps {
@@ -135,7 +142,8 @@
     color: #f8fafc;
 }
 
-.gantt-past-caption {
+.gantt-past-caption,
+.gantt-zoom-caption {
     color: #475569;
     font-size: 11.5px;
     font-weight: 600;
@@ -143,7 +151,8 @@
     margin-right: 4px;
 }
 
-.gantt-past-select {
+.gantt-past-select,
+.gantt-zoom-select {
     margin: 0;
     padding: 4px 6px;
     border: 1px solid rgba(15, 23, 42, 0.16);
@@ -157,10 +166,23 @@
     cursor: pointer;
 }
 
-.gantt-past-select.is-active {
+.gantt-past-select.is-active,
+.gantt-zoom-select.is-active {
     background: #e0f2fe;
     color: #0f172a;
     border-color: #0369a1;
+}
+
+.gantt-chart.gantt-axis-on-top {
+    .gantt-axis-row {
+        order: 1;
+        border-top: 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    }
+
+    .gantt-body-row {
+        order: 2;
+    }
 }
 
 .gantt-filter-empty {
@@ -241,8 +263,14 @@
     user-select: none;
 }
 
-.gantt-plot-svg .weekend-band {
+.gantt-plot-svg .weekend-band,
+.gantt-plot-svg .time-grid {
     shape-rendering: crispEdges;
+}
+
+.gantt-axis-svg .year-label,
+.gantt-axis-svg .quarter-label {
+    user-select: none;
 }
 
 .gantt-plot-svg .group-band {
