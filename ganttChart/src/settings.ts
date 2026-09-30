@@ -48,6 +48,12 @@ const zoomItems = [
     { value: "fit", displayName: "Fit", displayNameKey: "Zoom_Fit" }
 ];
 
+const groupSortItems = [
+    { value: "data", displayName: "Data order", displayNameKey: "GroupSort_Data" },
+    { value: "az", displayName: "A to Z", displayNameKey: "GroupSort_AZ" },
+    { value: "za", displayName: "Z to A", displayNameKey: "GroupSort_ZA" }
+];
+
 /**
  * Formatting cards aligned with capabilities.json.
  */
@@ -207,6 +213,16 @@ class GeneralCardSettings extends FormattingSettingsCard {
         value: pastEventsItems[0]
     });
 
+    groupSort = new formattingSettings.ItemDropdown({
+        name: "groupSort",
+        displayName: "Group sort",
+        displayNameKey: "Prop_GroupSort",
+        description: "Sort group rows. Data order keeps the order groups first appear. A to Z and Z to A use numeric order so DA2 stays before DA10. Tasks inside a group keep their order. The Ungrouped bucket stays in place.",
+        descriptionKey: "Prop_GroupSort_Desc",
+        items: groupSortItems,
+        value: groupSortItems[0]
+    });
+
     name: string = "general";
     displayName: string = "General";
     displayNameKey: string = "Objects_General";
@@ -220,7 +236,8 @@ class GeneralCardSettings extends FormattingSettingsCard {
         this.weekendShading,
         this.showTimeWindow,
         this.zoom,
-        this.pastEvents
+        this.pastEvents,
+        this.groupSort
     ];
 }
 

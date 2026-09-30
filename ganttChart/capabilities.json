@@ -372,6 +372,31 @@
                             }
                         ]
                     }
+                },
+                "groupSort": {
+                    "displayName": "Group sort",
+                    "displayNameKey": "Prop_GroupSort",
+                    "description": "Sort group rows. Data order keeps the order groups first appear. A to Z and Z to A use numeric order so DA2 stays before DA10. Tasks inside a group keep their order. The Ungrouped bucket stays in place.",
+                    "descriptionKey": "Prop_GroupSort_Desc",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "displayName": "Data order",
+                                "displayNameKey": "GroupSort_Data",
+                                "value": "data"
+                            },
+                            {
+                                "displayName": "A to Z",
+                                "displayNameKey": "GroupSort_AZ",
+                                "value": "az"
+                            },
+                            {
+                                "displayName": "Z to A",
+                                "displayNameKey": "GroupSort_ZA",
+                                "value": "za"
+                            }
+                        ]
+                    }
                 }
             }
         }
