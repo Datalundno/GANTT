@@ -44,6 +44,7 @@
     "PastEvents_None": "Hide past",
     "Landing_Title": "DataLund Gantt",
     "Landing_Subtitle": "Visualize project schedules on a clear timeline.",
+    "Landing_Version": "Version",
     "Landing_Step1": "1. Drag Task into the Task field",
     "Landing_Step2": "2. Drag a date into Start Date",
     "Landing_Step3": "3. Add End Date",

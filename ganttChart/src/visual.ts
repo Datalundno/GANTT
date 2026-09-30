@@ -4,6 +4,7 @@ import powerbi from "powerbi-visuals-api";
 import * as d3 from "d3";
 import { FormattingSettingsService } from "powerbi-visuals-utils-formattingmodel";
 import "./../style/visual.less";
+import pbiviz from "../pbiviz.json";
 
 import VisualConstructorOptions = powerbi.extensibility.visual.VisualConstructorOptions;
 import VisualUpdateOptions = powerbi.extensibility.visual.VisualUpdateOptions;
@@ -461,6 +462,10 @@ export class Visual implements IVisual {
         card.append("p")
             .classed("gantt-landing-subtitle", true)
             .text(this.t("Landing_Subtitle", "Visualize project schedules on a clear timeline."));
+
+        card.append("p")
+            .classed("gantt-landing-version", true)
+            .text(`${this.t("Landing_Version", "Version")} ${pbiviz.visual.version}`);
 
         const steps = card.append("ul").classed("gantt-landing-steps", true);
         const stepKeys: Array<[string, string]> = [
