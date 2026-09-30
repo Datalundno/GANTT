@@ -1,5 +1,6 @@
 "use strict";
 
+import { GroupSort, sortGroupKeys } from "./groupSort";
 import { collapseLineRows } from "./lines";
 import { DisplayRow, TaskRow, UNGROUPED_KEY } from "./types";
 
@@ -23,26 +24,34 @@ function groupHeader(key: string, taskCount: number, collapsed: boolean): Displa
 
 /**
  * Visible rows: optional group headers, then one row per task — or one row per
- * Line when that field is set. Group order follows first appearance.
- * A line with no remaining bars is omitted, so an empty group is omitted too.
+ * Line when that field is set. Group order is first appearance unless a sort
+ * mode is set. Tasks inside a group stay in data order. The Ungrouped bucket
+ * stays at its first-appearance index. A line with no remaining bars is omitted,
+ * so an empty group is omitted too.
  */
-export function buildDisplayRows(tasks: TaskRow[], collapsedGroups: Set<string>): DisplayRow[] {
+export function buildDisplayRows(
+    tasks: TaskRow[],
+    collapsedGroups: Set<string>,
+    groupSort: GroupSort = "data",
+    locale?: string
+): DisplayRow[] {
     if (!hasGrouping(tasks)) {
         return collapseLineRows(tasks, UNGROUPED_KEY);
     }
 
-    const order: string[] = [];
+    const appearance: string[] = [];
     const byGroup = new Map<string, TaskRow[]>();
 
     tasks.forEach((task) => {
         const key = task.group && task.group !== "" ? task.group : UNGROUPED_KEY;
         if (!byGroup.has(key)) {
             byGroup.set(key, []);
-            order.push(key);
+            appearance.push(key);
         }
         byGroup.get(key)!.push(task);
     });
 
+    const order = sortGroupKeys(appearance, groupSort, locale, UNGROUPED_KEY);
     const rows: DisplayRow[] = [];
     order.forEach((key) => {
         const groupTasks = byGroup.get(key) ?? [];
