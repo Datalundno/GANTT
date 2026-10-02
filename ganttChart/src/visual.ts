@@ -22,7 +22,7 @@ import { parseGroupSort, GroupSort } from "./data/groupSort";
 import { buildDisplayRows, displaySlotIds, hasGrouping, taskSlotMap, visibleTaskRows } from "./data/groups";
 import { filterPastTasks, parsePastEvents, PastEventsMode } from "./data/pastEvents";
 import { AxisGranularity, AxisGranularityOption, AxisLabelFormat, TaskRow, ViewModel } from "./data/types";
-import { computeLayout, ChartLayout, RIGHT_PADDING, AXIS_HEIGHT, MIN_PIXELS_PER_DAY, daySpan } from "./render/layout";
+import { computeLayout, ChartLayout, RIGHT_PADDING, AXIS_HEIGHT, MIN_PIXELS_PER_DAY, daySpan, horizontalScrollbarInset } from "./render/layout";
 import {
     createBandScale,
     createTimeScale,
@@ -320,40 +320,6 @@ export class Visual implements IVisual {
             this.applyZoom(parseZoom(select.value));
         });
 
-        const groupSort = this.toolbar.append("div")
-            .classed("gantt-toolbar-group", true)
-            .classed("gantt-toolbar-group-sort", true);
-        groupSort.append("span")
-            .classed("gantt-group-sort-caption", true)
-            .text(this.t("Prop_GroupSort", "Group sort"));
-        const groupSortSelect = groupSort.append("select")
-            .classed("gantt-group-sort-select", true)
-            .attr("aria-label", this.t("Prop_GroupSort", "Group sort"))
-            .attr("title", this.t(
-                "Prop_GroupSort_Desc",
-                "Sort group rows. Data order keeps the order groups first appear. A to Z and Z to A use numeric order so DA2 stays before DA10. Tasks inside a group keep their order. The Ungrouped bucket stays in place."
-            ));
-        const groupSortOptions: Array<{ label: string; value: GroupSort }> = [
-            { label: this.t("GroupSort_Data", "Data order"), value: "data" },
-            { label: this.t("GroupSort_AZ", "A to Z"), value: "az" },
-            { label: this.t("GroupSort_ZA", "Z to A"), value: "za" }
-        ];
-        groupSortOptions.forEach((option) => {
-            groupSortSelect.append("option")
-                .attr("value", option.value)
-                .text(option.label);
-        });
-        groupSortSelect.on("change", (event: Event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            const select = event.target as HTMLSelectElement;
-            if (!this.host.hostCapabilities?.allowInteractions) {
-                select.value = this.groupSortMode();
-                return;
-            }
-            this.applyGroupSort(parseGroupSort(select.value));
-        });
-
         const groups = this.toolbar.append("div")
             .classed("gantt-toolbar-group", true)
             .classed("gantt-toolbar-groups", true);
@@ -450,29 +416,6 @@ export class Visual implements IVisual {
         this.renderFromState();
     }
 
-    private applyGroupSort(mode: GroupSort): void {
-        const slice = this.formattingSettings?.generalCard?.groupSort;
-        if (slice?.items) {
-            const match = slice.items.find((item) => item.value === mode);
-            if (match) {
-                slice.value = match;
-            }
-        }
-        this.host.persistProperties({
-            merge: [
-                {
-                    objectName: "general",
-                    selector: null,
-                    properties: {
-                        groupSort: mode
-                    }
-                }
-            ]
-        });
-        this.syncToolbarActive();
-        this.renderFromState();
-    }
-
     private syncToolbarActive(): void {
         const mode = this.pastEventsMode();
         this.toolbar.selectAll<HTMLButtonElement, unknown>("button.gantt-tool-btn[data-window]")
@@ -491,10 +434,6 @@ export class Visual implements IVisual {
         this.toolbar.select<HTMLSelectElement>("select.gantt-zoom-select")
             .property("value", zoom)
             .classed("is-active", zoom !== "detail");
-        const groupSort = this.groupSortMode();
-        this.toolbar.select<HTMLSelectElement>("select.gantt-group-sort-select")
-            .property("value", groupSort)
-            .classed("is-active", groupSort !== "data");
     }
 
     private syncToolbarVisibility(): boolean {
@@ -511,8 +450,6 @@ export class Visual implements IVisual {
         this.toolbar.select(".gantt-toolbar-zoom")
             .style("display", "inline-flex");
         this.toolbar.select(".gantt-toolbar-past")
-            .style("display", "inline-flex");
-        this.toolbar.select(".gantt-toolbar-group-sort")
             .style("display", "inline-flex");
         this.toolbar.select(".gantt-toolbar-groups")
             .style("display", showGroups ? "inline-flex" : "none");
@@ -903,6 +840,22 @@ export class Visual implements IVisual {
         this.axisRow.style("display", "");
     }
 
+    /**
+     * The plot's horizontal scrollbar shortens only that column. Pad the
+     * label column by the same inset so both vertical scroll ranges end
+     * together. Skip it when the plot does not scroll vertically, and when
+     * the scrollbar is absent, so the columns do not gain an empty gap.
+     */
+    private syncLabelScrollInset(layout: ChartLayout): void {
+        const plotNode = this.plotCol.node();
+        if (!plotNode || !layout.needsVerticalScroll) {
+            this.labelsCol.style("padding-bottom", null);
+            return;
+        }
+        const inset = horizontalScrollbarInset(plotNode.offsetHeight, plotNode.clientHeight);
+        this.labelsCol.style("padding-bottom", inset > 0 ? `${inset}px` : null);
+    }
+
     private render(
         layout: ChartLayout,
         displayRows: ReturnType<typeof buildDisplayRows>,
@@ -1008,6 +961,8 @@ export class Visual implements IVisual {
         this.plotSvg
             .attr("width", layout.contentWidth)
             .attr("height", layout.contentHeight);
+
+        this.syncLabelScrollInset(layout);
 
         this.axisSvg
             .attr("width", layout.contentWidth)
