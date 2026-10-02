@@ -22,7 +22,7 @@ import { parseGroupSort, GroupSort } from "./data/groupSort";
 import { buildDisplayRows, displaySlotIds, hasGrouping, taskSlotMap, visibleTaskRows } from "./data/groups";
 import { filterPastTasks, parsePastEvents, PastEventsMode } from "./data/pastEvents";
 import { AxisGranularity, AxisGranularityOption, AxisLabelFormat, TaskRow, ViewModel } from "./data/types";
-import { computeLayout, ChartLayout, RIGHT_PADDING, AXIS_HEIGHT, MIN_PIXELS_PER_DAY, daySpan } from "./render/layout";
+import { computeLayout, ChartLayout, RIGHT_PADDING, AXIS_HEIGHT, MIN_PIXELS_PER_DAY, daySpan, horizontalScrollbarInset } from "./render/layout";
 import {
     createBandScale,
     createTimeScale,
@@ -840,6 +840,22 @@ export class Visual implements IVisual {
         this.axisRow.style("display", "");
     }
 
+    /**
+     * The plot's horizontal scrollbar shortens only that column. Pad the
+     * label column by the same inset so both vertical scroll ranges end
+     * together. Skip it when the plot does not scroll vertically, and when
+     * the scrollbar is absent, so the columns do not gain an empty gap.
+     */
+    private syncLabelScrollInset(layout: ChartLayout): void {
+        const plotNode = this.plotCol.node();
+        if (!plotNode || !layout.needsVerticalScroll) {
+            this.labelsCol.style("padding-bottom", null);
+            return;
+        }
+        const inset = horizontalScrollbarInset(plotNode.offsetHeight, plotNode.clientHeight);
+        this.labelsCol.style("padding-bottom", inset > 0 ? `${inset}px` : null);
+    }
+
     private render(
         layout: ChartLayout,
         displayRows: ReturnType<typeof buildDisplayRows>,
@@ -945,6 +961,8 @@ export class Visual implements IVisual {
         this.plotSvg
             .attr("width", layout.contentWidth)
             .attr("height", layout.contentHeight);
+
+        this.syncLabelScrollInset(layout);
 
         this.axisSvg
             .attr("width", layout.contentWidth)

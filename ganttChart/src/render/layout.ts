@@ -38,6 +38,19 @@ export function daySpan(start: Date, end: Date): number {
     return Math.max(1, (end.getTime() - start.getTime()) / MS_PER_DAY);
 }
 
+/**
+ * Pixels the plot's horizontal scrollbar removes from its client height.
+ * The label column has no horizontal scrollbar, so the plot's vertical
+ * scroll range is longer by this amount unless the label column pads by it.
+ * Zero when the scrollbar is not taking space.
+ */
+export function horizontalScrollbarInset(offsetHeight: number, clientHeight: number): number {
+    if (!Number.isFinite(offsetHeight) || !Number.isFinite(clientHeight)) {
+        return 0;
+    }
+    return Math.max(0, offsetHeight - clientHeight);
+}
+
 export function computeLayout(
     viewportWidth: number,
     viewportHeight: number,
